@@ -1,0 +1,49 @@
+# Firebase App Hosting configuration
+# Docs: https://firebase.google.com/docs/app-hosting/configure
+#
+# This backend auto-builds and deploys from the GitHub `live` branch.
+
+runConfig:
+  # Cost-conscious defaults for a portfolio site. Scale to zero when idle.
+  minInstances: 0
+  maxInstances: 2
+  concurrency: 80
+  cpu: 1
+  memoryMiB: 512
+
+# Environment variables.
+#  - NEXT_PUBLIC_* are inlined into the client bundle at BUILD time and are
+#    safe to expose. Fill `value:` once the Firebase web app is created.
+#  - Server-only secrets (e.g. the Gemini key) are stored in Cloud Secret
+#    Manager and referenced by `secret:` name — never inlined here.
+#    Create with: firebase apphosting:secrets:set gemini-api-key
+#
+env:
+  # Public Firebase client config (project: daechankimdesign-2026).
+  # NEXT_PUBLIC_* must be available at BUILD to be inlined into the bundle.
+  - variable: NEXT_PUBLIC_FIREBASE_API_KEY
+    value: AIzaSyC0oIV7lCl5hNjbOND3HH2pNXnSobDrV9A
+    availability: [BUILD, RUNTIME]
+  - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+    value: daechankimdesign-2026.firebaseapp.com
+    availability: [BUILD, RUNTIME]
+  - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
+    value: daechankimdesign-2026
+    availability: [BUILD, RUNTIME]
+  - variable: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+    value: daechankimdesign-2026.firebasestorage.app
+    availability: [BUILD, RUNTIME]
+  - variable: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
+    value: "949466608811"
+    availability: [BUILD, RUNTIME]
+  - variable: NEXT_PUBLIC_FIREBASE_APP_ID
+    value: "1:949466608811:web:95b534a06cc254c62ff3ee"
+    availability: [BUILD, RUNTIME]
+
+  # Wired in Phase 6 (translation pipeline):
+  # - variable: NEXT_PUBLIC_FIREBASE_APPCHECK_SITE_KEY
+  #   value: ""
+  #   availability: [BUILD, RUNTIME]
+  # - variable: GEMINI_API_KEY
+  #   secret: gemini-api-key          # firebase apphosting:secrets:set gemini-api-key
+  #   availability: [RUNTIME]
