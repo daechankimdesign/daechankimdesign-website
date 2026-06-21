@@ -1,0 +1,19 @@
+{
+  "Nav": {
+    "home": "Inicio",
+    "projects": "Proyectos",
+    "sandbox": "Sandbox",
+    "blogs": "Blog",
+    "about": "Acerca",
+    "resume": "Currículum",
+    "contact": "Contacto",
+    "settings": "Ajustes"
+  },
+  "Settings": {
+    "title": "Ajustes",
+    "language": "Idioma"
+  },
+  "Common": {
+    "comingSoon": "Próximamente"
+  }
+}

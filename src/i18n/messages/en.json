@@ -1,0 +1,19 @@
+{
+  "Nav": {
+    "home": "Home",
+    "projects": "Projects",
+    "sandbox": "Sandbox",
+    "blogs": "Blogs",
+    "about": "About",
+    "resume": "Resume",
+    "contact": "Contact",
+    "settings": "Settings"
+  },
+  "Settings": {
+    "title": "Settings",
+    "language": "Language"
+  },
+  "Common": {
+    "comingSoon": "Coming soon"
+  }
+}

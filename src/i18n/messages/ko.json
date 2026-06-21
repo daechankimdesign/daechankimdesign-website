@@ -1,0 +1,19 @@
+{
+  "Nav": {
+    "home": "홈",
+    "projects": "프로젝트",
+    "sandbox": "샌드박스",
+    "blogs": "블로그",
+    "about": "소개",
+    "resume": "이력서",
+    "contact": "연락처",
+    "settings": "설정"
+  },
+  "Settings": {
+    "title": "설정",
+    "language": "언어"
+  },
+  "Common": {
+    "comingSoon": "준비 중"
+  }
+}
