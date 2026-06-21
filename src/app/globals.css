@@ -1,26 +1,188 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* ============================================================================
+   Design tokens — "Figma Simple Design System" (monochrome neutral palette).
+   Spacing is intentionally left at Tailwind's default --spacing (0.25rem = 4px
+   at a 16px root): p-1=4 p-2=8 p-3=12 p-4=16 p-6=24 p-15=60. This keeps the
+   strict 4px grid AND preserves rem/zoom accessibility.
+   ============================================================================ */
+@theme {
+  /* Neutral palette (extends Tailwind defaults; we use only these by convention) */
+  --color-fg: #1e1e1e; /* primary text / ink */
+  --color-fg-muted: #757575; /* secondary text, inactive nav, meta values */
+  --color-fg-subtle: #b3b3b3; /* tertiary / disabled */
+  --color-hairline: #d9d9d9; /* hairline borders */
+  --color-surface: #e3e3e3; /* active pill / raised surface */
+  --color-surface-subtle: #f5f5f5; /* subtle background blocks */
+  --color-canvas: #ffffff; /* page background */
 }
 
+/* next/font CSS variables resolve via `inline` (var-referencing-var) */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-noto-sans);
+  --font-serif: var(--font-noto-serif);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* ============================================================================
+   Base
+   ============================================================================ */
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--color-canvas);
+    color: var(--color-fg);
+    font-family: var(--font-sans), system-ui, sans-serif;
+    font-size: 14px; /* Body */
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Links: underline only, inherit color, no color change on hover (rules §3).
+     Navigation/logo links opt out with the `no-underline` utility. */
+  a {
+    color: inherit;
+    text-decoration: underline;
+    text-underline-offset: 0.15em;
+    text-decoration-thickness: from-font;
+  }
+  a:hover {
+    color: inherit;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* ============================================================================
+   Typography scale (px values per rules §3).
+   Fluid on smaller viewports via clamp(); round() snaps to whole-integer px
+   where supported (the second font-size), falling back to plain clamp() where
+   not — no @supports needed. Every clamp min is >= the 11px floor.
+   ============================================================================ */
+@utility text-display {
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  font-size: clamp(28px, 16px + 3vw, 40px);
+  font-size: round(clamp(28px, 16px + 3vw, 40px), 1px);
+}
+@utility text-h1 {
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  font-size: clamp(22px, 14px + 2vw, 28px);
+  font-size: round(clamp(22px, 14px + 2vw, 28px), 1px);
+}
+@utility text-h2 {
+  font-weight: 700;
+  line-height: 1.3;
+  font-size: clamp(18px, 13px + 1.3vw, 20px);
+  font-size: round(clamp(18px, 13px + 1.3vw, 20px), 1px);
+}
+@utility text-h3 {
+  font-weight: 500;
+  line-height: 1.4;
+  font-size: clamp(15px, 13px + 0.5vw, 16px);
+  font-size: round(clamp(15px, 13px + 0.5vw, 16px), 1px);
+}
+@utility text-body {
+  font-weight: 400;
+  line-height: 1.6;
+  font-size: 14px;
+}
+/* PROPOSED token addition (Phase 1 flag): caption/label for meta rows + small
+   tags seen in the About mockup (~12px). Kept >= 11px floor. */
+@utility text-caption {
+  font-weight: 400;
+  line-height: 1.4;
+  font-size: 12px;
+}
+
+/* ============================================================================
+   Hairline borders — crisp ~1-device-pixel line (#D9D9D9), never a literal
+   sub-pixel (e.g. 0.6px) border (rules §2). Implemented as a scaled pseudo-
+   element, gated by device-pixel-ratio so it renders as a single device pixel
+   at 1x / 2x / 3x. Each variant uses ::after, so combine at most one side per
+   element (use Tailwind `border border-hairline` for full 1px boxes).
+   ============================================================================ */
+.hairline-t,
+.hairline-b,
+.hairline-l,
+.hairline-r {
+  position: relative;
+}
+.hairline-t::after,
+.hairline-b::after,
+.hairline-l::after,
+.hairline-r::after {
+  content: "";
+  position: absolute;
+  background-color: var(--color-hairline);
+  pointer-events: none;
+}
+.hairline-t::after {
+  inset: 0 0 auto 0;
+  height: 1px;
+  transform-origin: top;
+}
+.hairline-b::after {
+  inset: auto 0 0 0;
+  height: 1px;
+  transform-origin: bottom;
+}
+.hairline-l::after {
+  inset: 0 auto 0 0;
+  width: 1px;
+  transform-origin: left;
+}
+.hairline-r::after {
+  inset: 0 0 0 auto;
+  width: 1px;
+  transform-origin: right;
+}
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 2dppx) {
+  .hairline-t::after,
+  .hairline-b::after {
+    transform: scaleY(0.5);
+  }
+  .hairline-l::after,
+  .hairline-r::after {
+    transform: scaleX(0.5);
+  }
+}
+@media (-webkit-min-device-pixel-ratio: 3), (min-resolution: 3dppx) {
+  .hairline-t::after,
+  .hairline-b::after {
+    transform: scaleY(0.3333);
+  }
+  .hairline-l::after,
+  .hairline-r::after {
+    transform: scaleX(0.3333);
+  }
+}
+
+/* ============================================================================
+   Layout helpers
+   ============================================================================ */
+/* Page container: full width, max 1800px, 20px gutters (mobile) → 60px (>=768) */
+.container-page {
+  width: 100%;
+  max-width: 1800px;
+  margin-inline: auto;
+  padding-inline: 20px;
+}
+@media (min-width: 768px) {
+  .container-page {
+    padding-inline: 60px;
+  }
+}
+
+/* Prose/content links keep the underline affordance (already the <a> default).
+   A `.link` utility for explicit inline links in component code. */
+.link {
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+  color: inherit;
 }
