@@ -11,7 +11,7 @@ export function GlobalNav() {
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   return (
-    <header>
+    <header className="sticky top-0 z-30">
       <nav className="container-page flex items-center justify-between gap-6 py-4">
         {/* Left — text logo */}
         <Link href="/" className="text-h3 font-bold no-underline shrink-0">

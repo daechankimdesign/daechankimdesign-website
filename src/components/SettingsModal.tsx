@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import { useLocale, useTranslations } from "next-intl";
 import { Xmark } from "iconoir-react";
 import { useRouter, usePathname } from "@/i18n/navigation";
@@ -96,7 +97,11 @@ export function SettingsModal({
     }
   };
 
-  return (
+  // Portal to <body> so the overlay escapes the sticky header's stacking
+  // context (z-30) and renders above the UniversalNav pill (z-40).
+  if (typeof document === "undefined") return null;
+
+  return createPortal(
     <div
       className="fixed inset-0 z-50 flex items-start justify-center"
       role="dialog"
@@ -152,6 +157,7 @@ export function SettingsModal({
           <p className="text-caption mt-3 text-fg-muted">{notice}</p>
         ) : null}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
