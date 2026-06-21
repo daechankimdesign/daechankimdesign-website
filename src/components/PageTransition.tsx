@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import { usePathname } from "@/i18n/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 
 // Ordered navigation categories
@@ -84,6 +84,8 @@ export function PageTransition({ children }: { children: ReactNode }) {
     }
   };
 
+  const [transitioning, setTransitioning] = useState(false);
+
   return (
     <motion.div
       key={pathname}
@@ -91,7 +93,11 @@ export function PageTransition({ children }: { children: ReactNode }) {
       initial="initial"
       animate="animate"
       variants={slideVariants}
-      className="flex flex-1 flex-col bg-canvas relative overflow-hidden"
+      onAnimationStart={() => setTransitioning(true)}
+      onAnimationComplete={() => setTransitioning(false)}
+      className={`flex flex-1 flex-col bg-canvas relative ${
+        transitioning ? "overflow-hidden" : ""
+      }`}
     >
       {children}
     </motion.div>

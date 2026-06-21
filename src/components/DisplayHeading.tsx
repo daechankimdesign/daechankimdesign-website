@@ -4,20 +4,22 @@ import { motion } from "framer-motion";
 import type { ReactNode } from "react";
 
 /**
- * Display heading (rules §5): a one-time slide-in from the bottom on mount,
+ * Animated heading (rules §5): a one-time slide-in from the bottom on mount,
  * with a slide-up exit. transform/opacity only. Sits within PageTransition,
  * sharing its easing so the two read as one cohesive entrance, not a conflict.
+ * Defaults to the Display type level; pass `className` (e.g. "text-h1") to use
+ * a different level.
  */
 export function DisplayHeading({
   children,
-  className = "",
+  className = "text-display",
 }: {
   children: ReactNode;
   className?: string;
 }) {
   return (
     <motion.h1
-      className={`text-display ${className}`}
+      className={className}
       initial={{ opacity: 0, y: 24 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -24 }}

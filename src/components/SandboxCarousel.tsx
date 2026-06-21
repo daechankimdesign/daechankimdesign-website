@@ -101,7 +101,7 @@ export function SandboxCarousel({
     return (
       <section className="py-16">
         <div className="container-page mb-8">
-          <h2 className="text-h2">{heading}</h2>
+          <h3 className="text-h3">{heading}</h3>
         </div>
         <div className="flex gap-6 overflow-x-auto px-5 sm:px-8 lg:px-12">
           {cards}
@@ -114,7 +114,7 @@ export function SandboxCarousel({
     <section ref={wrapperRef} className="relative">
       <div className="sticky top-0 flex h-screen flex-col justify-center overflow-hidden">
         <div className="container-page mb-8">
-          <h2 className="text-h2">{heading}</h2>
+          <h3 className="text-h3">{heading}</h3>
         </div>
         <div
           ref={trackRef}

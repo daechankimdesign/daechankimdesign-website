@@ -1,19 +1,19 @@
 ---
 title: "Group Trip Calendar"
-summary: "A shared calendar for friend groups to manage trip plans and events without the usual chat-thread chaos."
+summary: "A shared calendar for friend groups to plan trips together, without the usual chat-thread chaos."
 thumbnail: "https://picsum.photos/seed/trip-calendar/1600/900"
-date: "2025-01-15"
-tags: ["React", "Framer", "Claude Code"]
+date: "2025-05-04"
+tags: ["React", "Firebase", "Claude Code"]
 ---
 
-_Placeholder — content to be populated later._
+A mobile-first PWA for a small group of friends to plan trips on one shared calendar. Built in a weekend with React, Firebase, and Claude Code.
 
-![Trip calendar interface](https://picsum.photos/seed/calendar-ui/1600/900)
+![Group Trip Calendar interface](https://picsum.photos/seed/calendar-ui/1600/900)
 
-## What it does
+### Inspirations
 
-_To be written._
+Planning a trip with friends always seems to dissolve into a group chat: dates buried under memes, "wait, which weekend was it again," and three half-agreed plans at once. I wanted the opposite of a chat thread, one calm shared calendar everyone can see. The warm "Terra" look, earthy greens and cream with soft shapes, was a deliberate push away from sterile productivity tools toward something you actually want to open to plan a trip.
 
-## Notes
+### Functions
 
-A sandbox piece — rough edges left intentionally visible.
+Everyone signs in with Google and joins a group from an invite link, then shares a single calendar. You can add single-day or multi-day trip events, drag events around to reschedule, and see who is coming. Times are stored in UTC and shown in the group's own timezone, so a friend in New York and a friend in Tokyo still agree on which day a Seoul trip lands on. Permissions stay simple: members read, attendees edit their own events, and the group creator can delete. Built with @dnd-kit for drag-and-drop and framer-motion for the transitions, scoped tight on purpose with no notifications, recurring events, or cost-splitting.

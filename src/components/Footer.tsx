@@ -17,7 +17,7 @@ export async function Footer() {
       <div className="container-page flex flex-col gap-8 py-12 md:flex-row md:items-start md:justify-between">
         {/* Brand + contact */}
         <div>
-          <p className="text-h3 font-bold">Daechan Kim</p>
+          <p className="text-logo">Daechan Kim</p>
           <div className="mt-2 flex gap-4">
             <a
               href="mailto:daechankim.design@gmail.com"

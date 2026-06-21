@@ -11,10 +11,10 @@ export function GlobalNav() {
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-30">
+    <header className="sticky top-0 z-30 mix-blend-difference">
       <nav className="container-page flex items-center justify-between gap-6 py-4">
         {/* Left — text logo */}
-        <Link href="/" className="text-h3 font-bold no-underline shrink-0">
+        <Link href="/" className="text-logo no-underline shrink-0 text-[#e1e1e1]">
           Daechan Kim
         </Link>
 
@@ -24,13 +24,13 @@ export function GlobalNav() {
             href="/resume.pdf"
             target="_blank"
             rel="noopener noreferrer"
-            className="hidden text-body no-underline transition-opacity hover:opacity-60 sm:inline"
+            className="hidden text-body no-underline transition-opacity hover:opacity-60 sm:inline text-[#e1e1e1]"
           >
             {t("resume")}
           </a>
           <a
             href="mailto:daechankim.design@gmail.com"
-            className="hidden text-body no-underline transition-opacity hover:opacity-60 sm:inline"
+            className="hidden text-body no-underline transition-opacity hover:opacity-60 sm:inline text-[#e1e1e1]"
           >
             {t("contact")}
           </a>
@@ -38,7 +38,7 @@ export function GlobalNav() {
             type="button"
             onClick={() => setSettingsOpen(true)}
             aria-label={t("settings")}
-            className="text-fg-muted transition-colors hover:text-fg"
+            className="text-[#8a8a8a] transition-colors hover:text-[#e1e1e1]"
           >
             <SettingsIcon width={20} height={20} />
           </button>

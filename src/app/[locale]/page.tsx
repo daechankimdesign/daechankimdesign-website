@@ -35,7 +35,7 @@ export default async function Home({
           <span className="block">Daechan Kim, a product designer</span>
           <RotatingText phrases={HERO_ROTATIONS} />
         </DisplayHeading>
-        <p className="text-body mt-8 max-w-[60ch] text-fg-muted">
+        <p className="text-h3 mt-8 max-w-[60ch] text-fg-muted">
           3+ years across a B2B2C startup and global client work, leading
           end-to-end design and building impactful products validated by users,
           with the latest AI tools for prototyping and deployment.
@@ -43,8 +43,8 @@ export default async function Home({
       </section>
 
       {/* Projects — featured showcase */}
-      <section className="container-page py-16">
-        <h2 className="text-h2 mb-8">{t("projects")}</h2>
+      <section className="container-page py-16 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16">
+        <h3 className="text-h3 sticky top-24 z-20 lg:col-span-3">{t("projects")}</h3>
         <FeaturedProjects items={projects} detailsLabel="Details" />
       </section>
 

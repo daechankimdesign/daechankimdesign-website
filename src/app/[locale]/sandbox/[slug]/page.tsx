@@ -44,19 +44,31 @@ export default async function SandboxDetailPage({
           {tContent("untranslated")}
         </p>
       ) : null}
-      <header className="mb-8 max-w-[70ch]">
-        <DisplayHeading>{frontmatter.title}</DisplayHeading>
-        {frontmatter.summary ? (
-          <p className="text-body mt-3 text-fg-muted">{frontmatter.summary}</p>
-        ) : null}
-        {frontmatter.tags && frontmatter.tags.length > 0 ? (
-          <p className="text-caption mt-3 text-fg-muted">
-            {frontmatter.tags.join("  ·  ")}
-          </p>
-        ) : null}
-      </header>
-      <article>{content}</article>
-      <SideDocumentTab />
+
+      <div className="flex flex-col lg:flex-row gap-12 lg:gap-16">
+        {/* Left Side: Sticky Side Document Tab */}
+        <aside className="hidden lg:block lg:w-48 lg:shrink-0">
+          <div className="lg:sticky lg:top-24 lg:max-h-[calc(100vh-8rem)] lg:overflow-y-auto pr-2">
+            <SideDocumentTab />
+          </div>
+        </aside>
+
+        {/* Right Side: Main Content */}
+        <div className="flex-1 min-w-0 max-w-4xl">
+          <header className="mb-8 max-w-[70ch]">
+            <DisplayHeading>{frontmatter.title}</DisplayHeading>
+            {frontmatter.summary ? (
+              <p className="text-body mt-3 text-fg-muted">{frontmatter.summary}</p>
+            ) : null}
+            {frontmatter.tags && frontmatter.tags.length > 0 ? (
+              <p className="text-caption mt-3 text-fg-muted">
+                {frontmatter.tags.join("  ·  ")}
+              </p>
+            ) : null}
+          </header>
+          <article>{content}</article>
+        </div>
+      </div>
     </main>
   );
 }

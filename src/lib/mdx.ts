@@ -21,7 +21,7 @@ export type Frontmatter = {
   [key: string]: unknown;
 };
 
-export type ContentItem = { slug: string; frontmatter: Frontmatter };
+export type ContentItem = { slug: string; frontmatter: Frontmatter; images: string[] };
 
 // English source is canonical on disk; non-English locales come from Firestore.
 const CONTENT_ROOT = path.join(process.cwd(), "src", "content", "en");
@@ -85,7 +85,38 @@ export const getAllFrontmatter = cache(async (
       const loaded = await readSource(type, slug, locale);
       if (!loaded) return null;
       const { frontmatter } = getFrontmatter<Frontmatter>(loaded.mdx);
-      return { slug, frontmatter } satisfies ContentItem;
+
+      // Extract images from the MDX source
+      const images: string[] = [];
+      if (frontmatter.thumbnail) {
+        images.push(frontmatter.thumbnail);
+      }
+
+      const jsxRegex = /<MDXImage\s+[^>]*src=["']([^"']+)["']/g;
+      let match;
+      while ((match = jsxRegex.exec(loaded.mdx)) !== null) {
+        images.push(match[1]);
+      }
+
+      const mdRegex = /!\[.*?\]\((.*?)\)/g;
+      while ((match = mdRegex.exec(loaded.mdx)) !== null) {
+        images.push(match[1]);
+      }
+
+      const uniqueImages = Array.from(new Set(images));
+
+      // Generate fallback placeholders using the slug as seed if we have fewer than 3 images
+      if (uniqueImages.length < 3) {
+        const seedBase = slug || "project";
+        while (uniqueImages.length < 3) {
+          const index = uniqueImages.length;
+          uniqueImages.push(`https://picsum.photos/seed/${seedBase}-${index}/1600/900`);
+        }
+      }
+
+      const finalImages = uniqueImages.slice(0, 5);
+
+      return { slug, frontmatter, images: finalImages } satisfies ContentItem;
     }),
   );
   return items

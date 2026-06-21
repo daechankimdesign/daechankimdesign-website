@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 
 type Props = {
   src: string;
@@ -28,6 +28,14 @@ export function ProgressiveImage({
   priority,
 }: Props) {
   const [loaded, setLoaded] = useState(false);
+  const imgRef = useRef<HTMLImageElement>(null);
+
+  useEffect(() => {
+    // If the image has already loaded (e.g. from browser cache) before the effect runs
+    if (imgRef.current && imgRef.current.complete) {
+      setLoaded(true);
+    }
+  }, []);
 
   return (
     <div
@@ -47,6 +55,7 @@ export function ProgressiveImage({
       />
       {/* Full-resolution — crossfades in */}
       <Image
+        ref={imgRef}
         src={src}
         alt={alt}
         fill

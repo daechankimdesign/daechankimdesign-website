@@ -44,7 +44,7 @@ export default async function LocaleLayout({
         <NextIntlClientProvider>
           <GlobalNav />
           <UniversalNav />
-          <div className="relative flex flex-1 flex-col overflow-x-hidden">
+          <div className="relative flex flex-1 flex-col">
             <PageTransition>{children}</PageTransition>
           </div>
           <Footer />
