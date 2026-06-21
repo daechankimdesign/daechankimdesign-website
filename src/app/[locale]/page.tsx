@@ -3,7 +3,7 @@ import { getAllFrontmatter } from "@/lib/mdx";
 import { DisplayHeading } from "@/components/DisplayHeading";
 import { RotatingText } from "@/components/RotatingText";
 import { FeaturedProjects } from "@/components/FeaturedProjects";
-import { ContentGrid } from "@/components/ContentGrid";
+import { SandboxCarousel } from "@/components/SandboxCarousel";
 
 // Ubiquitous prefix stays fixed; only this trailing clause rotates (from
 // content/Website notes). TODO(i18n): move to messages once finalized.
@@ -48,11 +48,8 @@ export default async function Home({
         <FeaturedProjects items={projects} detailsLabel="Details" />
       </section>
 
-      {/* Sandbox — 3-up grid */}
-      <section className="container-page py-16">
-        <h2 className="text-h2 mb-8">{t("sandbox")}</h2>
-        <ContentGrid basePath="/sandbox" items={sandbox} />
-      </section>
+      {/* Sandbox — pinned horizontal carousel */}
+      <SandboxCarousel items={sandbox} heading={t("sandbox")} />
     </>
   );
 }
