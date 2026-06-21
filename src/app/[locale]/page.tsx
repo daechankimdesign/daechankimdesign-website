@@ -1,8 +1,18 @@
 import { setRequestLocale, getTranslations } from "next-intl/server";
 import { getAllFrontmatter } from "@/lib/mdx";
 import { DisplayHeading } from "@/components/DisplayHeading";
+import { RotatingText } from "@/components/RotatingText";
 import { FeaturedProjects } from "@/components/FeaturedProjects";
 import { ContentGrid } from "@/components/ContentGrid";
+
+// Ubiquitous prefix stays fixed; only this trailing clause rotates (from
+// content/Website notes). TODO(i18n): move to messages once finalized.
+const HERO_ROTATIONS = [
+  "plans and conducts user research.",
+  "synthesizes and surfaces research insights.",
+  "structures interface and deploy prototypes.",
+  "conduct user testing and develop iterations.",
+];
 
 export default async function Home({
   params,
@@ -20,9 +30,10 @@ export default async function Home({
   return (
     <>
       {/* Hero — TODO(i18n): move copy to messages once finalized */}
-      <section className="container-page flex min-h-[72vh] flex-col items-center justify-center py-24 text-center">
+      <section className="container-page flex min-h-[60vh] flex-col items-center justify-center py-24 text-center">
         <DisplayHeading>
-          Daechan Kim, a product designer plans and conducts qualitative research
+          <span className="block">Daechan Kim, a product designer</span>
+          <RotatingText phrases={HERO_ROTATIONS} />
         </DisplayHeading>
         <p className="text-body mt-8 max-w-[60ch] text-fg-muted">
           3+ years across a B2B2C startup and global client work, leading
