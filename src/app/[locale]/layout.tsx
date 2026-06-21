@@ -6,6 +6,7 @@ import { setRequestLocale } from "next-intl/server";
 import { notoSans, notoSerif } from "../fonts";
 import { routing } from "@/i18n/routing";
 import { GlobalNav } from "@/components/GlobalNav";
+import { Footer } from "@/components/Footer";
 import "../globals.css";
 
 export const metadata: Metadata = {
@@ -40,6 +41,7 @@ export default async function LocaleLayout({
         <NextIntlClientProvider>
           <GlobalNav />
           <div className="flex flex-1 flex-col">{children}</div>
+          <Footer />
         </NextIntlClientProvider>
       </body>
     </html>
