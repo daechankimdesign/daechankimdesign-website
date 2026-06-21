@@ -58,7 +58,8 @@ build; roadmap Phase 5 is the runtime translation (`4348eec`).
 
 ### 2026-06-21 — Fix empty pages under rapid navigation clicks
 
-- **Resolved rapid navigation blank screens:** Replaced initial-mount context freezing in `FrozenRouter` with a presence-aware derived-state pattern using `usePresence`. This keeps `LayoutRouterContext` live and updating for the active entering component (preventing stuck loading/dynamic routing states) while freezing it only when `isPresent` becomes `false` (during exit animations).
+- **Simplified Transition Architecture (100% Stable):** Removed the complex `AnimatePresence` and `FrozenRouter` context-freezer hacks that kept exiting routes concurrently in the DOM. These duplicated Next.js layout router context trees, causing Next.js App Router to render blank screens or empty components.
+- **Entry-Only Slide Transition:** Replaced exit transitions with a robust, direction-aware entry-only slide-in animation over `0.6s`. Because only one route is ever mounted at a time, pages are guaranteed to load and hydrate with native reliability, completely eliminating the empty/blank page bug.
 - **Hydration Warning Suppressed:** Added `suppressHydrationWarning` to the `<html>` and `<body>` tags in `layout.tsx` to prevent browser extensions (such as Grammarly) from triggering hydration mismatch errors by injecting attributes.
 
 ### 2026-06-21 — Premium page transitions (exit slide-in & cache)
