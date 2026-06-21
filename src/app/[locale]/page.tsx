@@ -13,8 +13,8 @@ export default async function Home({
   setRequestLocale(locale);
   const t = await getTranslations("Nav");
   const [projects, sandbox] = await Promise.all([
-    getAllFrontmatter("projects"),
-    getAllFrontmatter("sandbox"),
+    getAllFrontmatter("projects", locale),
+    getAllFrontmatter("sandbox", locale),
   ]);
 
   return (

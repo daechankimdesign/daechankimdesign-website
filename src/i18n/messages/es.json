@@ -11,7 +11,13 @@
   },
   "Settings": {
     "title": "Ajustes",
-    "language": "Idioma"
+    "language": "Idioma",
+    "translating": "Traduciendo…",
+    "rateLimited": "Ya has solicitado una traducción de esta página.",
+    "error": "La traducción falló. Inténtalo de nuevo."
+  },
+  "Content": {
+    "untranslated": "Esta página aún no se ha traducido a tu idioma. Abre Ajustes y elige tu idioma para traducirla."
   },
   "Common": {
     "comingSoon": "Próximamente"

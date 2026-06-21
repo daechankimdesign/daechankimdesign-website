@@ -9,7 +9,7 @@ export default async function SandboxIndexPage({
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
-  const items = await getAllFrontmatter("sandbox");
+  const items = await getAllFrontmatter("sandbox", locale);
 
   return (
     <main className="container-page py-16">

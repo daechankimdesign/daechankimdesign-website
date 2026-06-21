@@ -1,19 +1,16 @@
 import { notFound } from "next/navigation";
-import { setRequestLocale } from "next-intl/server";
+import { setRequestLocale, getTranslations } from "next-intl/server";
 import { getCompiled, getSlugs } from "@/lib/mdx";
 import { routing } from "@/i18n/routing";
 import { DisplayHeading } from "@/components/DisplayHeading";
 import { SideDocumentTab } from "@/components/SideDocumentTab";
 
-// Only pre-generated (locale × slug) combos exist; unknown slugs 404 without a
-// runtime filesystem read. Phase 6 will revisit this for Firestore translations.
-export const dynamicParams = false;
-
+// Pre-render only the canonical English combos; ko/es render on first request
+// (dynamicParams defaults to true) so a freshly-translated locale appears
+// without a redeploy. Unknown slugs still 404 via getCompiled -> notFound().
 export async function generateStaticParams() {
   const slugs = await getSlugs("projects");
-  return routing.locales.flatMap((locale) =>
-    slugs.map((slug) => ({ locale, slug })),
-  );
+  return slugs.map((slug) => ({ locale: routing.defaultLocale, slug }));
 }
 
 export default async function ProjectDetailPage({
@@ -24,9 +21,11 @@ export default async function ProjectDetailPage({
   const { locale, slug } = await params;
   setRequestLocale(locale);
 
-  const result = await getCompiled("projects", slug);
+  const result = await getCompiled("projects", slug, locale);
   if (!result) notFound();
-  const { content, frontmatter, error } = result;
+  const { content, frontmatter, error, translated } = result;
+  const showUntranslated = locale !== routing.defaultLocale && !translated;
+  const tContent = await getTranslations("Content");
 
   if (error) {
     return (
@@ -40,6 +39,11 @@ export default async function ProjectDetailPage({
 
   return (
     <main className="container-page py-16">
+      {showUntranslated ? (
+        <p className="text-caption mb-6 rounded-md border border-hairline bg-surface-subtle px-4 py-3 text-fg-muted">
+          {tContent("untranslated")}
+        </p>
+      ) : null}
       <header className="mb-8 max-w-[70ch]">
         <DisplayHeading>{frontmatter.title}</DisplayHeading>
         {frontmatter.summary ? (

@@ -11,7 +11,13 @@
   },
   "Settings": {
     "title": "Settings",
-    "language": "Language"
+    "language": "Language",
+    "translating": "Translating…",
+    "rateLimited": "You've already requested a translation for this page.",
+    "error": "Translation failed. Please try again."
+  },
+  "Content": {
+    "untranslated": "This page hasn't been translated to your language yet. Open Settings and choose your language to translate it."
   },
   "Common": {
     "comingSoon": "Coming soon"

@@ -9,7 +9,7 @@ export default async function ProjectIndexPage({
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
-  const items = await getAllFrontmatter("projects");
+  const items = await getAllFrontmatter("projects", locale);
 
   return (
     <main className="container-page py-16">

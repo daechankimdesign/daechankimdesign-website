@@ -3,7 +3,10 @@ import path from "node:path";
 import { evaluate } from "next-mdx-remote-client/rsc";
 import { getFrontmatter } from "next-mdx-remote-client/utils";
 import rehypeSlug from "rehype-slug";
+import rehypeUnwrapImages from "rehype-unwrap-images";
 import { mdxComponents } from "@/components/mdx";
+import { getCachedTranslation } from "@/lib/translations";
+import { routing } from "@/i18n/routing";
 
 export type ContentType = "projects" | "sandbox" | "blog";
 
@@ -19,7 +22,7 @@ export type Frontmatter = {
 
 export type ContentItem = { slug: string; frontmatter: Frontmatter };
 
-// English source lives on disk; translations come from Firestore (Phase 6).
+// English source is canonical on disk; non-English locales come from Firestore.
 const CONTENT_ROOT = path.join(process.cwd(), "src", "content", "en");
 const dirFor = (type: ContentType) => path.join(CONTENT_ROOT, type);
 
@@ -34,7 +37,8 @@ export async function getSlugs(type: ContentType): Promise<string[]> {
   }
 }
 
-export async function readSource(
+/** Canonical English source straight from disk. Null if the slug is absent. */
+export async function readDiskSource(
   type: ContentType,
   slug: string,
 ): Promise<string | null> {
@@ -45,16 +49,41 @@ export async function readSource(
   }
 }
 
+export type LoadedSource = { mdx: string; translated: boolean };
+
+/**
+ * Locale-aware source — THE Phase-5 seam. English reads disk. Other locales
+ * read the cached Firestore translation when `complete`, else fall back to the
+ * English source (never 404 purely because a translation is missing). Returns
+ * null only when the English source itself is absent (a genuine 404).
+ */
+export async function readSource(
+  type: ContentType,
+  slug: string,
+  locale: string = routing.defaultLocale,
+): Promise<LoadedSource | null> {
+  if (locale === routing.defaultLocale) {
+    const mdx = await readDiskSource(type, slug);
+    return mdx === null ? null : { mdx, translated: false };
+  }
+  const translation = await getCachedTranslation(slug, locale);
+  if (translation) return { mdx: translation.mdx, translated: true };
+
+  const fallback = await readDiskSource(type, slug);
+  return fallback === null ? null : { mdx: fallback, translated: false };
+}
+
 /** Frontmatter only — cheap (no compile). For index grids. Newest first. */
 export async function getAllFrontmatter(
   type: ContentType,
+  locale: string = routing.defaultLocale,
 ): Promise<ContentItem[]> {
   const slugs = await getSlugs(type);
   const items = await Promise.all(
     slugs.map(async (slug) => {
-      const source = await readSource(type, slug);
-      if (!source) return null;
-      const { frontmatter } = getFrontmatter<Frontmatter>(source);
+      const loaded = await readSource(type, slug, locale);
+      if (!loaded) return null;
+      const { frontmatter } = getFrontmatter<Frontmatter>(loaded.mdx);
       return { slug, frontmatter } satisfies ContentItem;
     }),
   );
@@ -67,22 +96,28 @@ export async function getAllFrontmatter(
     );
 }
 
-/** Full compile for a detail page. Returns null if the file is missing. */
-export async function getCompiled(type: ContentType, slug: string) {
-  const source = await readSource(type, slug);
-  if (source === null) return null;
+/** Full compile for a detail page. Returns null if the source is missing. */
+export async function getCompiled(
+  type: ContentType,
+  slug: string,
+  locale: string = routing.defaultLocale,
+) {
+  const loaded = await readSource(type, slug, locale);
+  if (loaded === null) return null;
 
   const { content, frontmatter, error } = await evaluate<Frontmatter>({
-    source,
+    source: loaded.mdx,
     options: {
       parseFrontmatter: true,
-      // Untrusted-content hardening (matters for Firestore MDX in Phase 6).
+      // Untrusted-content hardening (Firestore MDX is untrusted at render time).
       disableImports: true,
       disableExports: true,
-      mdxOptions: { rehypePlugins: [rehypeSlug] },
+      // unwrap-images first: lift a lone markdown image out of its <p> so the
+      // <figure> MDXImage renders isn't nested in a <p> (invalid HTML).
+      mdxOptions: { rehypePlugins: [rehypeUnwrapImages, rehypeSlug] },
     },
     components: mdxComponents,
   });
 
-  return { content, frontmatter, error };
+  return { content, frontmatter, error, translated: loaded.translated };
 }
