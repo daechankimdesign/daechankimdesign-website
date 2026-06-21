@@ -1,5 +1,6 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
+import { cache } from "react";
 import { evaluate } from "next-mdx-remote-client/rsc";
 import { getFrontmatter } from "next-mdx-remote-client/utils";
 import rehypeSlug from "rehype-slug";
@@ -38,16 +39,16 @@ export async function getSlugs(type: ContentType): Promise<string[]> {
 }
 
 /** Canonical English source straight from disk. Null if the slug is absent. */
-export async function readDiskSource(
+export const readDiskSource = cache(async (
   type: ContentType,
   slug: string,
-): Promise<string | null> {
+): Promise<string | null> => {
   try {
     return await fs.readFile(path.join(dirFor(type), `${slug}.mdx`), "utf8");
   } catch {
     return null;
   }
-}
+});
 
 export type LoadedSource = { mdx: string; translated: boolean };
 
@@ -57,11 +58,11 @@ export type LoadedSource = { mdx: string; translated: boolean };
  * English source (never 404 purely because a translation is missing). Returns
  * null only when the English source itself is absent (a genuine 404).
  */
-export async function readSource(
+export const readSource = cache(async (
   type: ContentType,
   slug: string,
   locale: string = routing.defaultLocale,
-): Promise<LoadedSource | null> {
+): Promise<LoadedSource | null> => {
   if (locale === routing.defaultLocale) {
     const mdx = await readDiskSource(type, slug);
     return mdx === null ? null : { mdx, translated: false };
@@ -71,13 +72,13 @@ export async function readSource(
 
   const fallback = await readDiskSource(type, slug);
   return fallback === null ? null : { mdx: fallback, translated: false };
-}
+});
 
 /** Frontmatter only — cheap (no compile). For index grids. Newest first. */
-export async function getAllFrontmatter(
+export const getAllFrontmatter = cache(async (
   type: ContentType,
   locale: string = routing.defaultLocale,
-): Promise<ContentItem[]> {
+): Promise<ContentItem[]> => {
   const slugs = await getSlugs(type);
   const items = await Promise.all(
     slugs.map(async (slug) => {
@@ -94,14 +95,14 @@ export async function getAllFrontmatter(
         String(a.frontmatter.date ?? ""),
       ),
     );
-}
+});
 
 /** Full compile for a detail page. Returns null if the source is missing. */
-export async function getCompiled(
+export const getCompiled = cache(async (
   type: ContentType,
   slug: string,
   locale: string = routing.defaultLocale,
-) {
+) => {
   const loaded = await readSource(type, slug, locale);
   if (loaded === null) return null;
 
@@ -120,4 +121,4 @@ export async function getCompiled(
   });
 
   return { content, frontmatter, error, translated: loaded.translated };
-}
+});
