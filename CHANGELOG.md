@@ -56,6 +56,23 @@ build; roadmap Phase 5 is the runtime translation (`4348eec`).
 
 ## Log
 
+### 2026-06-21 — Fix empty pages under rapid navigation clicks
+
+- **Resolved rapid navigation blank screens:** Replaced initial-mount context freezing in `FrozenRouter` with a presence-aware derived-state pattern using `usePresence`. This keeps `LayoutRouterContext` live and updating for the active entering component (preventing stuck loading/dynamic routing states) while freezing it only when `isPresent` becomes `false` (during exit animations).
+- **Hydration Warning Suppressed:** Added `suppressHydrationWarning` to the `<html>` and `<body>` tags in `layout.tsx` to prevent browser extensions (such as Grammarly) from triggering hydration mismatch errors by injecting attributes.
+
+### 2026-06-21 — Premium page transitions (exit slide-in & cache)
+
+- **Centralized exit transitions:** Moved transitions to `layout.tsx` wrapping `children` and enabled concurrent exit animations via `AnimatePresence mode="popLayout"`.
+- **Symmetrical push transitions:**
+  - **Forward (Home -> Projects):** Exiting page slides from `0` to `-100%`; entering page slides from `100%` to `0` (side-by-side push, no overlap, no gaps).
+  - **Backward (Projects -> Home):** Exiting page slides from `0` to `100%`; entering page slides from `-100%` to `0`.
+- **Immediate exit content fade:** Exiting page content fades out in `0.4s` to make the slate plain. Entering page content animates immediately without delay (`0.5s` fade-in during the slide).
+- **Flat transition (No shadows):** Removed border shadow styles from the sliding slates for a cleaner flat aesthetic.
+- **Resolved loading bug:** Fixed blank/empty page states by implementing `FrozenRouter` which context-freezes the `LayoutRouterContext` during page exit, preventing Next.js router slot collisions.
+- **Synchronized 1.2s timings:** Both entering and exiting slides are locked to `1.2s` with identical easing, ensuring they slide next to each other at the same speed.
+- **React compilation cache:** Wrapped file reads and MDX evaluations (`readDiskSource`, `readSource`, `getAllFrontmatter`, `getCompiled`) in React's `cache` to avoid duplicate reads during SSR/metadata cycles.
+
 ### 2026-06-20 — UI refinements (nav, hero, sandbox)
 
 - **Sandbox = pinned scroll-jack carousel** (`b55e4e7`). `SandboxCarousel.tsx`

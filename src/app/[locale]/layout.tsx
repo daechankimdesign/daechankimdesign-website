@@ -7,6 +7,7 @@ import { notoSans, notoSerif } from "../fonts";
 import { routing } from "@/i18n/routing";
 import { GlobalNav } from "@/components/GlobalNav";
 import { UniversalNav } from "@/components/UniversalNav";
+import { PageTransition } from "@/components/PageTransition";
 import { Footer } from "@/components/Footer";
 import "../globals.css";
 
@@ -37,12 +38,15 @@ export default async function LocaleLayout({
     <html
       lang={locale}
       className={`${notoSans.variable} ${notoSerif.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
-      <body className="flex min-h-full flex-col font-sans">
+      <body className="flex min-h-full flex-col font-sans" suppressHydrationWarning>
         <NextIntlClientProvider>
           <GlobalNav />
           <UniversalNav />
-          <div className="flex flex-1 flex-col">{children}</div>
+          <div className="relative flex flex-1 flex-col overflow-x-hidden">
+            <PageTransition>{children}</PageTransition>
+          </div>
           <Footer />
         </NextIntlClientProvider>
       </body>
