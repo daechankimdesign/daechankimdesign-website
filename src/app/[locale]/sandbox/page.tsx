@@ -1,4 +1,6 @@
 import { setRequestLocale } from "next-intl/server";
+import { getAllFrontmatter } from "@/lib/mdx";
+import { ContentGrid } from "@/components/ContentGrid";
 
 export default async function SandboxIndexPage({
   params,
@@ -7,13 +9,12 @@ export default async function SandboxIndexPage({
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
+  const items = await getAllFrontmatter("sandbox");
 
   return (
-    <main className="container-page py-24">
-      <h1 className="text-h1">Sandbox</h1>
-      <p className="text-body text-fg-muted mt-4">
-        Frontmatter grid arrives in Phase 3.
-      </p>
+    <main className="container-page py-16">
+      <h1 className="text-h1 mb-8">Sandbox</h1>
+      <ContentGrid basePath="/sandbox" items={items} />
     </main>
   );
 }
