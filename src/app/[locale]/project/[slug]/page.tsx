@@ -2,6 +2,8 @@ import { notFound } from "next/navigation";
 import { setRequestLocale } from "next-intl/server";
 import { getCompiled, getSlugs } from "@/lib/mdx";
 import { routing } from "@/i18n/routing";
+import { DisplayHeading } from "@/components/DisplayHeading";
+import { SideDocumentTab } from "@/components/SideDocumentTab";
 
 // Only pre-generated (locale × slug) combos exist; unknown slugs 404 without a
 // runtime filesystem read. Phase 6 will revisit this for Firestore translations.
@@ -39,7 +41,7 @@ export default async function ProjectDetailPage({
   return (
     <main className="container-page py-16">
       <header className="mb-8 max-w-[70ch]">
-        <h1 className="text-display">{frontmatter.title}</h1>
+        <DisplayHeading>{frontmatter.title}</DisplayHeading>
         {frontmatter.summary ? (
           <p className="text-body mt-3 text-fg-muted">{frontmatter.summary}</p>
         ) : null}
@@ -50,6 +52,7 @@ export default async function ProjectDetailPage({
         ) : null}
       </header>
       <article>{content}</article>
+      <SideDocumentTab />
     </main>
   );
 }

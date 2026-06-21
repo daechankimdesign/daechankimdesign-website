@@ -2,6 +2,8 @@ import { notFound } from "next/navigation";
 import { setRequestLocale } from "next-intl/server";
 import { getCompiled, getSlugs } from "@/lib/mdx";
 import { routing } from "@/i18n/routing";
+import { DisplayHeading } from "@/components/DisplayHeading";
+import { SideDocumentTab } from "@/components/SideDocumentTab";
 
 export const dynamicParams = false;
 
@@ -37,7 +39,7 @@ export default async function SandboxDetailPage({
   return (
     <main className="container-page py-16">
       <header className="mb-8 max-w-[70ch]">
-        <h1 className="text-display">{frontmatter.title}</h1>
+        <DisplayHeading>{frontmatter.title}</DisplayHeading>
         {frontmatter.summary ? (
           <p className="text-body mt-3 text-fg-muted">{frontmatter.summary}</p>
         ) : null}
@@ -48,6 +50,7 @@ export default async function SandboxDetailPage({
         ) : null}
       </header>
       <article>{content}</article>
+      <SideDocumentTab />
     </main>
   );
 }

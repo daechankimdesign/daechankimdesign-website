@@ -1,5 +1,6 @@
 import { setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
+import { DisplayHeading } from "@/components/DisplayHeading";
 
 export default async function Home({
   params,
@@ -11,7 +12,7 @@ export default async function Home({
 
   return (
     <main className="container-page flex flex-1 flex-col items-center justify-center gap-3 py-24 text-center">
-      <h1 className="text-display">Daechan Kim</h1>
+      <DisplayHeading>Daechan Kim</DisplayHeading>
       <p className="text-body text-fg-muted">
         Product designer — portfolio in progress.
       </p>
