@@ -30,7 +30,7 @@ export default async function Home({
   return (
     <>
       {/* Hero — TODO(i18n): move copy to messages once finalized */}
-      <section className="container-page flex min-h-[70vh] flex-col items-center justify-center py-24 text-center">
+      <section className="container-page flex min-h-[70vh] flex-col items-center justify-center py-16 text-center sm:py-24">
         <DisplayHeading>
           <span className="block">Daechan Kim, a product designer</span>
           <RotatingText phrases={HERO_ROTATIONS} />

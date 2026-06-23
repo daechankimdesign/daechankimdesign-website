@@ -15,6 +15,11 @@ import type { ContentItem } from "@/lib/mdx";
  * back up reverses it smoothly and re-entering mid-way just works. Falls back to
  * a native horizontal scroll strip under prefers-reduced-motion.
  */
+// Pinned dwell (in viewport-heights) before the slide begins and after it ends,
+// giving room to scroll into and out of the horizontal carousel.
+const LEAD = 0.5;
+const TAIL = 0.5;
+
 export function SandboxCarousel({
   items,
   heading,
@@ -34,21 +39,23 @@ export function SandboxCarousel({
 
     let raf = 0;
     let maxX = 0;
+    let lead = 0;
 
     const update = () => {
       raf = 0;
-      const scrollable = wrapper.offsetHeight - window.innerHeight;
       const top = wrapper.getBoundingClientRect().top;
-      const progress =
-        scrollable > 0 ? Math.min(1, Math.max(0, -top / scrollable)) : 0;
-      track.style.transform = `translate3d(${-(progress * maxX)}px,0,0)`;
+      // Hold for `lead` px, slide over maxX, then hold again for the tail.
+      const moved = Math.min(maxX, Math.max(0, -top - lead));
+      track.style.transform = `translate3d(${-moved}px,0,0)`;
     };
 
     const measure = () => {
       // Horizontal overflow of the track past the visible (viewport) width.
       maxX = Math.max(0, track.scrollWidth - track.clientWidth);
-      // 1 viewport to pin + maxX of vertical travel → 1px scroll = 1px slide.
-      wrapper.style.height = `${window.innerHeight + maxX}px`;
+      lead = window.innerHeight * LEAD;
+      const tail = window.innerHeight * TAIL;
+      // 1 viewport to pin + lead dwell + maxX slide + tail dwell.
+      wrapper.style.height = `${window.innerHeight + lead + maxX + tail}px`;
       update();
     };
 

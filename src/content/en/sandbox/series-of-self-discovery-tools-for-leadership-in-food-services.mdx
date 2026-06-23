@@ -1,0 +1,46 @@
+---
+title: "Series of self-discovery tools for leadership in food services."
+summary: "Interactive quizzes and a shift-survival game that take leadership soft-skills training past static e-learning."
+thumbnail: "https://picsum.photos/seed/stimulus-series/1600/900"
+date: "2026-06-01"
+tags: ["React", "Learning Design", "Claude Code"]
+---
+
+A set of interactive leadership-training tools I designed and built for a global beverage service brand: three self-discovery quizzes and a shift-survival game. They are open-sourced on GitHub for anyone in the organization to use, and they sit inside the brand's digital training, part of the learning-management curriculum that reaches its store and assistant managers, regional managers, and franchise owners.
+
+![Self-discovery tools cover](https://picsum.photos/seed/stimulus-series/1600/900)
+
+### Inspirations
+
+Most corporate e-learning is shaped less by what you want to teach than by what the authoring tool can build. Here that tool was Articulate Rise 360, and like most static builders it caps out at slides, clicks, and quizzes that feel the same every time. React-based interactive content broke that ceiling. The lessons could be tangible, and a learner could pass a result and a thought straight to a teammate or another leader. That sharing is the point: it makes the material feel relevant to people used to a much higher bar of engagement everywhere else in their lives. The whole effort was about using the full capability of current technology instead of settling for static slides.
+
+### What's inside
+
+Three quizzes and a game, all meant to be taken solo first, then talked about.
+
+- **Leadership style quiz.** How you tend to lead, with your strengths and blind spots.
+- **Words of appreciation at work.** How you prefer to give and receive recognition on a team.
+- **Communication style quiz.** How you come across, and where it helps or gets in the way.
+- **The shift-survival game.** You run ten shifts and try to keep the balance between being a good leader and a successful operations manager. Lean too far toward either and the shift tips out of balance.
+
+Each quiz ends on a result built to be read at a glance, a personal style with its strengths and weaknesses, and you can share a screenshot of it with a preset message. The tools work alone, but they land best alongside the brand's cohort-based courses, where people compare results and trade reflections.
+
+![A quiz result screen](https://picsum.photos/seed/stimulus-quiz/1600/900)
+
+### Designing and building it
+
+As a team, we started by finding where high-engagement, interactive media would actually pay off: the personal soft-skill styles that static slides handle badly, where seeing yourself reflected is the whole lesson. The team wrote the questions, answers, and scoring, and my hand in the content itself was small. What I owned was turning that content into the tools.
+
+That meant a cohesive palette, type, and UI, plus a lot of constraint-conscious decisions to live inside a learning-management iframe: designing for a fixed, limited screen height, a progress bar with the question count, a confirm button to advance and a back button to revisit and edit an answer, and a result screen that makes a personal style easy to understand. I used React to let people share their result as a screenshot with a preset message. It was sketched first in Figma, then designed and built in Claude Code with Antigravity in the loop, a fast, iterative, and genuinely fun way to make React-based learning content.
+
+![The shift-survival game](https://picsum.photos/seed/stimulus-game/1600/900)
+
+### How it landed
+
+I tested the quizzes and the game with seventeen participants, and all seventeen were excited to see a kind of e-learning their platform had never carried. The ones who played the game found it the most relatable and wanted to share it with their teams right away.
+
+If I took it further, I would add a backend to hold a leaderboard and pull richer statistics from the results. It was out of scope here, and I could not yet justify the structure, so I left it out. A sandbox piece, rough edges left visible.
+
+### Credits
+
+Lesson content: Tim Radville, María Risueño.
