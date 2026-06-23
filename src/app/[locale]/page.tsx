@@ -30,7 +30,7 @@ export default async function Home({
   return (
     <>
       {/* Hero — TODO(i18n): move copy to messages once finalized */}
-      <section className="container-page flex min-h-[60vh] flex-col items-center justify-center py-24 text-center">
+      <section className="container-page flex min-h-[70vh] flex-col items-center justify-center py-24 text-center">
         <DisplayHeading>
           <span className="block">Daechan Kim, a product designer</span>
           <RotatingText phrases={HERO_ROTATIONS} />
@@ -43,7 +43,7 @@ export default async function Home({
       </section>
 
       {/* Projects — featured showcase */}
-      <section className="container-page py-16 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16">
+      <section className="container-page py-16 grid grid-cols-1 lg:grid-cols-12 gap-x-8 lg:gap-x-16 gap-y-0">
         <h3 className="text-h3 sticky top-24 z-20 lg:col-span-3">{t("projects")}</h3>
         <FeaturedProjects items={projects} detailsLabel="Details" />
       </section>

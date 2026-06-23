@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { LinkButton } from "@/components/LinkButton";
 
 export const metadata: Metadata = {
   title: "Styleguide — Design System",
@@ -142,6 +143,24 @@ export default function Styleguide() {
           Single-side variants use a scaled pseudo-element (1 device pixel at 1×
           / 2× / 3×). For full boxes use Tailwind <code>border border-hairline</code>.
           Never a literal 0.6px border.
+        </p>
+      </section>
+
+      {/* Link button */}
+      <section className="mb-20">
+        <SectionLabel>Link button — .link-button + .hairline-b</SectionLabel>
+        <div className="flex flex-wrap items-start gap-10">
+          <LinkButton href="/styleguide">Details</LinkButton>
+          <LinkButton href="/styleguide">View project</LinkButton>
+          <LinkButton href="https://example.com" external>
+            External link
+          </LinkButton>
+        </div>
+        <p className="text-caption text-fg-muted mt-6 max-w-[60ch]">
+          Text link styled as a control: <strong>8px</strong> block padding, an
+          up-right arrow scaled to the text (<code>1em</code>), and a hairline
+          bottom rule. Use the <code>LinkButton</code> component — locale-aware by
+          default, <code>external</code> for out-of-app links (new tab).
         </p>
       </section>
 

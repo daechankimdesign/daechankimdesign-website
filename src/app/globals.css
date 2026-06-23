@@ -201,3 +201,25 @@
   text-underline-offset: 0.15em;
   color: inherit;
 }
+
+/* Link button — a text link styled as a control: 8px block padding, an
+   up-right arrow scaled to the text (1em), and a hairline bottom rule. Compose
+   with `.hairline-b` (the LinkButton component does this) for the crisp border. */
+.link-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding-block: 4px;
+  color: var(--color-fg);
+  font-weight: 500;
+  text-decoration: none;
+  transition: opacity 0.2s ease;
+}
+.link-button:hover {
+  opacity: 0.6;
+}
+.link-button svg {
+  width: 1em;
+  height: 1em;
+  flex-shrink: 0;
+}

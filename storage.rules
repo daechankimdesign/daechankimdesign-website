@@ -1,0 +1,17 @@
+rules_version = '2';
+
+// Portfolio media bucket. Everything is locked down except `media/**`, which is
+// public, read-only content (sandbox demo videos, case-study assets) served
+// directly by URL. Uploads are done manually via the console / gsutil, never by
+// a client, so write stays denied everywhere.
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /media/{allPaths=**} {
+      allow read: if true;
+      allow write: if false;
+    }
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

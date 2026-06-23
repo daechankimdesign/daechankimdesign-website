@@ -73,15 +73,15 @@ export function SandboxCarousel({
     <Link
       key={slug}
       href={`/sandbox/${slug}`}
-      className="group block w-[80vw] shrink-0 no-underline sm:w-[360px]"
+      className="group block w-[80vw] shrink-0 no-underline sm:w-[460px]"
     >
       {frontmatter.thumbnail ? (
         <ProgressiveImage
           src={frontmatter.thumbnail}
           alt={frontmatter.title}
           width={1600}
-          height={900}
-          sizes="(max-width: 640px) 80vw, 360px"
+          height={1600}
+          sizes="(max-width: 640px) 80vw, 460px"
           className="mb-4 rounded-md"
         />
       ) : null}

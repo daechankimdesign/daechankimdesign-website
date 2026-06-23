@@ -37,6 +37,29 @@ export function ProgressiveImage({
     }
   }, []);
 
+  // Animated formats (GIF, animated WebP) bypass the optimizer (which would
+  // freeze them to one frame) and skip the duplicate blur layer (no point
+  // downloading a multi-frame asset twice). All project WebPs are animated.
+  const isAnimated = /\.(gif|webp)($|\?)/i.test(src);
+  if (isAnimated) {
+    return (
+      <div
+        className={`relative overflow-hidden bg-surface-subtle ${className ?? ""}`}
+        style={{ aspectRatio: `${width} / ${height}` }}
+      >
+        <Image
+          src={src}
+          alt={alt}
+          fill
+          sizes={sizes}
+          priority={priority}
+          unoptimized
+          className="object-cover"
+        />
+      </div>
+    );
+  }
+
   return (
     <div
       className={`relative overflow-hidden bg-surface-subtle ${className ?? ""}`}

@@ -33,7 +33,7 @@ function NavPill() {
   return (
     <nav
       aria-label="Primary"
-      className="flex items-center gap-1 rounded-full border border-hairline px-1.5 py-1 backdrop-blur-md"
+      className="flex items-center gap-1 rounded-full border-[0.6px] border-hairline px-1.5 py-1 backdrop-blur-md"
     >
       {NAV.map((item) => (
         <Link

@@ -56,14 +56,14 @@ export default async function ProjectDetailPage({
         {/* Right Side: Main Case Study Content */}
         <div className="flex-1 min-w-0 max-w-4xl">
           <header className="mb-8 max-w-[70ch]">
+            {frontmatter.tags && frontmatter.tags.length > 0 ? (
+              <p className="text-caption mb-3 text-fg-muted">
+                {frontmatter.tags.join("  ·  ")}
+              </p>
+            ) : null}
             <DisplayHeading className="text-h1">{frontmatter.title}</DisplayHeading>
             {frontmatter.summary ? (
               <p className="text-body mt-3 text-fg-muted">{frontmatter.summary}</p>
-            ) : null}
-            {frontmatter.tags && frontmatter.tags.length > 0 ? (
-              <p className="text-caption mt-3 text-fg-muted">
-                {frontmatter.tags.join("  ·  ")}
-              </p>
             ) : null}
           </header>
           <article>{content}</article>

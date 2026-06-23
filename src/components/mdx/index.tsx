@@ -1,12 +1,14 @@
 import type { MDXComponents } from "next-mdx-remote-client/rsc";
 import { VideoPlayer } from "./VideoPlayer";
 import { MDXImage } from "./MDXImage";
+import { ProjectMeta } from "./ProjectMeta";
 
 // Passed explicitly on every RSC evaluate() call (MDXProvider is effectless in
 // the App Router). Custom tags used in MDX must exist here or rendering throws.
 export const mdxComponents: MDXComponents = {
   VideoPlayer,
   MDXImage,
+  ProjectMeta,
   img: (props) => (
     <MDXImage src={String(props.src ?? "")} alt={props.alt ?? ""} />
   ),
