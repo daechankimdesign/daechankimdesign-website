@@ -83,6 +83,16 @@
   font-size: clamp(18px, 13px + 1.3vw, 20px);
   font-size: round(clamp(18px, 13px + 1.3vw, 20px), 1px);
 }
+/* Sub-display: h2's size, lighter weight — for hero sub-copy that should read
+   large but quiet. */
+@utility text-sub-display {
+  font-weight: 400;
+  font-family: var(--font-sans), system-ui, sans-serif;
+  line-height: 1.3;
+  letter-spacing: -0.03em;
+  font-size: clamp(18px, 13px + 1.3vw, 20px);
+  font-size: round(clamp(18px, 13px + 1.3vw, 20px), 1px);
+}
 @utility text-h3 {
   font-weight: 500;
   font-family: var(--font-serif), Georgia, serif;
@@ -222,4 +232,35 @@
   width: 1em;
   height: 1em;
   flex-shrink: 0;
+}
+
+/* Hero "end-to-end": the palette scrolls across the word. Every colour stop is
+   offset by --hero-travel (driven each frame by HeroHeadline), so the whole
+   gradient slides left — animating a value INSIDE the gradient repaints the
+   clipped text reliably (background-position does not). The palette is repeated
+   wide (200% per colour) so only ~one colour shows at a time and the change
+   reads clearly. The period (600%) must match HeroHeadline's CYCLE_TRAVEL for a
+   seamless, forward-only loop. */
+.hero-fill-text {
+  --hero-travel: 0%;
+  background-image: linear-gradient(
+    90deg,
+    #7e8fed calc(0% - var(--hero-travel)),
+    #eeaeca calc(200% - var(--hero-travel)),
+    #94bbe9 calc(400% - var(--hero-travel)),
+    #7e8fed calc(600% - var(--hero-travel)),
+    #eeaeca calc(800% - var(--hero-travel)),
+    #94bbe9 calc(1000% - var(--hero-travel)),
+    #7e8fed calc(1200% - var(--hero-travel))
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+@supports not ((-webkit-background-clip: text) or (background-clip: text)) {
+  .hero-fill-text {
+    color: var(--color-fg);
+    -webkit-text-fill-color: currentColor;
+  }
 }

@@ -11,6 +11,7 @@ const TYPE_LEVELS = [
   { cls: "text-display", name: "Display", spec: "40px / Bold · fluid 28→40 · tracking -0.02em" },
   { cls: "text-h1", name: "H1", spec: "28px / Bold · fluid 22→28" },
   { cls: "text-h2", name: "H2", spec: "20px / Bold · fluid 18→20" },
+  { cls: "text-sub-display", name: "Sub-display", spec: "20px / Regular · fluid 18→20 (H2 size, lighter)" },
   { cls: "text-h3", name: "H3", spec: "16px / Medium · fluid 15→16" },
   { cls: "text-body", name: "Body", spec: "14px / Regular · line-height 1.6" },
   { cls: "text-caption", name: "Caption", spec: "12px / Regular · PROPOSED token (meta labels, small tags)" },

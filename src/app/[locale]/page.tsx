@@ -1,7 +1,7 @@
 import { setRequestLocale, getTranslations } from "next-intl/server";
 import { getAllFrontmatter } from "@/lib/mdx";
 import { DisplayHeading } from "@/components/DisplayHeading";
-import { RotatingText } from "@/components/RotatingText";
+import { HeroHeadline } from "@/components/HeroHeadline";
 import { FeaturedProjects } from "@/components/FeaturedProjects";
 import { SandboxCarousel } from "@/components/SandboxCarousel";
 
@@ -30,15 +30,14 @@ export default async function Home({
   return (
     <>
       {/* Hero — TODO(i18n): move copy to messages once finalized */}
-      <section className="container-page flex min-h-[70vh] flex-col items-center justify-center py-16 text-center sm:py-24">
+      <section className="container-page flex min-h-[70vh] flex-col items-start justify-center py-16 text-left sm:py-24 md:items-center md:text-center">
         <DisplayHeading>
-          <span className="block">Daechan Kim, a product designer</span>
-          <RotatingText phrases={HERO_ROTATIONS} />
+          <HeroHeadline phrases={HERO_ROTATIONS} />
         </DisplayHeading>
-        <p className="text-h3 mt-8 max-w-[60ch] text-fg-muted">
-          3+ years across a B2B2C startup and global client work, leading
-          end-to-end design and building impactful products validated by users,
-          with the latest AI tools for prototyping and deployment.
+        <p className="text-sub-display mt-8 max-w-[60ch] text-fg-muted">
+          3+ years across a B2B2C startup and global client work, creating
+          comprehensive designs and building impactful products validated by
+          users, with the latest AI tools for prototyping and deployment.
         </p>
       </section>
 

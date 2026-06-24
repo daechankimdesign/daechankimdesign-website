@@ -1,25 +1,97 @@
 ---
 title: Accelerating institutions to preserve the local history.
-summary: A tool that helps organizations capture, structure, and surface community records with AI.
-thumbnail: https://picsum.photos/seed/local-history/1600/900
-date: 2025-03-01
+summary: A two-sided web platform that lets local institutions collect their community's oral histories, and lets neighbors tell them in their own voice.
+thumbnail: https://picsum.photos/seed/missionoria/1600/900
+date: 2026-03-01
 tags:
-  - User Experience
+  - Product Design
+  - Service Design
   - Development with AI
 ---
+<ProjectMeta
+  items={[
+    { label: "Role", value: "Founding Product Lead" },
+    { label: "Platform", value: "Web (mobile, tablet, desktop)" },
+    { label: "Timeline", value: "Oct 2025 to Mar 2026" },
+  ]}
+/>
 
-_Placeholder — content to be populated later._
+## About
 
-![Project cover](https://picsum.photos/seed/local-history-hero/1600/1000)
-
-## Context
-
-_To be written._
-
-## Process
-
-_To be written._
+A web platform that lets a library, a parks department, or a cultural initiative collect its community's oral histories without the manual labor, and lets neighbors tell those stories in their own voice and medium.
 
 ## Outcome
 
-_To be written._
+<MDXImage
+  src="https://picsum.photos/seed/missionoria-hero/1600/1000"
+  alt="The Oria institution platform, missionoria.com"
+  width={1600}
+  height={1000}
+  caption="Placeholder: missionoria.com, where an institution opens a collection and shares it as a link."
+/>
+
+Oria's institution platform, missionoria.com, turns story collection from a staffing problem into a link. An organization signs up, opens a campaign, and shares a URL or QR code; community members answer in text, audio, or video on a phone, tablet, or desktop, and every story comes back transcribed, indexed, and owned by the organization. Built from October 2025 and released publicly in January 2026, it now runs in twelve partner institutions and initiatives, from local libraries to Maryland's parks and recreation services, and reached $12K ARR in its first three months.
+
+## The Problem
+
+No one loses local history on purpose, yet almost everyone loses it by accident. Libraries, historical societies, and parks departments genuinely want to preserve their communities' stories, but the way it gets done has barely changed: recruit participants, schedule interviews, sit for the recording, then transcribe and analyze it all by hand. Every step costs staff hours, and the staff, libraries especially, are chronically understaffed and stretched thin. So the stories a community most wants to keep are exactly the ones there is never enough time to gather.
+
+This grew directly out of the earlier Oria work. Redesigning the mobile app around senior storytellers and large language models showed us where the need was sharpest: senior living, assisted living, local libraries, and cultural initiatives, all sitting on irreplaceable stories with no realistic way to collect them. The individual side had a solution; the institutional side was wide open.
+
+## Talking to the Institutions
+
+Because we were bootstrapping, the product was built out of conversations, not assumptions. To move from a rough alpha to something real, I interviewed four stakeholders: two librarians, a historic-resources lead from Maryland's park and planning commission, and a therapist who works with personal narrative. Their guidance kept steering the build the whole way through.
+
+Two findings reset the plan. First, they welcomed AI, and they cared deeply about ownership: the stories had to belong to the organization, not to us. Second, and more surprising, these institutions already hold strong, trusted channels to their participants. They did not need help with distribution or recruitment the way a consumer product would. What ate their time was the collection and the analysis. So I aimed the product squarely there: make a campaign trivial to create and deploy, make collected stories easy to manage and understand, and make the act of telling a story immersive enough that people give their authentic one.
+
+## The Platform
+
+<MDXImage
+  src="https://picsum.photos/seed/missionoria-campaign/1600/1000"
+  alt="Creating a campaign and AI-generated topic questions"
+  width={1600}
+  height={1000}
+  caption="Placeholder: a campaign and its topics, with questions drafted by the Gemini API."
+/>
+
+**A campaign anyone can stand up.** An organization signs up, creates its space, and opens a campaign: the overarching theme of a collection. Under it, it adds topics, each with its own questions. To cut the blank-page work, the questions can be generated; enter the campaign, the topic, and the direction you want, and the platform drafts them with the Gemini API. Each campaign and topic publishes to missionoria.com, ready to share as a link or QR code, and participants can also browse public campaigns to find a local institution collecting stories near them.
+
+<MDXImage
+  src="https://picsum.photos/seed/missionoria-tell/1600/1000"
+  alt="A participant answering in text, audio, or video"
+  width={1600}
+  height={1000}
+  caption="Placeholder: a neighbor tells a story in whatever medium suits them."
+/>
+
+**Telling a story in any medium.** A participant opens the link and answers however they want, in text, audio, video, or photo, on a phone, tablet, or desktop, so it works on-site at the library as well as at the kitchen table. Every contribution is stored in its original format and transcribed, so the collection is searchable and indexable from the first story.
+
+<MDXImage
+  src="https://picsum.photos/seed/missionoria-insights/1600/1000"
+  alt="The organization's archive and analytics"
+  width={1600}
+  height={1000}
+  caption="Placeholder: the stories stay the organization's, with analytics a manual process never had."
+/>
+
+**The stories stay theirs.** Collected stories belong to the organization, not to Oria. They can download and use them however they like, to archive, publish, research, or build new content, with no interpretation layered on by us. Alongside the archive, the platform gives organizations the analytics their old process never could: participation, completion, and retention rates, the number of stories collected, and more, so a small team can see what is working without hand-counting anything.
+
+## Designing for Two Users at Once
+
+The hard part was that this is two products sharing one platform. The institution needs control, speed, and clarity: create, deploy, and manage collections with as little friction as possible. The participant needs the opposite of an admin tool: a calm, immersive space that makes telling a real story feel worth doing. Holding both in one system, without letting the operational side make the human side cold, was the central design challenge. It is also why the work kept pulling me forward: we were building for the communities and people who most need to be represented, and that mattered more than the difficulty.
+
+## Role
+
+Founding product lead. I led the product end to end: ideation, the full user flow, user research, design, interface development, and user testing. A data engineer was a great partner in making it real, structuring the database and standing up the initial build and deploy pipelines. I designed in Figma and developed mostly in Claude Code and Codex, on a stack of React and AWS (after an initial Vercel build), with Gemini powering the AI question generation.
+
+## Learnings
+
+**Speed has a tax, and the tax is consistency.** The hardest part was moving this fast across many design phases and a shifting set of tools. The technology let me build quickly, but it also let the work sprawl, and visual alignment is still catching up; I am still going screen by screen to bring everything back to one design system. It is the honest cost of an AI-accelerated build: you can outrun your own conventions, and then you have to circle back and re-earn them.
+
+<MDXImage
+  src="https://picsum.photos/seed/missionoria-close/1600/1000"
+  alt="Oria institution platform"
+  width={1600}
+  height={1000}
+  caption="Placeholder."
+/>

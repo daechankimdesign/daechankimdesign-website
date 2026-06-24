@@ -21,10 +21,9 @@ const DIR_THRESHOLD = 4;
 // Distance from the page bottom within which the nav re-expands (footer zone).
 const BOTTOM_THRESHOLD = 220;
 // How much higher the expanded (text) pill rides vs the collapsed (dot) pill.
-const TEXT_LIFT = 40;
-// Debounce the dot hover so the box reflowing under the cursor (or a quick edge
-// cross) doesn't flicker. Exit is slower than enter to absorb the wobble.
-const HOVER_ENTER_DELAY = 70;
+const TEXT_LIFT = 12;
+// Debounce the hover so a quick edge cross doesn't flicker the expand.
+const HOVER_ENTER_DELAY = 60;
 const HOVER_LEAVE_DELAY = 220;
 
 // The pill grows (animating width, never scale) over GROW seconds; the label
@@ -35,29 +34,14 @@ const GROW = 0.28;
 const spring = { type: "spring", stiffness: 420, damping: 36 } as const;
 
 /**
- * The transparent, hairline-bordered pill. When `collapsed`, every item that
- * isn't the current page (and isn't hovered) shrinks to an 8px gray dot and the
- * pill shrinks to fit (framer `layout`); hovering a dot reveals its label.
+ * The hairline-bordered pill. When `collapsed`, every item that isn't the
+ * current page shrinks to an 8px gray dot and the pill shrinks to fit; otherwise
+ * each label's width grows to make room, then fades in.
  */
 function NavPill({ collapsed = false }: { collapsed?: boolean }) {
   const t = useTranslations("Nav");
   const pathname = usePathname();
-  const [hovered, setHovered] = useState<string | null>(null);
-  const hoverTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    return () => {
-      if (hoverTimer.current) clearTimeout(hoverTimer.current);
-    };
-  }, []);
-
-  // Schedule the hover change after a delay; a newer event cancels the pending
-  // one (mouseleave fires before the next mouseenter, so moving between dots is
-  // clean and a brief leave-then-reenter is absorbed).
-  const scheduleHover = (next: string | null, delay: number) => {
-    if (hoverTimer.current) clearTimeout(hoverTimer.current);
-    hoverTimer.current = setTimeout(() => setHovered(next), delay);
-  };
+  const [hoveredItem, setHoveredItem] = useState<string | null>(null);
 
   // pathname from next-intl is locale-stripped (e.g. "/project/foo").
   const isActive = (href: string) =>
@@ -65,68 +49,83 @@ function NavPill({ collapsed = false }: { collapsed?: boolean }) {
       ? pathname === "/"
       : pathname === href || pathname.startsWith(`${href}/`);
 
+  const activeHref = NAV.find((item) => isActive(item.href))?.href ?? null;
+  // The highlight rests on the active tab and slides to whatever is hovered, so
+  // a hover "comes out of" the current tab's pill.
+  const highlightedHref = hoveredItem ?? activeHref;
+
   return (
     <nav
       aria-label="Primary"
-      className="flex items-center gap-1 rounded-full border-[0.6px] border-hairline bg-canvas px-1.5 py-1"
+      onMouseLeave={() => setHoveredItem(null)}
+      className="isolate flex items-center gap-1 rounded-full border-[0.6px] border-hairline bg-canvas px-1.5 py-1"
     >
       {NAV.map((item) => {
         const active = isActive(item.href);
-        // A dot when collapsed, unless it's the active page or being hovered.
-        const asDot = collapsed && !active && hovered !== item.href;
+        const asDot = collapsed && !active;
+        const highlighted = item.href === highlightedHref;
+        const lit = active || hoveredItem === item.href;
         return (
-          <div
-            key={item.href}
-            onMouseEnter={() => scheduleHover(item.href, HOVER_ENTER_DELAY)}
-            onMouseLeave={() => scheduleHover(null, HOVER_LEAVE_DELAY)}
-          >
+          <div key={item.href} onMouseEnter={() => setHoveredItem(item.href)}>
             <Link
               href={item.href}
               aria-current={active ? "page" : undefined}
               aria-label={t(item.key)}
-              className={`flex items-center justify-center rounded-full px-3 py-1.5 no-underline transition-colors ${
-                active ? "bg-surface text-fg" : "text-fg-muted hover:text-fg"
+              className={`relative flex items-center justify-center rounded-full px-3 py-1.5 no-underline transition-colors ${
+                lit ? "text-fg" : "text-fg-muted"
               }`}
             >
-              <AnimatePresence mode="wait" initial={false}>
-                {asDot ? (
-                  <motion.span
-                    key="dot"
-                    initial={{ opacity: 0, scale: 0.3 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.3 }}
-                    transition={{ duration: 0.12 }}
-                    className="block h-2 w-2 rounded-full bg-fg-muted"
-                  />
-                ) : (
-                  // Width grows first to make room, THEN the label fades in
-                  // (opacity delayed by the grow). Animating width — not scale —
-                  // so the text never distorts.
-                  <motion.span
-                    key="text"
-                    className="block overflow-hidden whitespace-nowrap text-body"
-                    initial={{ width: 0, opacity: 0 }}
-                    animate={{
-                      width: "auto",
-                      opacity: 1,
-                      transition: {
-                        width: { duration: GROW, ease: EASE },
-                        opacity: { duration: 0.2, delay: GROW },
-                      },
-                    }}
-                    exit={{
-                      width: 0,
-                      opacity: 0,
-                      transition: {
-                        width: { duration: GROW * 0.8, ease: EASE, delay: 0.1 },
-                        opacity: { duration: 0.14 },
-                      },
-                    }}
-                  >
-                    {t(item.key)}
-                  </motion.span>
-                )}
-              </AnimatePresence>
+              {/* One shared highlight pill — z-0, BEHIND every label — that rests
+                  on the active tab and slides to the hovered tab. */}
+              {highlighted ? (
+                <motion.span
+                  layoutId="nav-highlight"
+                  className="absolute inset-0 z-0 rounded-full bg-surface"
+                  transition={{ type: "spring", stiffness: 500, damping: 38 }}
+                />
+              ) : null}
+              {/* Dot: absolutely centered in the Link's padding box (inset-0 +
+                  m-auto), so it never adds width — the label alone drives the
+                  box. It fades in slightly FASTER than the label collapses, so
+                  the label shrinks INTO a dot with no empty, re-widening gap.
+                  z-10 keeps it above the sliding highlight pill. */}
+              <motion.span
+                aria-hidden
+                className="pointer-events-none absolute inset-0 z-10 m-auto h-2 w-2 rounded-full bg-surface"
+                initial={false}
+                animate={{ opacity: asDot ? 1 : 0, scale: asDot ? 1 : 0.3 }}
+                transition={{ duration: 0.15, ease: EASE }}
+              />
+              {/* Label (z-10) drives the width: grows first then fades in to
+                  reveal; collapses to 0 to hide. Animates width — not scale —
+                  so the text never distorts. */}
+              <span className="relative z-10 flex items-center justify-center">
+                <motion.span
+                  className="block overflow-hidden whitespace-nowrap text-body"
+                  initial={false}
+                  animate={
+                    asDot
+                      ? {
+                          width: 0,
+                          opacity: 0,
+                          transition: {
+                            width: { duration: 0.26, ease: EASE },
+                            opacity: { duration: 0.12 },
+                          },
+                        }
+                      : {
+                          width: "auto",
+                          opacity: 1,
+                          transition: {
+                            width: { duration: GROW, ease: EASE },
+                            opacity: { duration: 0.2, delay: GROW },
+                          },
+                        }
+                  }
+                >
+                  {t(item.key)}
+                </motion.span>
+              </span>
             </Link>
           </div>
         );
@@ -139,9 +138,10 @@ function NavPill({ collapsed = false }: { collapsed?: boolean }) {
  * Universal navigation, separate from the top bar. It rides at the top within
  * the first fold, then — once the user scrolls past the threshold — slides up
  * and re-enters (after a slight delay) docked just above the bottom. While
- * docked, scrolling DOWN collapses inactive items to dots; scrolling UP, the
- * top of the page, and the footer all expand them back to labels. Expanded the
- * pill rides a touch higher than collapsed, with a transition between.
+ * docked, scrolling DOWN collapses inactive items to dots and the pill drops a
+ * touch; scrolling UP (or the top/footer) expands the labels and the pill rides
+ * higher. Hovering the collapsed pill drives that SAME expanded state — labels
+ * + lift — and a top-padded hover zone keeps the cursor inside as it rises.
  */
 export function UniversalNav() {
   const [scrolled, setScrolled] = useState(false);
@@ -149,7 +149,9 @@ export function UniversalNav() {
   // at the bottom there (a tab-bar) regardless of scroll.
   const [isMobile, setIsMobile] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
+  const [hovered, setHovered] = useState(false);
   const lastY = useRef(0);
+  const hoverTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     const mq = window.matchMedia("(max-width: 767px)");
@@ -177,10 +179,19 @@ export function UniversalNav() {
     return () => {
       mq.removeEventListener("change", onMq);
       window.removeEventListener("scroll", onScroll);
+      if (hoverTimer.current) clearTimeout(hoverTimer.current);
     };
   }, []);
 
+  const scheduleHover = (next: boolean, delay: number) => {
+    if (hoverTimer.current) clearTimeout(hoverTimer.current);
+    hoverTimer.current = setTimeout(() => setHovered(next), delay);
+  };
+
   const docked = isMobile || scrolled;
+  // Dots only while collapsed AND not hovered; hovering expands the whole pill.
+  const showDots = collapsed && !hovered;
+  const lifted = !showDots; // expanded labels ride higher
 
   // inset-x-0 + mx-auto + w-max centers horizontally without a transform, so
   // framer-motion is free to own translateY for the slide.
@@ -189,22 +200,31 @@ export function UniversalNav() {
       {docked ? (
         <motion.div
           key="bottom"
-          className="fixed inset-x-0 bottom-6 z-40 mx-auto w-max"
+          className="fixed inset-x-0 bottom-10 z-40 mx-auto w-max"
           initial={{ y: 96, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 96, opacity: 0, transition: spring }}
           // Slight delay so it eases in a beat after the top pill leaves.
           transition={{ ...spring, delay: 0.18 }}
         >
-          {/* Inner transform handles the text↔dot position shift snappily,
-              independent of the (delayed) slide-in above. */}
-          <motion.div
-            initial={false}
-            animate={{ y: collapsed ? 0 : -TEXT_LIFT }}
-            transition={spring}
+          {/* Leave zone: padded above by the lift distance so, once expanded,
+              the cursor can reach the risen labels without collapsing. Enter is
+              gated to the pill itself (below) so only the dots trigger it. */}
+          <div
+            style={{ paddingTop: TEXT_LIFT }}
+            onMouseLeave={() => scheduleHover(false, HOVER_LEAVE_DELAY)}
           >
-            <NavPill collapsed={collapsed} />
-          </motion.div>
+            {/* The pill's hit-box stays at the collapsed dot position (a transform
+                doesn't move layout), so onMouseEnter fires only over the dots. */}
+            <motion.div
+              initial={false}
+              animate={{ y: lifted ? -TEXT_LIFT : 0 }}
+              transition={spring}
+              onMouseEnter={() => scheduleHover(true, HOVER_ENTER_DELAY)}
+            >
+              <NavPill collapsed={showDots} />
+            </motion.div>
+          </div>
         </motion.div>
       ) : (
         <motion.div

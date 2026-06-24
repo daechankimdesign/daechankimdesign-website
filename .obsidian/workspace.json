@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Portfolio Ideation/Design Ethos.md",
+                "file": "Legacy Portfolio/About - simple industrial design version.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Design Ethos"
+              "title": "About - simple industrial design version"
             }
           }
         ]
@@ -185,30 +185,38 @@
   },
   "active": "147556d98151699e",
   "lastOpenFiles": [
+    "public/about/portrait.png",
+    "public/about",
+    "Legacy Portfolio/About.md",
+    "src/content/en/sandbox/academic-jargon-translator-helps-to-synthesize-complex-concepts-for-my-girlfriend.mdx",
+    "src/components/mdx/Gallery.tsx",
+    "Screenshot 2026-06-23 at 9.16.56 PM.jpeg",
+    "Screenshot 2026-06-23 at 9.16.01 PM.jpeg",
+    "Screenshot 2026-06-23 at 9.16.08 PM 1.jpeg",
+    "Screenshot 2026-06-23 at 9.16.08 PM.jpeg",
+    "Legacy Portfolio/Daechan Kim  Experience Designer.md",
+    "Legacy Portfolio/About - simple industrial design version.md",
+    "src/content/en/about.mdx",
+    "Legacy Portfolio/Translate furniture as a service to tackle social phenomenon..md",
+    "docs/STACK-NOTES-2026.md",
+    "src/content/en/projects/accelerating-institutions-to-preserve-the-local-history.mdx",
+    "src/content/en/projects/translate-furniture-as-a-service-to-tackle-social-phenomenon.mdx",
+    "src/content/en/projects/democratizing-storytelling-for-minorities-using-explorative-llm.mdx",
+    "src/content/en/sandbox/interactive-maps-for-local-residents-to-learn-and-discover-the-parks.mdx",
+    "src/content/en/sandbox/portfolio-editor-preserving-unique-writing-tone-and-perspective-for-designers-struggle-to-write.mdx",
+    "src/content/en/sandbox/group-trip-calendar.mdx",
+    "Portfolio Ideation/Design Ethos.md",
     "Portfolio Ideation/Case Study Format.md",
     "CLAUDE.md",
     "portfolio-master-prompt.md",
     "portfolio-project-rules.md",
     "README.md",
-    "src/content/en/projects/translate-furniture-as-a-service-to-tackle-social-phenomenon.mdx",
-    "src/content/en/projects/democratizing-storytelling-for-minorities-using-explorative-llm.mdx",
-    "src/content/en/projects/accelerating-institutions-to-preserve-the-local-history.mdx",
-    "src/content/en/sandbox/academic-jargon-translator-helps-to-synthesize-complex-concepts-for-my-girlfriend.mdx",
-    "src/content/en/sandbox/interactive-maps-for-local-residents-to-learn-and-discover-the-parks.mdx",
-    "src/content/en/sandbox/group-trip-calendar.mdx",
-    "src/content/en/sandbox/series-of-self-discovery-tools-for-leadership-in-food-services.mdx",
-    "src/content/en/sandbox/project-tracker-for-designers-powered-by-pessimistic-classmate.mdx",
-    "src/content/en/sandbox/portfolio-editor-preserving-unique-writing-tone-and-perspective-for-designers-struggle-to-write.mdx",
     "public/sandbox/group-trip-calendar/thumbnail.webp",
-    "firebase-debug.log",
     "public/sandbox/group-trip-calendar/thumbnail.gif",
     "Portfolio Ideation/groupcal recordings/thumbail.gif",
     "Portfolio Ideation/groupcal recordings/export-1782178058555.gif",
     "Portfolio Ideation/Oria Web App Case Study Guide.md",
     "Portfolio Ideation/Oria Portfolio.md",
-    "Legacy Portfolio/Translate furniture as a service to tackle social phenomenon..md",
-    "Legacy Portfolio/Daechan Kim  Experience Designer.md",
-    "Portfolio Ideation/Design Ethos.md",
     "CHANGELOG.md"
   ]
 }

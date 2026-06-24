@@ -1,7 +1,7 @@
 "use client";
 
 import { Fragment, useEffect, useRef, useState } from "react";
-import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 
 // After scrolling stops, auto-cycling takes back over.
 const STOP_DELAY = 700;
@@ -10,27 +10,38 @@ const SCRUB_VH = 0.6;
 const EASE: [number, number, number, number] = [0.16, 1, 0.3, 1];
 
 /**
- * Cycles through `phrases` in place with a per-word flipping-board motion. Idle,
- * it auto-advances at `interval` with a clean exit-then-enter. As the page
- * scrolls, scroll position scrubs the phrase (top of page → first, scrolled
- * down → last) with quicker, overlapping flips — a touch-friendly replacement
- * for the old pointer hover. Phrases wrap onto multiple lines on narrow screens;
- * a hidden sizer reserves the tallest phrase's height so the layout never jumps.
+ * Cycles through `phrases` in place with a per-word flipping-board motion. Every
+ * phrase is grid-stacked into ONE cell, so they share an exact position and the
+ * box is always as tall as the tallest phrase wraps — the layout stays
+ * consistent and phrases break onto multiple lines on narrow screens. Only the
+ * active phrase is visible; its words flip in one by one (staggered), the phrase
+ * just left flips out, the rest wait hidden. Idle, it auto-advances at
+ * `interval`; scroll position scrubs it (touch-friendly). The clip box is padded
+ * (cancelled by equal negative margin) so flips and descenders never get cut.
  */
 export function RotatingText({
   phrases,
   interval = 3000,
   className = "",
+  onAdvance,
 }: {
   phrases: string[];
   interval?: number;
   className?: string;
+  onAdvance?: () => void;
 }) {
   const reduce = useReducedMotion();
-  const [index, setIndex] = useState(0);
+  // `prev` (the phrase just left) rides alongside `index` so the exit direction
+  // is known even when scroll scrubbing jumps several phrases at once.
+  const [{ index, prev }, setPhrase] = useState({ index: 0, prev: 0 });
   const [fast, setFast] = useState(false);
+  // Large screens scrub by mouse X over the hero; small screens scrub by scroll.
+  const [isLarge, setIsLarge] = useState(false);
+  const rootRef = useRef<HTMLSpanElement>(null);
   const interactingRef = useRef(false);
   const stopTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // The scrub's last zone, so a scrub-driven word change nudges the gradient once.
+  const lastZoneRef = useRef(-1);
 
   // Auto-cycle at regular speed — but stand down while scrolling is driving.
   useEffect(() => {
@@ -38,98 +49,151 @@ export function RotatingText({
     const id = setInterval(() => {
       if (!interactingRef.current) {
         setFast(false);
-        setIndex((i) => (i + 1) % phrases.length);
+        setPhrase((s) => ({
+          index: (s.index + 1) % phrases.length,
+          prev: s.index,
+        }));
       }
     }, interval);
     return () => clearInterval(id);
   }, [reduce, phrases.length, interval]);
 
-  // Scroll position selects the phrase (works on touch + desktop); when scroll
-  // stops, control returns to the auto-cycle.
+  // Track large vs small screen to pick the trigger.
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 768px)");
+    const update = () => setIsLarge(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
+
+  // The phrase trigger. Large screens: the mouse's horizontal position over the
+  // hero section picks the phrase (left → first, right → last). Small screens:
+  // scroll position scrubs it (touch-friendly). When the input stops or leaves,
+  // control returns to the auto-cycle.
   useEffect(() => {
     if (reduce || phrases.length <= 1) return;
-    const onScroll = () => {
-      const range = window.innerHeight * SCRUB_VH;
-      const p = range > 0 ? Math.min(1, Math.max(0, window.scrollY / range)) : 0;
-      const i = Math.min(phrases.length - 1, Math.floor(p * phrases.length));
+
+    const select = (i: number) => {
       interactingRef.current = true;
       setFast(true);
-      setIndex(i);
+      setPhrase((s) => (i === s.index ? s : { index: i, prev: s.index }));
+      // A scrub-driven move to a new zone nudges the hero gradient forward.
+      if (i !== lastZoneRef.current) {
+        lastZoneRef.current = i;
+        onAdvance?.();
+      }
       if (stopTimer.current) clearTimeout(stopTimer.current);
       stopTimer.current = setTimeout(() => {
         interactingRef.current = false;
       }, STOP_DELAY);
+    };
+    const release = () => {
+      interactingRef.current = false;
+      if (stopTimer.current) clearTimeout(stopTimer.current);
+    };
+
+    if (isLarge) {
+      const section = rootRef.current?.closest("section");
+      if (!section) return;
+      const onMove = (e: MouseEvent) => {
+        const rect = section.getBoundingClientRect();
+        const t = (e.clientX - rect.left) / rect.width;
+        const i = Math.min(
+          phrases.length - 1,
+          Math.max(0, Math.floor(t * phrases.length)),
+        );
+        select(i);
+      };
+      section.addEventListener("mousemove", onMove);
+      section.addEventListener("mouseleave", release);
+      return () => {
+        section.removeEventListener("mousemove", onMove);
+        section.removeEventListener("mouseleave", release);
+        if (stopTimer.current) clearTimeout(stopTimer.current);
+      };
+    }
+
+    const onScroll = () => {
+      const range = window.innerHeight * SCRUB_VH;
+      const p = range > 0 ? Math.min(1, Math.max(0, window.scrollY / range)) : 0;
+      const i = Math.min(phrases.length - 1, Math.floor(p * phrases.length));
+      select(i);
     };
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => {
       window.removeEventListener("scroll", onScroll);
       if (stopTimer.current) clearTimeout(stopTimer.current);
     };
-  }, [reduce, phrases.length]);
+  }, [reduce, phrases.length, isLarge, onAdvance]);
 
   if (!phrases || phrases.length === 0) return null;
 
-  // Scrubbing flips fast with a tighter stagger; idle is slower and deliberate.
-  const wordDuration = fast ? 0.28 : 0.5;
-  const stagger = fast ? 0.03 : 0.06;
+  const wordDuration = fast ? 0.3 : 0.5;
+  const stagger = fast ? 0.025 : 0.05;
 
+  // Parent orchestrates the per-word stagger; only the visible transitions
+  // (active / leaving) stagger, idle words snap straight to hidden.
   const container = {
-    hidden: {},
-    visible: { transition: { staggerChildren: stagger } },
-    exit: { transition: { staggerChildren: stagger * 0.6 } },
+    active: { transition: { staggerChildren: stagger } },
+    leaving: { transition: { staggerChildren: stagger * 0.6 } },
+    idle: { transition: { staggerChildren: 0 } },
   };
 
-  const word = reduce
-    ? { hidden: { opacity: 1 }, visible: { opacity: 1 }, exit: { opacity: 1 } }
+  const wordV = reduce
+    ? {
+        active: { opacity: 1, transition: { duration: 0 } },
+        leaving: { opacity: 0, transition: { duration: 0 } },
+        idle: { opacity: 0, transition: { duration: 0 } },
+      }
     : {
-        hidden: { opacity: 0, rotateX: -90, y: "0.35em" },
-        visible: {
+        active: {
           opacity: 1,
           rotateX: 0,
-          y: 0,
+          y: "0em",
           transition: { duration: wordDuration, ease: EASE },
         },
-        exit: {
+        leaving: {
           opacity: 0,
           rotateX: 90,
           y: "-0.35em",
           transition: { duration: wordDuration * 0.8, ease: EASE },
         },
+        idle: { opacity: 0, rotateX: -90, y: "0.35em", transition: { duration: 0 } },
       };
 
   return (
     <span
+      ref={rootRef}
       className={`relative grid w-full overflow-hidden ${className}`}
-      style={{ perspective: "1000px" }}
+      // Padding gives flips + descenders room before the clip edge; the equal
+      // negative margin cancels it so the heading's spacing doesn't move.
+      style={{
+        perspective: "1000px",
+        paddingTop: "0.2em",
+        paddingBottom: "0.4em",
+        marginTop: "-0.2em",
+        marginBottom: "-0.4em",
+      }}
     >
-      {/* Hidden sizer: every phrase stacked so the box is as tall as the tallest
-          one WRAPS at the current width. Lets phrases break onto 2–3 lines on
-          narrow screens while keeping the height stable through the swap. */}
-      {phrases.map((p, i) => (
-        <span
-          key={`sizer-${i}`}
-          aria-hidden
-          className="invisible col-start-1 row-start-1 block"
-        >
-          {p}
-        </span>
-      ))}
-
-      {/* Animated layer overlays the sizer in the same grid cell. */}
-      <span className="col-start-1 row-start-1 block">
-        <AnimatePresence mode={fast ? undefined : "wait"}>
+      {phrases.map((phrase, i) => {
+        const active = i === index;
+        const leaving = i === prev && prev !== index;
+        const state = active ? "active" : leaving ? "leaving" : "idle";
+        const words = phrase.split(" ");
+        return (
           <motion.span
-            key={index}
-            className="block"
+            key={i}
+            aria-hidden={!active}
+            className="col-start-1 row-start-1 block"
             variants={container}
-            initial="hidden"
-            animate="visible"
-            exit="exit"
+            initial={false}
+            animate={state}
           >
-            {phrases[index].split(" ").map((w, i) => (
-              <Fragment key={i}>
+            {words.map((w, wi) => (
+              <Fragment key={wi}>
                 <motion.span
-                  variants={word}
+                  variants={wordV}
                   className="inline-block origin-bottom"
                   style={{
                     transformStyle: "preserve-3d",
@@ -137,12 +201,13 @@ export function RotatingText({
                   }}
                 >
                   {w}
-                </motion.span>{" "}
+                </motion.span>
+                {wi < words.length - 1 ? " " : ""}
               </Fragment>
             ))}
           </motion.span>
-        </AnimatePresence>
-      </span>
+        );
+      })}
     </span>
   );
 }

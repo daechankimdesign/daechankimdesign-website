@@ -18,6 +18,10 @@ export function SideDocumentTab({ hidden = false }: { hidden?: boolean }) {
   const t = useTranslations("Nav");
   const pathname = usePathname();
 
+  // The "← Index" backlink only belongs on a project/sandbox detail page; on
+  // other pages (e.g. About) the tab is a plain scroll-spy outline.
+  const isDetail =
+    pathname.startsWith("/project/") || pathname.startsWith("/sandbox/");
   const backTo = pathname.startsWith("/sandbox") ? "/sandbox" : "/project";
   const backLabel = t("backToIndex");
 
@@ -69,13 +73,15 @@ export function SideDocumentTab({ hidden = false }: { hidden?: boolean }) {
 
   return (
     <nav aria-label="Table of contents" className="flex flex-col gap-6">
-      <Link
-        href={backTo}
-        className="inline-flex items-center gap-1.5 text-body text-fg-muted no-underline transition-colors hover:text-fg"
-      >
-        <span>←</span>
-        <span>{backLabel}</span>
-      </Link>
+      {isDetail ? (
+        <Link
+          href={backTo}
+          className="inline-flex items-center gap-1.5 text-body text-fg-muted no-underline transition-colors hover:text-fg"
+        >
+          <span>←</span>
+          <span>{backLabel}</span>
+        </Link>
+      ) : null}
       <ul className="flex flex-col gap-3">
         {headings.map((h) => {
           const indent = h.level > 2 ? `${(h.level - 2) * 16}px` : "0px";

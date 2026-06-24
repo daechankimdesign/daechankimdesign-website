@@ -153,3 +153,29 @@ export const getCompiled = cache(async (
 
   return { content, frontmatter, error, translated: loaded.translated };
 });
+
+/** Compile a standalone top-level page (e.g. `about.mdx`) from disk. */
+export const getCompiledPage = cache(async (name: string) => {
+  let source: string;
+  try {
+    source = await fs.readFile(
+      path.join(CONTENT_ROOT, `${name}.mdx`),
+      "utf8",
+    );
+  } catch {
+    return null;
+  }
+
+  const { content, frontmatter, error } = await evaluate<Frontmatter>({
+    source,
+    options: {
+      parseFrontmatter: true,
+      disableImports: true,
+      disableExports: true,
+      mdxOptions: { rehypePlugins: [rehypeUnwrapImages, rehypeSlug] },
+    },
+    components: mdxComponents,
+  });
+
+  return { content, frontmatter, error };
+});
