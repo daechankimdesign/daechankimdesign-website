@@ -56,6 +56,21 @@ build; roadmap Phase 5 is the runtime translation (`4348eec`).
 
 ## Log
 
+### 2026-07-03 — Sans-only typography (drop Noto Serif)
+
+- **Removed serif entirely.** `text-h3` (the last serif consumer — homepage
+  "Projects"/"Sandbox" headings, detail-page sub-headings) now uses
+  `var(--font-sans)`. `text-h2`/`text-sub-display` were already sans.
+- Stopped loading **Noto Serif**: dropped the `Noto_Serif` import/export from
+  `fonts.ts`, the `--font-noto-serif` variable from `layout.tsx`, and the
+  `--font-serif` token from the `@theme inline` block in `globals.css`.
+- Neutralized Tailwind v4's built-in `--font-serif` default via
+  `@theme { --font-serif: initial; }`, so the `font-serif` utility no longer
+  exists and no serif family (Georgia/Times) can be applied anywhere.
+- Updated the local `/design-rules` reference labels to say Noto Sans.
+- Verified against the running dev server: served CSS has 0 `Georgia`/serif
+  family references; `text-h3` resolves to Noto Sans.
+
 ### 2026-06-21 — Headings Typography Swap
 
 - **Font Family Swapping:** Exchanged the font configurations of the heading utilities in `globals.css`. The `text-h2` class now uses Noto Sans (`var(--font-sans)`), and the `text-h3` class now uses Noto Serif (`var(--font-serif)`).

@@ -2,7 +2,8 @@ import { notFound } from "next/navigation";
 import { setRequestLocale, getTranslations } from "next-intl/server";
 import { getCompiled, getSlugs } from "@/lib/mdx";
 import { routing } from "@/i18n/routing";
-import { DisplayHeading } from "@/components/DisplayHeading";
+import { Reveal, RevealItem } from "@/components/Reveal";
+import { SandboxEmbed } from "@/components/SandboxEmbed";
 import { SideDocumentTab } from "@/components/SideDocumentTab";
 
 // Pre-render only the canonical English combos; ko/es render on first request
@@ -54,18 +55,54 @@ export default async function SandboxDetailPage({
         </aside>
 
         {/* Right Side: Main Content */}
-        <div className="flex-1 min-w-0 max-w-4xl">
-          <header className="mb-8 max-w-[70ch]">
-            <DisplayHeading>{frontmatter.title}</DisplayHeading>
-            {frontmatter.summary ? (
-              <p className="text-body mt-3 text-fg-muted">{frontmatter.summary}</p>
-            ) : null}
-            {frontmatter.tags && frontmatter.tags.length > 0 ? (
-              <p className="text-caption mt-3 text-fg-muted">
-                {frontmatter.tags.join("  ·  ")}
-              </p>
-            ) : null}
+        <div className="flex-1 min-w-0 content-column">
+          <header className="mb-8 measure">
+            <Reveal>
+              <RevealItem as="h1" className="text-display">
+                {frontmatter.title}
+              </RevealItem>
+              {frontmatter.summary ? (
+                <RevealItem as="p" className="text-body mt-3 text-fg-muted">
+                  {frontmatter.summary}
+                </RevealItem>
+              ) : null}
+              {frontmatter.tags && frontmatter.tags.length > 0 ? (
+                <RevealItem as="p" className="text-caption mt-3 text-fg-muted">
+                  {frontmatter.tags.join("  ·  ")}
+                </RevealItem>
+              ) : null}
+            </Reveal>
           </header>
+
+          {/* Interactive project embed — sits atop the body when the piece has
+              a live demo (`embed` in frontmatter). Pieces without one (e.g. a
+              Chrome extension) render no frame at all. */}
+          {frontmatter.embed ? (
+            <SandboxEmbed
+              src={frontmatter.embed}
+              title={frontmatter.title}
+              posters={{
+                desktop:
+                  frontmatter.embedPosterDesktop ??
+                  frontmatter.embedPoster ??
+                  frontmatter.thumbnail,
+                tablet:
+                  frontmatter.embedPosterTablet ??
+                  frontmatter.embedPoster ??
+                  frontmatter.thumbnail,
+                mobile:
+                  frontmatter.embedPosterMobile ??
+                  frontmatter.embedPoster ??
+                  frontmatter.thumbnail,
+              }}
+              height={
+                frontmatter.embedHeight
+                  ? Number(frontmatter.embedHeight)
+                  : undefined
+              }
+            />
+          ) : null}
+
           <article>{content}</article>
         </div>
       </div>

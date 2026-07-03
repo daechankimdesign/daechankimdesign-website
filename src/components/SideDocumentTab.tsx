@@ -12,7 +12,14 @@ type Heading = { id: string; text: string; level: number };
  * heading nearest the viewport center is "active". Displays a ← Index backlink
  * at the top and lists active sections.
  */
-export function SideDocumentTab({ hidden = false }: { hidden?: boolean }) {
+export function SideDocumentTab({
+  hidden = false,
+  maxLevel = 3,
+}: {
+  hidden?: boolean;
+  // Deepest heading level to list (2 = top-level categories only).
+  maxLevel?: number;
+}) {
   const [headings, setHeadings] = useState<Heading[]>([]);
   const [activeId, setActiveId] = useState("");
   const t = useTranslations("Nav");
@@ -33,7 +40,7 @@ export function SideDocumentTab({ hidden = false }: { hidden?: boolean }) {
     const handleUpdate = () => {
       const nodes = Array.from(
         document.querySelectorAll<HTMLElement>("article :is(h1, h2, h3)"),
-      ).filter((el) => el.id);
+      ).filter((el) => el.id && Number(el.tagName.charAt(1)) <= maxLevel);
 
       setHeadings(
         nodes.map((el) => ({
@@ -67,7 +74,7 @@ export function SideDocumentTab({ hidden = false }: { hidden?: boolean }) {
         observer.disconnect();
       }
     };
-  }, [hidden]);
+  }, [hidden, maxLevel]);
 
   if (hidden || headings.length === 0) return null;
 

@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { setRequestLocale, getTranslations } from "next-intl/server";
 import { getCompiled, getSlugs } from "@/lib/mdx";
 import { routing } from "@/i18n/routing";
-import { DisplayHeading } from "@/components/DisplayHeading";
+import { Reveal, RevealItem } from "@/components/Reveal";
 import { SideDocumentTab } from "@/components/SideDocumentTab";
 
 // Pre-render only the canonical English combos; ko/es render on first request
@@ -54,17 +54,23 @@ export default async function ProjectDetailPage({
         </aside>
 
         {/* Right Side: Main Case Study Content */}
-        <div className="flex-1 min-w-0 max-w-4xl">
-          <header className="mb-8 max-w-[70ch]">
-            {frontmatter.tags && frontmatter.tags.length > 0 ? (
-              <p className="text-caption mb-3 text-fg-muted">
-                {frontmatter.tags.join("  ·  ")}
-              </p>
-            ) : null}
-            <DisplayHeading className="text-h1">{frontmatter.title}</DisplayHeading>
-            {frontmatter.summary ? (
-              <p className="text-body mt-3 text-fg-muted">{frontmatter.summary}</p>
-            ) : null}
+        <div className="flex-1 min-w-0 content-column">
+          <header className="mb-8 measure">
+            <Reveal>
+              {frontmatter.tags && frontmatter.tags.length > 0 ? (
+                <RevealItem as="p" className="text-caption mb-3 text-fg-muted">
+                  {frontmatter.tags.join("  ·  ")}
+                </RevealItem>
+              ) : null}
+              <RevealItem as="h1" className="text-h1">
+                {frontmatter.title}
+              </RevealItem>
+              {frontmatter.summary ? (
+                <RevealItem as="p" className="text-body mt-3 text-fg-muted">
+                  {frontmatter.summary}
+                </RevealItem>
+              ) : null}
+            </Reveal>
           </header>
           <article>{content}</article>
         </div>

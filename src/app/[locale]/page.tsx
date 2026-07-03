@@ -1,6 +1,6 @@
 import { setRequestLocale, getTranslations } from "next-intl/server";
 import { getAllFrontmatter } from "@/lib/mdx";
-import { DisplayHeading } from "@/components/DisplayHeading";
+import { Reveal, RevealItem, RevealOnView } from "@/components/Reveal";
 import { HeroHeadline } from "@/components/HeroHeadline";
 import { FeaturedProjects } from "@/components/FeaturedProjects";
 import { SandboxCarousel } from "@/components/SandboxCarousel";
@@ -29,26 +29,39 @@ export default async function Home({
 
   return (
     <>
-      {/* Hero — TODO(i18n): move copy to messages once finalized */}
+      {/* Hero — content group reveal on load (nav present → cascade up).
+          TODO(i18n): move copy to messages once finalized */}
       <section className="container-page flex min-h-[70vh] flex-col items-start justify-center py-16 text-left sm:py-24 md:items-center md:text-center">
-        <DisplayHeading>
-          <HeroHeadline phrases={HERO_ROTATIONS} />
-        </DisplayHeading>
-        <p className="text-sub-display mt-8 max-w-[60ch] text-fg-muted">
-          3+ years across a B2B2C startup and global client work, creating
-          comprehensive designs and building impactful products validated by
-          users, with the latest AI tools for prototyping and deployment.
-        </p>
+        <Reveal className="flex w-full flex-col items-start md:items-center">
+          <RevealItem as="h1" className="text-display">
+            <HeroHeadline phrases={HERO_ROTATIONS} />
+          </RevealItem>
+          <RevealItem
+            as="p"
+            className="text-sub-display mt-8 measure-lede text-fg-muted"
+          >
+            3+ years across a B2B2C startup and global client work, creating
+            comprehensive designs and building impactful products validated by
+            users, with the latest AI tools for prototyping and deployment.
+          </RevealItem>
+        </Reveal>
       </section>
 
-      {/* Projects — featured showcase */}
-      <section className="container-page py-16 grid grid-cols-1 lg:grid-cols-12 gap-x-8 lg:gap-x-16 gap-y-0">
-        <h3 className="text-h3 sticky top-24 z-20 lg:col-span-3">{t("projects")}</h3>
-        <FeaturedProjects items={projects} detailsLabel="Details" />
-      </section>
+      {/* Projects — featured showcase. Opacity-only reveal (rise=false): the
+          section holds a sticky heading, which a transformed ancestor breaks.
+          Delayed so it lands after the hero cascade (it's in view on load). */}
+      <RevealOnView rise={false} delay={1}>
+        <section className="container-page py-16 grid grid-cols-1 lg:grid-cols-12 gap-x-8 lg:gap-x-16 gap-y-0">
+          <h3 className="text-h3 sticky top-24 z-20 lg:col-span-3">{t("projects")}</h3>
+          <FeaturedProjects items={projects} detailsLabel="Details" />
+        </section>
+      </RevealOnView>
 
-      {/* Sandbox — pinned horizontal carousel */}
-      <SandboxCarousel items={sandbox} heading={t("sandbox")} />
+      {/* Sandbox — pinned horizontal carousel. Opacity-only reveal (rise=false)
+          so the scroll-jack's sticky pin + getBoundingClientRect math stay intact. */}
+      <RevealOnView rise={false}>
+        <SandboxCarousel items={sandbox} heading={t("sandbox")} />
+      </RevealOnView>
     </>
   );
 }

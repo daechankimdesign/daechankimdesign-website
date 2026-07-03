@@ -20,7 +20,12 @@
 /* next/font CSS variables resolve via `inline` (var-referencing-var) */
 @theme inline {
   --font-sans: var(--font-noto-sans);
-  --font-serif: var(--font-noto-serif);
+}
+
+/* The project is sans-only. Remove Tailwind's built-in serif token (and its
+   `font-serif` utility) so no serif family can ever be applied. */
+@theme {
+  --font-serif: initial;
 }
 
 /* ============================================================================
@@ -95,7 +100,7 @@
 }
 @utility text-h3 {
   font-weight: 500;
-  font-family: var(--font-serif), Georgia, serif;
+  font-family: var(--font-sans), system-ui, sans-serif;
   line-height: 1.4;
   letter-spacing: -0.03em;
   font-size: clamp(15px, 13px + 0.5vw, 16px);
@@ -114,8 +119,8 @@
   line-height: 1.4;
   font-size: 12px;
 }
-/* Logo wordmark — always Noto Sans, extrabold, tight kerning, independent of
-   the serif H2/H3. Same size as H3 so nav layout is unchanged. */
+/* Logo wordmark — Noto Sans, extrabold, tight kerning. Same size as H3 so nav
+   layout is unchanged. */
 @utility text-logo {
   font-family: var(--font-sans), system-ui, sans-serif;
   font-weight: 800;
@@ -191,10 +196,70 @@
 /* ============================================================================
    Layout helpers
    ============================================================================ */
-/* Page container: full width, max 1800px, 20px gutters (mobile) → 60px (>=768) */
+/* Per-block edge fade — a content block dims toward 50% opacity while it sits in
+   the TOP or BOTTOM ~20vh of the viewport, and is full opacity through the
+   middle. Driven by a scroll (view) timeline across the block's whole pass
+   through the viewport, so it runs on the compositor at ~zero main-thread cost
+   and adds no JS. Applied to a wrapper INSIDE each entrance-reveal element, so
+   the two opacities multiply. Reveal owns the entrance; this owns the position
+   dim.
+
+   Over the full `cover` range: 0% = block top at the viewport bottom (just
+   entering) → dims up to full by 20% (~20vh in), holds through the middle, then
+   fades back down from 80% to 0.5 at 100% (block bottom leaving the top edge).
+   Gated behind @supports (no-op where scroll timelines are unavailable) and
+   disabled under reduced-motion. */
+@keyframes edge-fade-in {
+  from {
+    opacity: 0.5;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes edge-fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0.05;
+  }
+}
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .edge-fade {
+      /* Two disjoint-range animations on one view timeline. BOTTOM: linear fade
+         IN toward full over the bottom 20vh (cover 0–20%), floor 50%. TOP: fade
+         OUT to 5% over a shorter top 10vh band (cover 90–100%) on a hyperbolic
+         (front-loaded ease-out) curve, so opacity drops steeply on entering the
+         band then eases asymptotically toward 5% at the edge. The ranges never
+         overlap and neither fills outside its own range (default fill: none), so
+         the middle rests at base opacity (1). A single full-range multi-stop
+         keyframe set mis-composites in Chromium, so this two-animation form is
+         used. */
+      animation: edge-fade-in linear, edge-fade-out cubic-bezier(0.16, 1, 0.3, 1);
+      animation-timeline: view(), view();
+      animation-range: cover 0% cover 20%, cover 90% cover 100%;
+    }
+  }
+}
+
+/* ── Width system ──────────────────────────────────────────────────────────
+   One shell, one content column, two reading measures. Compose them; don't
+   sprinkle ad-hoc max-w-[..] values.
+
+     .container-page  structural shell — full width, max 1440px, page gutters.
+                      Use for every <main>, the nav, the footer, and grids.
+     .content-column  document text/media column (56rem). The reading column on
+                      About and project/sandbox detail pages, inside the shell.
+     .measure         body-prose line length (70ch). Paragraphs and article copy.
+     .measure-lede    lede / summary / caption line length (60ch). Shorter copy.
+   ────────────────────────────────────────────────────────────────────────── */
+
+/* Page container: full width, max 1440px, 20px gutters (mobile) → 60px (>=768) */
 .container-page {
   width: 100%;
-  max-width: 1800px;
+  max-width: 1440px;
   margin-inline: auto;
   padding-inline: 20px;
 }
@@ -202,6 +267,16 @@
   .container-page {
     padding-inline: 60px;
   }
+}
+
+.content-column {
+  max-width: 56rem;
+}
+.measure {
+  max-width: 70ch;
+}
+.measure-lede {
+  max-width: 60ch;
 }
 
 /* Prose/content links keep the underline affordance (already the <a> default).

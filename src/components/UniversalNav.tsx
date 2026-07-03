@@ -38,7 +38,18 @@ const spring = { type: "spring", stiffness: 420, damping: 36 } as const;
  * current page shrinks to an 8px gray dot and the pill shrinks to fit; otherwise
  * each label's width grows to make room, then fades in.
  */
-function NavPill({ collapsed = false }: { collapsed?: boolean }) {
+function NavPill({
+  collapsed = false,
+  scope = "top",
+}: {
+  collapsed?: boolean;
+  // Scopes the shared highlight's layoutId to THIS pill. The top and bottom
+  // pills are both mounted during the AnimatePresence dock swap; a single shared
+  // id would make framer animate the highlight from one pill's position across
+  // the viewport to the other's. Per-pill ids keep the hover-slide but prevent
+  // that cross-screen flight.
+  scope?: string;
+}) {
   const t = useTranslations("Nav");
   const pathname = usePathname();
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
@@ -79,7 +90,7 @@ function NavPill({ collapsed = false }: { collapsed?: boolean }) {
                   on the active tab and slides to the hovered tab. */}
               {highlighted ? (
                 <motion.span
-                  layoutId="nav-highlight"
+                  layoutId={`nav-highlight-${scope}`}
                   className="absolute inset-0 z-0 rounded-full bg-surface"
                   transition={{ type: "spring", stiffness: 500, damping: 38 }}
                 />
@@ -223,7 +234,7 @@ export function UniversalNav() {
               transition={spring}
               onMouseEnter={() => scheduleHover(true, HOVER_ENTER_DELAY)}
             >
-              <NavPill collapsed={showDots} />
+              <NavPill collapsed={showDots} scope="bottom" />
             </motion.div>
           </div>
         </motion.div>
@@ -236,7 +247,7 @@ export function UniversalNav() {
           exit={{ y: -56, opacity: 0 }}
           transition={spring}
         >
-          <NavPill />
+          <NavPill scope="top" />
         </motion.div>
       )}
     </AnimatePresence>

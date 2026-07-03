@@ -116,7 +116,7 @@ function FeaturedProjectCard({
               <Link
                 key={src}
                 href={`/project/${slug}`}
-                className="block no-underline overflow-hidden rounded-md border border-hairline transition-transform duration-300 hover:scale-[1.005]"
+                className="edge-fade block no-underline overflow-hidden rounded-md border border-hairline transition-transform duration-300 hover:scale-[1.005]"
               >
                 <ProgressiveImage
                   src={src}
