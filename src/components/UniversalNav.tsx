@@ -86,15 +86,16 @@ function NavPill({ collapsed = false }: { collapsed?: boolean }) {
               ) : null}
               {/* Dot: absolutely centered in the Link's padding box (inset-0 +
                   m-auto), so it never adds width — the label alone drives the
-                  box. It fades in slightly FASTER than the label collapses, so
-                  the label shrinks INTO a dot with no empty, re-widening gap.
-                  z-10 keeps it above the sliding highlight pill. */}
+                  box. Full-size and fading in FAST (no scale pop), so it's
+                  already present as the label collapses INTO it — never a
+                  "collapsed, then a dot grows in" gap. z-10 keeps it above the
+                  sliding highlight pill. */}
               <motion.span
                 aria-hidden
                 className="pointer-events-none absolute inset-0 z-10 m-auto h-2 w-2 rounded-full bg-surface"
                 initial={false}
-                animate={{ opacity: asDot ? 1 : 0, scale: asDot ? 1 : 0.3 }}
-                transition={{ duration: 0.15, ease: EASE }}
+                animate={{ opacity: asDot ? 1 : 0 }}
+                transition={{ duration: 0.1, ease: "linear" }}
               />
               {/* Label (z-10) drives the width: grows first then fades in to
                   reveal; collapses to 0 to hide. Animates width — not scale —
