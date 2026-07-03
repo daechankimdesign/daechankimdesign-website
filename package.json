@@ -9,7 +9,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "screenshots": "node scripts/screenshot-embeds.mjs"
   },
   "dependencies": {
     "@google/genai": "^2.9.0",

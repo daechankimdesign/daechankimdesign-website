@@ -1,20 +1,12 @@
 import { getTranslations } from "next-intl/server";
-import { Link } from "@/i18n/navigation";
-
-const NAV = [
-  { href: "/", key: "home" },
-  { href: "/project", key: "projects" },
-  { href: "/sandbox", key: "sandbox" },
-  { href: "/blog", key: "blogs" },
-  { href: "/about", key: "about" },
-] as const;
 
 export async function Footer() {
   const t = await getTranslations("Nav");
+  const year = new Date().getFullYear();
 
   return (
     <footer className="hairline-t mt-24">
-      <div className="container-page flex flex-col gap-8 py-12 md:flex-row md:items-start md:justify-between">
+      <div className="container-page flex flex-col gap-8 py-12 md:flex-row md:items-end md:justify-between">
         {/* Brand + contact */}
         <div>
           <p className="text-logo">Daechan Kim</p>
@@ -36,18 +28,11 @@ export async function Footer() {
           </div>
         </div>
 
-        {/* Nav */}
-        <nav className="flex flex-wrap gap-x-6 gap-y-2">
-          {NAV.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="text-body text-fg-muted no-underline transition-colors hover:text-fg"
-            >
-              {t(item.key)}
-            </Link>
-          ))}
-        </nav>
+        {/* Copyright — quiet caption; primary nav lives in UniversalNav, so the
+            duplicate footer nav is intentionally omitted. */}
+        <p className="text-caption text-fg-muted">
+          © {year} Daechan Kim. All rights reserved.
+        </p>
       </div>
     </footer>
   );

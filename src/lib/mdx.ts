@@ -18,6 +18,17 @@ export type Frontmatter = {
   thumbnail?: string;
   date?: string;
   tags?: string[];
+  /** Sandbox live-demo URL — rendered as an interactive frame atop the body. */
+  embed?: string;
+  /** Per-device facade screenshots (set by scripts/screenshot-embeds.mjs). Each
+      falls back to `embedPoster`, then `thumbnail`. */
+  embedPosterDesktop?: string;
+  embedPosterTablet?: string;
+  embedPosterMobile?: string;
+  /** Single facade screenshot used when no per-device shot is set. */
+  embedPoster?: string;
+  /** Optional embed frame height in px (default 720). */
+  embedHeight?: number;
   [key: string]: unknown;
 };
 
@@ -105,12 +116,16 @@ export const getAllFrontmatter = cache(async (
 
       const uniqueImages = Array.from(new Set(images));
 
-      // Generate fallback placeholders using the slug as seed if we have fewer than 3 images
+      // Pad to 3 with on-brand labeled placeholders if the source has fewer.
       if (uniqueImages.length < 3) {
-        const seedBase = slug || "project";
+        const label = encodeURIComponent(
+          String(frontmatter.title ?? "Preview"),
+        );
         while (uniqueImages.length < 3) {
-          const index = uniqueImages.length;
-          uniqueImages.push(`https://picsum.photos/seed/${seedBase}-${index}/1600/900`);
+          const index = uniqueImages.length + 1;
+          uniqueImages.push(
+            `https://placehold.co/1600x900/e3e3e3/757575.png?text=${label}+${index}`,
+          );
         }
       }
 

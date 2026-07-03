@@ -80,7 +80,7 @@ export function SandboxCarousel({
     <Link
       key={slug}
       href={`/sandbox/${slug}`}
-      className="group block w-[80vw] shrink-0 no-underline sm:w-[460px]"
+      className="edge-fade group block w-[80vw] shrink-0 no-underline sm:w-[460px]"
     >
       {frontmatter.thumbnail ? (
         <ProgressiveImage

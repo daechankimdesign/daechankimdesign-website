@@ -1,7 +1,7 @@
 import { setRequestLocale } from "next-intl/server";
 import { getCompiledPage } from "@/lib/mdx";
-import { DisplayHeading } from "@/components/DisplayHeading";
-import { ProgressiveImage } from "@/components/ProgressiveImage";
+import { Reveal, RevealItem } from "@/components/Reveal";
+import { ProfileStack } from "@/components/ProfileStack";
 import { SideDocumentTab } from "@/components/SideDocumentTab";
 
 export default async function AboutPage({
@@ -28,6 +28,9 @@ export default async function AboutPage({
   const { content, frontmatter } = result;
   const portrait =
     typeof frontmatter.portrait === "string" ? frontmatter.portrait : null;
+  const gallery = Array.isArray(frontmatter.gallery)
+    ? (frontmatter.gallery.filter((s) => typeof s === "string") as string[])
+    : [];
 
   return (
     <main className="container-page py-24">
@@ -35,7 +38,7 @@ export default async function AboutPage({
         {/* Far left: scroll-spy side tab (desktop only) */}
         <aside className="hidden lg:block lg:order-first lg:w-48 lg:shrink-0">
           <div className="lg:sticky lg:top-24 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto lg:pr-2">
-            <SideDocumentTab />
+            <SideDocumentTab maxLevel={2} />
           </div>
         </aside>
 
@@ -43,29 +46,33 @@ export default async function AboutPage({
         <aside className="lg:w-56 lg:shrink-0">
           {portrait ? (
             <div className="mx-auto max-w-xs lg:mx-0 lg:max-w-none lg:sticky lg:top-24">
-              <ProgressiveImage
-                src={portrait}
+              <ProfileStack
+                portrait={portrait}
                 alt={frontmatter.title}
-                width={1447}
-                height={1446}
-                sizes="(max-width: 1024px) 20rem, 14rem"
-                className="rounded-md"
+                images={gallery}
               />
             </div>
           ) : null}
         </aside>
 
         {/* Right: page content */}
-        <div className="min-w-0 flex-1">
+        <div className="min-w-0 flex-1 content-column">
           <header className="mb-8">
-            <DisplayHeading>{frontmatter.title}</DisplayHeading>
-            {frontmatter.summary ? (
-              <p className="text-body mt-3 text-fg-muted">
-                {frontmatter.summary}
-              </p>
-            ) : null}
+            <Reveal>
+              <RevealItem as="h1" className="text-display">
+                {frontmatter.title}
+              </RevealItem>
+              {frontmatter.summary ? (
+                <RevealItem
+                  as="p"
+                  className="text-body mt-3 text-fg-muted measure-lede"
+                >
+                  {frontmatter.summary}
+                </RevealItem>
+              ) : null}
+            </Reveal>
           </header>
-          <article className="max-w-[70ch]">{content}</article>
+          <article className="measure">{content}</article>
         </div>
       </div>
     </main>

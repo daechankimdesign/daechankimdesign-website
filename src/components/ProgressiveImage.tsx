@@ -16,8 +16,14 @@ type Props = {
 /**
  * Progressive image (rules §6): a 480px low-res copy loads first (blurred),
  * then the full-resolution asset crossfades in on load. Both layers use
- * next/image so each is optimized at its own width.
+ * next/image so each is optimized at its own width. Once a src has loaded this
+ * session, later mounts start already-loaded and skip the blur-up + crossfade.
  */
+
+// Session cache of srcs whose full-res has finished loading (persists across
+// client navigations, so re-entering a route doesn't replay the placeholder).
+const loadedSrcs = new Set<string>();
+
 export function ProgressiveImage({
   src,
   alt,
@@ -27,14 +33,19 @@ export function ProgressiveImage({
   sizes = "100vw",
   priority,
 }: Props) {
-  const [loaded, setLoaded] = useState(false);
+  // Start already loaded if this src rendered earlier this session — no blur-up.
+  const [loaded, setLoaded] = useState(() => loadedSrcs.has(src));
   const imgRef = useRef<HTMLImageElement>(null);
 
+  const markLoaded = () => {
+    loadedSrcs.add(src);
+    setLoaded(true);
+  };
+
   useEffect(() => {
-    // If the image has already loaded (e.g. from browser cache) before the effect runs
-    if (imgRef.current && imgRef.current.complete) {
-      setLoaded(true);
-    }
+    // Catch browser-cached images that finished before the load listener attached.
+    if (imgRef.current?.complete) markLoaded();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Animated formats (GIF, animated WebP) bypass the optimizer (which would
@@ -72,9 +83,12 @@ export function ProgressiveImage({
         aria-hidden
         fill
         sizes="480px"
-        quality={30}
+        quality={45}
         priority={priority}
-        className="scale-105 object-cover blur-lg"
+        className="scale-105 object-cover"
+        // Minimal, tight blur (inline so it always applies). scale-105 hides the
+        // 1px edge fade the blur creates.
+        style={{ filter: "blur(1px)" }}
       />
       {/* Full-resolution — crossfades in */}
       <Image
@@ -84,7 +98,7 @@ export function ProgressiveImage({
         fill
         sizes={sizes}
         priority={priority}
-        onLoad={() => setLoaded(true)}
+        onLoad={markLoaded}
         className={`object-cover transition-opacity duration-700 ${
           loaded ? "opacity-100" : "opacity-0"
         }`}

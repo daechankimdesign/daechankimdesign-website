@@ -58,7 +58,7 @@ export default function Styleguide() {
     <main className="container-page py-16">
       <header className="mb-16">
         <h1 className="text-display">Design System</h1>
-        <p className="text-body text-fg-muted mt-2 max-w-[60ch]">
+        <p className="text-body text-fg-muted mt-2 measure-lede">
           Phase 1 styleguide — every typography level, color, spacing token, and
           the hairline border. Built strictly on the Figma Simple Design System
           neutral palette. Resize the window to watch the fluid type resolve to
@@ -140,7 +140,7 @@ export default function Styleguide() {
             <p className="text-caption text-fg-muted mt-2">border-hairline</p>
           </div>
         </div>
-        <p className="text-caption text-fg-muted mt-6 max-w-[60ch]">
+        <p className="text-caption text-fg-muted mt-6 measure-lede">
           Single-side variants use a scaled pseudo-element (1 device pixel at 1×
           / 2× / 3×). For full boxes use Tailwind <code>border border-hairline</code>.
           Never a literal 0.6px border.
@@ -157,7 +157,7 @@ export default function Styleguide() {
             External link
           </LinkButton>
         </div>
-        <p className="text-caption text-fg-muted mt-6 max-w-[60ch]">
+        <p className="text-caption text-fg-muted mt-6 measure-lede">
           Text link styled as a control: <strong>8px</strong> block padding, an
           up-right arrow scaled to the text (<code>1em</code>), and a hairline
           bottom rule. Use the <code>LinkButton</code> component — locale-aware by
@@ -168,8 +168,8 @@ export default function Styleguide() {
       {/* Layout */}
       <section>
         <SectionLabel>Layout</SectionLabel>
-        <p className="text-body text-fg max-w-[60ch]">
-          <code>.container-page</code> — full width, max <strong>1800px</strong>,
+        <p className="text-body text-fg measure-lede">
+          <code>.container-page</code> — full width, max <strong>1440px</strong>,
           centered, with <strong>60px</strong> gutters on desktop and{" "}
           <strong>20px</strong> below 768px. This page uses it.
         </p>

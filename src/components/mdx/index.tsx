@@ -3,30 +3,58 @@ import { VideoPlayer } from "./VideoPlayer";
 import { MDXImage } from "./MDXImage";
 import { ProjectMeta } from "./ProjectMeta";
 import { Gallery } from "./Gallery";
+import { RevealBlock } from "./RevealBlock";
 
 // Passed explicitly on every RSC evaluate() call (MDXProvider is effectless in
 // the App Router). Custom tags used in MDX must exist here or rendering throws.
+//
+// Block-level elements are wrapped in RevealBlock so long-form content fades up
+// as it scrolls into view — the hero's entrance motion, continued through the
+// body. Inline elements (a, li) stay plain; li rides along inside its list.
 export const mdxComponents: MDXComponents = {
-  VideoPlayer,
-  MDXImage,
-  ProjectMeta,
-  Gallery,
-  img: (props) => (
-    <MDXImage src={String(props.src ?? "")} alt={props.alt ?? ""} />
+  VideoPlayer: (props) => (
+    <RevealBlock as="div">
+      <VideoPlayer {...props} />
+    </RevealBlock>
   ),
-  h1: (props) => <h1 className="text-h1 mt-12 mb-4" {...props} />,
-  h2: (props) => <h2 className="text-h2 mt-10 mb-3" {...props} />,
-  h3: (props) => <h3 className="text-h3 mt-8 mb-2" {...props} />,
-  p: (props) => <p className="text-body my-4 max-w-[70ch]" {...props} />,
-  ul: (props) => <ul className="text-body my-4 list-disc pl-6" {...props} />,
-  ol: (props) => <ol className="text-body my-4 list-decimal pl-6" {...props} />,
+  MDXImage: (props) => (
+    <RevealBlock as="div">
+      <MDXImage {...props} />
+    </RevealBlock>
+  ),
+  ProjectMeta: (props) => (
+    <RevealBlock as="div">
+      <ProjectMeta {...props} />
+    </RevealBlock>
+  ),
+  Gallery: (props) => (
+    <RevealBlock as="div">
+      <Gallery {...props} />
+    </RevealBlock>
+  ),
+  img: (props) => (
+    <RevealBlock as="div">
+      <MDXImage src={String(props.src ?? "")} alt={props.alt ?? ""} />
+    </RevealBlock>
+  ),
+  h1: (props) => <RevealBlock as="h1" className="text-h1 mt-12 mb-4" {...props} />,
+  h2: (props) => <RevealBlock as="h2" className="text-h2 mt-10 mb-3" {...props} />,
+  h3: (props) => <RevealBlock as="h3" className="text-h3 mt-8 mb-2" {...props} />,
+  p: (props) => <RevealBlock as="p" className="text-body my-4 measure" {...props} />,
+  ul: (props) => (
+    <RevealBlock as="ul" className="text-body my-4 list-disc pl-6" {...props} />
+  ),
+  ol: (props) => (
+    <RevealBlock as="ol" className="text-body my-4 list-decimal pl-6" {...props} />
+  ),
   li: (props) => <li className="my-1" {...props} />,
   blockquote: (props) => (
-    <blockquote
+    <RevealBlock
+      as="blockquote"
       className="hairline-l text-body my-6 pl-6 text-fg-muted"
       {...props}
     />
   ),
   a: (props) => <a className="link" {...props} />,
-  hr: () => <hr className="hairline-b my-12 border-0" />,
+  hr: () => <RevealBlock as="hr" className="hairline-b my-12 border-0" />,
 };
