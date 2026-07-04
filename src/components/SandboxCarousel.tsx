@@ -12,8 +12,13 @@ import type { ContentItem } from "@/lib/mdx";
  * is mapped 1:1 to horizontal translate — so the carousel advances as part of
  * the page scroll, then vertical scrolling resumes once it's exhausted. Because
  * the offset is derived from scroll *position* (not wheel events), scrolling
- * back up reverses it smoothly and re-entering mid-way just works. Falls back to
- * a native horizontal scroll strip under prefers-reduced-motion.
+ * back up reverses it smoothly and re-entering mid-way just works.
+ *
+ * While the section is pinned, a predominantly-horizontal wheel/trackpad gesture
+ * is also captured and folded into the same page scroll, so swiping sideways
+ * advances the carousel just like scrolling down does (and it suppresses the
+ * browser's horizontal back/forward overscroll while engaged). Falls back to a
+ * native horizontal scroll strip under prefers-reduced-motion.
  */
 // Pinned dwell (in viewport-heights) before the slide begins and after it ends,
 // giving room to scroll into and out of the horizontal carousel.
@@ -63,14 +68,30 @@ export function SandboxCarousel({
       if (!raf) raf = requestAnimationFrame(update);
     };
 
+    // Fold horizontal swipes into the page scroll the carousel derives from, but
+    // only while the section is pinned to the viewport, and only when the gesture
+    // is predominantly horizontal (vertical scroll already works natively). This
+    // is non-passive so it can preventDefault the browser's back/forward
+    // overscroll while we consume the gesture.
+    const onWheel = (e: WheelEvent) => {
+      const rect = wrapper.getBoundingClientRect();
+      const pinned = rect.top <= 0 && rect.bottom >= window.innerHeight;
+      if (!pinned) return;
+      if (Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return;
+      window.scrollBy(0, e.deltaX);
+      e.preventDefault();
+    };
+
     measure();
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", measure);
+    wrapper.addEventListener("wheel", onWheel, { passive: false });
     // Re-measure once thumbnails/fonts settle and can change track width.
     const settle = window.setTimeout(measure, 400);
     return () => {
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", measure);
+      wrapper.removeEventListener("wheel", onWheel);
       window.clearTimeout(settle);
       cancelAnimationFrame(raf);
     };
@@ -110,8 +131,10 @@ export function SandboxCarousel({
         <div className="container-page mb-8">
           <h3 className="text-h3">{heading}</h3>
         </div>
-        <div className="flex gap-6 overflow-x-auto px-5 sm:px-8 lg:px-12">
+        <div className="flex gap-6 overflow-x-auto ps-6 sm:ps-12 lg:ps-24">
           {cards}
+          {/* Trailing breathing room so the last card isn't flush to the edge. */}
+          <div aria-hidden className="shrink-0 w-6 sm:w-12 lg:w-24" />
         </div>
       </section>
     );
@@ -125,9 +148,14 @@ export function SandboxCarousel({
         </div>
         <div
           ref={trackRef}
-          className="flex w-full gap-6 px-5 will-change-transform sm:px-8 lg:px-12"
+          className="flex w-full gap-6 ps-6 will-change-transform sm:ps-12 lg:ps-24"
         >
           {cards}
+          {/* Trailing spacer — a real flex child, not padding: the w-full track's
+              right padding falls inside the overflowing content, so it never
+              creates space after the last card. This does, and it's counted in
+              scrollWidth so the extra slide distance is scrolled through. */}
+          <div aria-hidden className="shrink-0 w-6 sm:w-12 lg:w-24" />
         </div>
       </div>
     </section>

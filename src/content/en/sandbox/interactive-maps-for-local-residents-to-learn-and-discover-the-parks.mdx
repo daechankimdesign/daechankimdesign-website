@@ -1,22 +1,23 @@
 ---
-title: "Interactive Park Maps"
-summary: "A lightweight interactive map that helps local residents discover and learn about the parks in their neighborhood."
-thumbnail: "https://placehold.co/1600x900/e3e3e3/757575.png?text=Park+Maps+1"
+title: "Mapping the Emerald Necklace"
+summary: "A custom interactive map for the Emerald Necklace Conservancy — so anyone in Boston can explore the whole chain of parks, and every point of interest along it, from their phone."
+thumbnail: "/sandbox/interactive-maps-for-local-residents-to-learn-and-discover-the-parks/emerald-necklace.png"
 date: "2025-02-15"
-tags: ["React", "Claude Code", "Framer"]
-embed: "" # live demo URL (e.g. https://your-app.vercel.app) — leave empty to hide the frame
+tags: ["React", "Mapbox", "Airtable", "Framer", "Claude Code"]
+embed: "https://daechankimdesign.github.io/daechan-parkmap/"
+embedPosterDesktop: "/sandbox/interactive-maps-for-local-residents-to-learn-and-discover-the-parks/app-shot-desktop.png"
+embedPosterTablet: "/sandbox/interactive-maps-for-local-residents-to-learn-and-discover-the-parks/app-shot-tablet.png"
+embedPosterMobile: "/sandbox/interactive-maps-for-local-residents-to-learn-and-discover-the-parks/app-shot-mobile.png"
 ---
-A weekend experiment: a small, fast interactive map that surfaces nearby parks
-and a little story about each one — trails, hours, what makes them worth the walk.
 
-![Park map interface](https://placehold.co/1600x900/e3e3e3/757575.png?text=Park+Maps+2)
+A custom interactive map I built at Other Tomorrows for the **Emerald Necklace Conservancy** — the historic chain of parks that threads through Boston, from Charlesgate down through the Back Bay Fens, the Riverway, and Jamaica Pond to the Arnold Arboretum and Franklin Park. The Conservancy wanted visitors to be able to hold the whole necklace in their hand: to feel that these aren't eight separate parks but one connected system, and to freely explore any part of it — down to a single overlook, fountain, or trailhead — right from their phone.
 
 ## What it does
 
-Pan and zoom to a neighborhood; parks animate in with a short blurb and a photo.
-The goal was discovery, not navigation — fewer pins, more reasons to go outside.
+It opens on the full necklace so the through-line reads at a glance, then invites you in. Pan and zoom the system, tap a park to focus it, or tap a point of interest to open its details — photo, hours, accessibility, the story of the place — with a filter panel to narrow by park, facility, or activity. Everything is tuned to feel like exploring rather than searching: the parks ease into their green, overlapping pins fan apart so none get buried, and even the loading moment keeps you company — _finding a sun-basking painted turtle_, drawn from the critters that actually live along the Necklace.
 
-## Notes
+## The build
 
-Built quickly with React, Framer Motion for the transitions, and Claude Code for
-the data wrangling. A sandbox piece — rough edges left intentionally visible.
+One custom React component that drops straight into the Conservancy's Framer site. Mapbox GL renders a bespoke style over a custom Emerald Necklace tileset; all the content lives in Airtable and is pulled through a small Cloudflare Worker, so no keys ever reach the browser. It's data-driven by convention — add a field named `Filter--Activities` in Airtable and an "Activities" filter just appears, no code change needed. And to keep it fast and cheap, the billable Mapbox map doesn't even load until your first interaction; before that it's a static image of the necklace. Built with Claude Code, matched to the design screen by screen.
+
+The part I like most: it stays genuinely fun to move through while still delivering the one idea that matters most — that the Emerald Necklace is a single, continuous system, not a scatter of parks. A sandbox entry, but a real one.

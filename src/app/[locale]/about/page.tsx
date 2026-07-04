@@ -1,8 +1,31 @@
+import { promises as fs } from "node:fs";
+import path from "node:path";
+import { cache } from "react";
 import { setRequestLocale } from "next-intl/server";
 import { getCompiledPage } from "@/lib/mdx";
 import { Reveal, RevealItem } from "@/components/Reveal";
 import { ProfileStack } from "@/components/ProfileStack";
 import { SideDocumentTab } from "@/components/SideDocumentTab";
+
+const STACK_IMAGE_EXT = /\.(jpe?g|png|webp|avif|gif)$/i;
+
+/**
+ * Drop-folder for the portrait fly-in cards: any image in `public/about/stack/`
+ * becomes a card, in filename order. Returns web paths (`/about/stack/<file>`).
+ * Empty/missing folder → [], so the page falls back to the frontmatter gallery.
+ */
+const getStackImages = cache(async (): Promise<string[]> => {
+  const dir = path.join(process.cwd(), "public", "about", "stack");
+  try {
+    const files = await fs.readdir(dir);
+    return files
+      .filter((f) => STACK_IMAGE_EXT.test(f))
+      .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
+      .map((f) => `/about/stack/${f}`);
+  } catch {
+    return [];
+  }
+});
 
 export default async function AboutPage({
   params,
@@ -31,6 +54,9 @@ export default async function AboutPage({
   const gallery = Array.isArray(frontmatter.gallery)
     ? (frontmatter.gallery.filter((s) => typeof s === "string") as string[])
     : [];
+  // Dropped images win; the frontmatter gallery is the placeholder fallback.
+  const dropped = await getStackImages();
+  const stackImages = dropped.length > 0 ? dropped : gallery;
 
   return (
     <main className="container-page py-24">
@@ -49,7 +75,7 @@ export default async function AboutPage({
               <ProfileStack
                 portrait={portrait}
                 alt={frontmatter.title}
-                images={gallery}
+                images={stackImages}
               />
             </div>
           ) : null}

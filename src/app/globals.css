@@ -211,7 +211,7 @@
    disabled under reduced-motion. */
 @keyframes edge-fade-in {
   from {
-    opacity: 0.5;
+    opacity: 0.05;
   }
   to {
     opacity: 1;
@@ -228,18 +228,18 @@
 @supports (animation-timeline: view()) {
   @media (prefers-reduced-motion: no-preference) {
     .edge-fade {
-      /* Two disjoint-range animations on one view timeline. BOTTOM: linear fade
-         IN toward full over the bottom 20vh (cover 0–20%), floor 50%. TOP: fade
-         OUT to 5% over a shorter top 10vh band (cover 90–100%) on a hyperbolic
-         (front-loaded ease-out) curve, so opacity drops steeply on entering the
-         band then eases asymptotically toward 5% at the edge. The ranges never
-         overlap and neither fills outside its own range (default fill: none), so
-         the middle rests at base opacity (1). A single full-range multi-stop
-         keyframe set mis-composites in Chromium, so this two-animation form is
-         used. */
-      animation: edge-fade-in linear, edge-fade-out cubic-bezier(0.16, 1, 0.3, 1);
+      /* Two disjoint-range animations on one view timeline, symmetric top and
+         bottom: each edge dims to 5% over a 5vh band on a hyperbolic (expo)
+         curve. BOTTOM (cover 0–5%): fade IN 5% → 100% with easeInExpo. TOP
+         (cover 95–100%): fade OUT 100% → 5% with easeOutExpo — the mirror image,
+         so both edges dim identically. The ranges never overlap and neither
+         fills outside its own range (default fill: none), so the middle rests at
+         base opacity (1). A single full-range multi-stop keyframe set
+         mis-composites in Chromium, so this two-animation form is used. */
+      animation: edge-fade-in cubic-bezier(0.7, 0, 0.84, 0),
+        edge-fade-out cubic-bezier(0.16, 1, 0.3, 1);
       animation-timeline: view(), view();
-      animation-range: cover 0% cover 20%, cover 90% cover 100%;
+      animation-range: cover 0% cover 5%, cover 95% cover 100%;
     }
   }
 }
