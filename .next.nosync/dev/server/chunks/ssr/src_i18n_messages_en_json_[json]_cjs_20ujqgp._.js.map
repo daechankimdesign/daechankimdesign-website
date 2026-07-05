@@ -1,6 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 3, "column": 0}, "map": {"version":3,"sources":["file:///Users/daechan/Desktop/Career/01.DaechanKim%20Studio/06.daechankimdesign%20website/portfolio_website_2026/src/i18n/messages/en.json.%5Bjson%5D.cjs/turbopack%3A/src/i18n/messages/en.json"],"sourcesContent":["{\"Nav\":{\"home\":\"Home\",\"projects\":\"Projects\",\"sandbox\":\"Sandbox\",\"blogs\":\"Blogs\",\"about\":\"About\",\"resume\":\"Resume\",\"contact\":\"Contact\",\"settings\":\"Settings\",\"backToIndex\":\"Index\"},\"Settings\":{\"title\":\"Settings\",\"language\":\"Language\",\"translating\":\"Translating…\",\"rateLimited\":\"You've already requested a translation for this page.\",\"error\":\"Translation failed. Please try again.\"},\"Content\":{\"untranslated\":\"This page hasn't been translated to your language yet. Open Settings and choose your language to translate it.\"},\"Common\":{\"comingSoon\":\"Coming soon\"}}"],"names":[],"mappings":""}}]
-}

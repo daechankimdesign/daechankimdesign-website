@@ -15,6 +15,9 @@
 
 # next.js
 /.next/
+# Build dir is renamed *.nosync so iCloud won't sync it; ignore that too.
+/.next.nosync/
+/.next*/
 /out/
 
 # production

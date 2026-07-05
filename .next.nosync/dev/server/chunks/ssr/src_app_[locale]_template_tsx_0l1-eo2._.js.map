@@ -1,6 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 4, "column": 0}, "map": {"version":3,"sources":["file:///Users/daechan/Desktop/Career/01.DaechanKim%20Studio/06.daechankimdesign%20website/portfolio_website_2026/src/app/%5Blocale%5D/template.tsx"],"sourcesContent":["import type { ReactNode } from \"react\";\n\nexport default function Template({ children }: { children: ReactNode }) {\n  return children;\n}\n"],"names":["Template","children"],"mappings":";;;;AAEe,SAASA,SAAS,EAAEC,QAAQ,EAA2B;IACpE,OAAOA;AACT"}}]
-}
