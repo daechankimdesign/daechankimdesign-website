@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { motion, useReducedMotion } from "framer-motion";
 import { useTranslations } from "next-intl";
 import { Link, usePathname } from "@/i18n/navigation";
+import { EASE_OUT, DURATION, DELAY } from "@/lib/motion";
 
 type Heading = { id: string; text: string; level: number };
 
@@ -24,6 +26,7 @@ export function SideDocumentTab({
   const [activeId, setActiveId] = useState("");
   const t = useTranslations("Nav");
   const pathname = usePathname();
+  const reduce = useReducedMotion();
 
   // The "← Index" backlink only belongs on a project/sandbox detail page; on
   // other pages (e.g. About) the tab is a plain scroll-spy outline.
@@ -79,7 +82,19 @@ export function SideDocumentTab({
   if (hidden || headings.length === 0) return null;
 
   return (
-    <nav aria-label="Table of contents" className="flex flex-col gap-6">
+    <motion.nav
+      aria-label="Table of contents"
+      className="flex flex-col gap-6"
+      // Supporting chrome — settles in LAST, after header and body. Shared
+      // tokens (see src/lib/motion.ts); inert under reduced motion.
+      initial={reduce ? false : { opacity: 0, y: 8 }}
+      animate={reduce ? undefined : { opacity: 1, y: 0 }}
+      transition={
+        reduce
+          ? undefined
+          : { duration: DURATION, ease: EASE_OUT, delay: DELAY.sideTab }
+      }
+    >
       {isDetail ? (
         <Link
           href={backTo}
@@ -108,6 +123,6 @@ export function SideDocumentTab({
           );
         })}
       </ul>
-    </nav>
+    </motion.nav>
   );
 }

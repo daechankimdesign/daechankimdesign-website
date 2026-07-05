@@ -13,6 +13,45 @@ const HERO_ROTATIONS = [
   "tests prototypes and deploys products.",
 ];
 
+// Hero image stack — one card flies into the right-hand pile per text reveal
+// (3 clauses + the lede = 4). `src` = 480px card image (quick load), `full` =
+// full-res lightbox image; both live in public/home/hero/. NOTE: local public/
+// paths render in dev but 404 on the App Hosting deploy — migrate these to
+// uploaded Firebase Storage `?alt=media` URLs before shipping (docs/MEDIA-PIPELINE.md).
+const HERO_STACK = [
+  {
+    // "conducts research to find insights" — the interview photo (landscape).
+    src: "/home/hero/research-480.jpg",
+    full: "/home/hero/research.avif",
+    w: 480,
+    h: 364,
+    caption: "Conducting user research — interviews and synthesis that surface the insight.",
+  },
+  {
+    // "creates comprehensive designs" — the "comprehensive deployment" photo (portrait).
+    src: "/home/hero/design-480.jpg",
+    full: "/home/hero/design.webp",
+    w: 360,
+    h: 480,
+    caption: "Comprehensive design — the system, flows, and screens it produces.",
+  },
+  {
+    // "tests prototypes and deploys products" — no photo supplied yet.
+    src: "",
+    full: "",
+    caption:
+      "Prototype, test, and ship. (Placeholder — add a photo; use a Firebase Storage URL for the deploy.)",
+  },
+  {
+    // The lede — the team photo ("the last photo", square).
+    src: "/home/hero/impact-480.jpg",
+    full: "/home/hero/impact.jpeg",
+    w: 480,
+    h: 480,
+    caption: "The team behind the work.",
+  },
+];
+
 export default async function Home({
   params,
 }: {
@@ -34,8 +73,12 @@ export default async function Home({
         <HeroHeadline
           phrases={HERO_ROTATIONS}
           lede="3+ years across a B2B2C startup and global client work, creating comprehensive designs and building impactful products validated by users, with the latest AI tools for prototyping and deployment."
+          stack={HERO_STACK}
         />
       </section>
+      {/* Marks the hero's bottom edge — GlobalNav reveals once this scrolls past
+          the top of the viewport. */}
+      <div id="hero-sentinel" aria-hidden />
 
       {/* Projects — featured showcase. Opacity-only reveal (rise=false): the
           section holds a sticky heading, which a transformed ancestor breaks.
@@ -50,7 +93,11 @@ export default async function Home({
       {/* Sandbox — native horizontal scroll strip (overscroll-x-contain guards
           Chrome's back-swipe). Opacity-only reveal keeps it unobtrusive. */}
       <RevealOnView rise={false}>
-        <SandboxCarousel items={sandbox} heading={t("sandbox")} />
+        <SandboxCarousel
+          items={sandbox}
+          heading={t("sandbox")}
+          detailsLabel="Details"
+        />
       </RevealOnView>
     </>
   );

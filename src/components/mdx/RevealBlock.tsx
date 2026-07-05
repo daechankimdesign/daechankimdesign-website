@@ -1,7 +1,14 @@
 "use client";
 
-import { createElement, type ReactNode } from "react";
-import { motion, useReducedMotion, type Variants } from "framer-motion";
+import {
+  createElement,
+  useCallback,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
+import { motion, useReducedMotion } from "framer-motion";
+import { EASE_OUT, DURATION, DELAY } from "@/lib/motion";
 
 /**
  * Long-form content reveal. Each MDX block fades up the first time it scrolls
@@ -12,14 +19,14 @@ import { motion, useReducedMotion, type Variants } from "framer-motion";
  * Only opacity + transform animate, so there is no layout shift: every block
  * occupies its final space and merely fades/rises into it. Reduced-motion
  * renders the plain element, fully visible.
+ *
+ * Delay policy: only blocks in the INITIAL viewport on load carry `DELAY.body`
+ * so they trail the header. Blocks below the fold reveal with NO delay the
+ * moment the reader scrolls to them, so mid-story reading is never held up.
  */
 
-const EASE = [0.22, 1, 0.36, 1] as const;
-
-const VARIANTS: Variants = {
-  hidden: { opacity: 0, y: 16 },
-  show: { opacity: 1, y: 0, transition: { duration: 1.2, ease: EASE } },
-};
+const HIDDEN = { opacity: 0, y: 16 } as const;
+const SHOW = { opacity: 1, y: 0 } as const;
 
 // Reveal slightly before the block is fully on-screen so it reads as settled by
 // the time the reader reaches it, never lagging behind the scroll.
@@ -48,6 +55,19 @@ export function RevealBlock({
   children?: ReactNode;
 } & Record<string, unknown>) {
   const reduce = useReducedMotion();
+
+  // Default to the header-trailing delay; the ref measures on mount and clears
+  // it (→ 0) for any block that starts below the fold. The ref runs at commit,
+  // before the whileInView observer can fire, and below-fold blocks aren't in
+  // view until long after — so the delay is always correct with no race.
+  const [delay, setDelay] = useState<number>(DELAY.body);
+  const measured = useRef(false);
+  const measure = useCallback((node: HTMLElement | null) => {
+    if (!node || measured.current) return;
+    measured.current = true;
+    if (node.getBoundingClientRect().top >= window.innerHeight) setDelay(0);
+  }, []);
+
   if (reduce) return createElement(as, rest, children);
 
   const M = TAGS[as];
@@ -65,10 +85,11 @@ export function RevealBlock({
 
   return (
     <M
-      initial="hidden"
-      whileInView="show"
+      ref={measure}
+      initial={HIDDEN}
+      whileInView={SHOW}
       viewport={VIEWPORT}
-      variants={VARIANTS}
+      transition={{ duration: DURATION, ease: EASE_OUT, delay }}
       {...rest}
     >
       {content}

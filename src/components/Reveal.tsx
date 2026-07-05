@@ -2,6 +2,7 @@
 
 import { motion, useReducedMotion, type Variants } from "framer-motion";
 import type { ReactNode } from "react";
+import { EASE_OUT, DURATION, STAGGER, DELAY } from "@/lib/motion";
 
 /**
  * Entrance reveal — the on-load sequence from the reference site: the nav is
@@ -16,17 +17,14 @@ import type { ReactNode } from "react";
  * Reduced-motion: the whole thing renders inert (content simply present).
  */
 
-const EASE = [0.22, 1, 0.36, 1] as const;
-
 const container: Variants = {
   hidden: {},
   show: {
     transition: {
-      // Brief hold so the reveal starts after the nav has settled, then a gentle
-      // top-to-bottom cascade. Timings run at 2x the reference for a slower,
-      // more deliberate entrance.
-      delayChildren: 0.5,
-      staggerChildren: 0.18,
+      // Header appears first (shortest delay); a gentle top-to-bottom cascade.
+      // Shared tokens — see src/lib/motion.ts.
+      delayChildren: DELAY.header,
+      staggerChildren: STAGGER,
     },
   },
 };
@@ -36,7 +34,7 @@ const item: Variants = {
   show: {
     opacity: 1,
     y: 0,
-    transition: { duration: 1.5, ease: EASE },
+    transition: { duration: DURATION, ease: EASE_OUT },
   },
 };
 
@@ -91,7 +89,7 @@ export function RevealOnView({
       initial={rise ? { opacity: 0, y: 24 } : { opacity: 0 }}
       whileInView={rise ? { opacity: 1, y: 0 } : { opacity: 1 }}
       viewport={{ once: true, margin: "0px 0px -10% 0px" }}
-      transition={{ duration: 1.2, ease: EASE, delay }}
+      transition={{ duration: DURATION, ease: EASE_OUT, delay }}
     >
       {children}
     </motion.div>

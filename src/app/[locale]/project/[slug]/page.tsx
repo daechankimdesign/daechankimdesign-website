@@ -29,7 +29,7 @@ export default async function ProjectDetailPage({
 
   if (error) {
     return (
-      <main className="container-page py-16">
+      <main className="container-page pt-32 pb-16">
         <p className="text-body text-fg-muted">
           This case study could not be rendered.
         </p>
@@ -38,7 +38,7 @@ export default async function ProjectDetailPage({
   }
 
   return (
-    <main className="container-page py-16">
+    <main className="container-page pt-32 pb-16">
       {showUntranslated ? (
         <p className="text-caption mb-6 rounded-md border border-hairline bg-surface-subtle px-4 py-3 text-fg-muted">
           {tContent("untranslated")}
@@ -57,17 +57,17 @@ export default async function ProjectDetailPage({
         <div className="flex-1 min-w-0 content-column">
           <header className="mb-8 measure">
             <Reveal>
-              {frontmatter.tags && frontmatter.tags.length > 0 ? (
-                <RevealItem as="p" className="text-caption mb-3 text-fg-muted">
-                  {frontmatter.tags.join("  ·  ")}
-                </RevealItem>
-              ) : null}
-              <RevealItem as="h1" className="text-h1">
+              <RevealItem as="h1" className="text-display">
                 {frontmatter.title}
               </RevealItem>
               {frontmatter.summary ? (
                 <RevealItem as="p" className="text-body mt-3 text-fg-muted">
                   {frontmatter.summary}
+                </RevealItem>
+              ) : null}
+              {frontmatter.tags && frontmatter.tags.length > 0 ? (
+                <RevealItem as="p" className="text-caption mt-3 text-fg-muted">
+                  {frontmatter.tags.join("  ·  ")}
                 </RevealItem>
               ) : null}
             </Reveal>

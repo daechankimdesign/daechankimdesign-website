@@ -14,7 +14,6 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "fastly.picsum.photos" },
       { protocol: "https", hostname: "firebasestorage.googleapis.com" },
       { protocol: "https", hostname: "*.firebasestorage.app" },
-      { protocol: "https", hostname: "framerusercontent.com" },
       { protocol: "https", hostname: "placehold.co" },
     ],
   },
