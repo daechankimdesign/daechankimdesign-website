@@ -76,7 +76,10 @@ export function ProgressiveImage({
       className={`relative overflow-hidden bg-surface-subtle ${className ?? ""}`}
       style={{ aspectRatio: `${width} / ${height}` }}
     >
-      {/* Low-res placeholder — small + blurred, loads fast */}
+      {/* Low-res placeholder — small + blurred, loads fast. It fades OUT as the
+          full image fades in (a true crossfade), and stays aligned with it (no
+          scale). Fading it out is what stops a transparent PNG from revealing a
+          ghost of this layer behind the loaded image. */}
       <Image
         src={src}
         alt=""
@@ -85,9 +88,10 @@ export function ProgressiveImage({
         sizes="480px"
         quality={45}
         priority={priority}
-        className="scale-105 object-cover"
-        // Minimal, tight blur (inline so it always applies). scale-105 hides the
-        // 1px edge fade the blur creates.
+        className={`object-cover transition-opacity duration-700 ${
+          loaded ? "opacity-0" : "opacity-100"
+        }`}
+        // Minimal, tight blur (inline so it always applies).
         style={{ filter: "blur(1px)" }}
       />
       {/* Full-resolution — crossfades in */}

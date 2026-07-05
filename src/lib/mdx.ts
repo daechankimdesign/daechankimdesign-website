@@ -29,6 +29,8 @@ export type Frontmatter = {
   embedPoster?: string;
   /** Optional embed frame height in px (default 720). */
   embedHeight?: number;
+  /** Curated home-preview media — image + .mp4 loop URLs, in order. Overrides auto-extraction. */
+  cover?: string[];
   [key: string]: unknown;
 };
 
@@ -97,6 +99,17 @@ export const getAllFrontmatter = cache(async (
       if (!loaded) return null;
       const { frontmatter } = getFrontmatter<Frontmatter>(loaded.mdx);
 
+      // A curated `cover` (image + .mp4 loop URLs, in order) drives the home
+      // preview verbatim; otherwise auto-extract images from the body below.
+      const cover = Array.isArray(frontmatter.cover)
+        ? frontmatter.cover.filter(
+            (s): s is string => typeof s === "string" && s.length > 0,
+          )
+        : [];
+      if (cover.length > 0) {
+        return { slug, frontmatter, images: cover.slice(0, 6) } satisfies ContentItem;
+      }
+
       // Extract images from the MDX source
       const images: string[] = [];
       if (frontmatter.thumbnail) {
@@ -116,22 +129,19 @@ export const getAllFrontmatter = cache(async (
 
       const uniqueImages = Array.from(new Set(images));
 
-      // Pad to 3 with on-brand labeled placeholders if the source has fewer.
-      if (uniqueImages.length < 3) {
-        const label = encodeURIComponent(
-          String(frontmatter.title ?? "Preview"),
-        );
-        while (uniqueImages.length < 3) {
-          const index = uniqueImages.length + 1;
-          uniqueImages.push(
-            `https://placehold.co/1600x900/e3e3e3/757575.png?text=${label}+${index}`,
-          );
-        }
-      }
+      // Hide items with no real media — drop them from every listing (home +
+      // index). "Real" = a non-placeholder image or a <VideoPlayer>; a curated
+      // `cover` (handled above) always counts. No placeholder padding: an item
+      // either has its own images or it isn't shown.
+      const realImages = uniqueImages.filter((u) => !u.includes("placehold.co"));
+      const hasVideo = /<VideoPlayer[\s/>]/.test(loaded.mdx);
+      if (realImages.length === 0 && !hasVideo) return null;
 
-      const finalImages = uniqueImages.slice(0, 5);
-
-      return { slug, frontmatter, images: finalImages } satisfies ContentItem;
+      return {
+        slug,
+        frontmatter,
+        images: realImages.slice(0, 5),
+      } satisfies ContentItem;
     }),
   );
   return items

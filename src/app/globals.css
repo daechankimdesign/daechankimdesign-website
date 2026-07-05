@@ -67,8 +67,8 @@
    not — no @supports needed. Every clamp min is >= the 11px floor.
    ============================================================================ */
 @utility text-display {
-  font-weight: 700;
-  line-height: 1.1;
+  font-weight: 600;
+  line-height: 1.35;
   letter-spacing: -0.04em;
   font-size: clamp(28px, 16px + 3vw, 40px);
   font-size: round(clamp(28px, 16px + 3vw, 40px), 1px);
@@ -279,6 +279,31 @@
   max-width: 60ch;
 }
 
+/* Full-bleed horizontal rail that still aligns its first and last items to the
+   .container-page side gutters. `--rail-inset` is exactly .container-page's side
+   inset — the centering margin past the 1440px cap, plus the page gutter. A
+   scroller consumes it as its start padding and as a trailing spacer width, so
+   the strip lines up with the page grid on both ends while cards still bleed off
+   the right edge for horizontal scroll. */
+.rail-aligned {
+  --rail-inset: calc(max((100vw - 1440px) / 2, 0px) + 20px);
+}
+@media (min-width: 768px) {
+  .rail-aligned {
+    --rail-inset: calc(max((100vw - 1440px) / 2, 0px) + 60px);
+  }
+}
+
+/* Hide the scrollbar while keeping the element scrollable (native swipe/trackpad
+   still works). Cross-browser: Firefox, legacy Edge/IE, and WebKit/Blink. */
+.no-scrollbar {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE / old Edge */
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none; /* WebKit / Blink */
+}
+
 /* Prose/content links keep the underline affordance (already the <a> default).
    A `.link` utility for explicit inline links in component code. */
 .link {
@@ -309,33 +334,3 @@
   flex-shrink: 0;
 }
 
-/* Hero "end-to-end": the palette scrolls across the word. Every colour stop is
-   offset by --hero-travel (driven each frame by HeroHeadline), so the whole
-   gradient slides left — animating a value INSIDE the gradient repaints the
-   clipped text reliably (background-position does not). The palette is repeated
-   wide (200% per colour) so only ~one colour shows at a time and the change
-   reads clearly. The period (600%) must match HeroHeadline's CYCLE_TRAVEL for a
-   seamless, forward-only loop. */
-.hero-fill-text {
-  --hero-travel: 0%;
-  background-image: linear-gradient(
-    90deg,
-    #7e8fed calc(0% - var(--hero-travel)),
-    #eeaeca calc(200% - var(--hero-travel)),
-    #94bbe9 calc(400% - var(--hero-travel)),
-    #7e8fed calc(600% - var(--hero-travel)),
-    #eeaeca calc(800% - var(--hero-travel)),
-    #94bbe9 calc(1000% - var(--hero-travel)),
-    #7e8fed calc(1200% - var(--hero-travel))
-  );
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  color: transparent;
-}
-@supports not ((-webkit-background-clip: text) or (background-clip: text)) {
-  .hero-fill-text {
-    color: var(--color-fg);
-    -webkit-text-fill-color: currentColor;
-  }
-}
