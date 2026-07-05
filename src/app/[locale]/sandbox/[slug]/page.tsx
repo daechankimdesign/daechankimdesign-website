@@ -30,7 +30,7 @@ export default async function SandboxDetailPage({
 
   if (error) {
     return (
-      <main className="container-page py-16">
+      <main className="container-page pt-32 pb-16">
         <p className="text-body text-fg-muted">
           This entry could not be rendered.
         </p>
@@ -39,7 +39,7 @@ export default async function SandboxDetailPage({
   }
 
   return (
-    <main className="container-page py-16">
+    <main className="container-page pt-32 pb-16">
       {showUntranslated ? (
         <p className="text-caption mb-6 rounded-md border border-hairline bg-surface-subtle px-4 py-3 text-fg-muted">
           {tContent("untranslated")}

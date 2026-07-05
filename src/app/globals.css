@@ -15,6 +15,11 @@
   --color-surface: #e3e3e3; /* active pill / raised surface */
   --color-surface-subtle: #f5f5f5; /* subtle background blocks */
   --color-canvas: #ffffff; /* page background */
+  /* shadcn-registry bridge: components pulled from a shadcn registry (e.g. the
+     CoverFlow carousel) reference `foreground`/`background`. Map them onto the
+     project's own tokens so no shadcn theme is needed. */
+  --color-foreground: #1e1e1e; /* == --color-fg */
+  --color-background: #ffffff; /* == --color-canvas */
 }
 
 /* next/font CSS variables resolve via `inline` (var-referencing-var) */
@@ -196,53 +201,79 @@
 /* ============================================================================
    Layout helpers
    ============================================================================ */
-/* Per-block edge fade — a content block dims toward 50% opacity while it sits in
-   the TOP or BOTTOM ~20vh of the viewport, and is full opacity through the
-   middle. Driven by a scroll (view) timeline across the block's whole pass
-   through the viewport, so it runs on the compositor at ~zero main-thread cost
-   and adds no JS. Applied to a wrapper INSIDE each entrance-reveal element, so
-   the two opacities multiply. Reveal owns the entrance; this owns the position
-   dim.
+/* Viewport edge fade — a single, page-level mask (NOT per-object). Two
+   viewport-fixed bands, one at the top edge and one at the bottom, each exactly
+   10svh tall, paint the canvas colour opaque at the very edge and fade to
+   transparent inward. On the solid canvas background this reads as a true mask:
+   whatever content crosses the extreme edge dissolves into the page, uniformly
+   and independent of object boundaries.
 
-   Over the full `cover` range: 0% = block top at the viewport bottom (just
-   entering) → dims up to full by 20% (~20vh in), holds through the middle, then
-   fades back down from 80% to 0.5 at 100% (block bottom leaving the top edge).
-   Gated behind @supports (no-op where scroll timelines are unavailable) and
-   disabled under reduced-motion. */
-@keyframes edge-fade-in {
-  from {
-    opacity: 0.05;
-  }
-  to {
-    opacity: 1;
+   Delivered as body::before / body::after → zero JSX, no JS, SSR-safe.
+   `position: fixed` pins the bands to the viewport during document scroll (they
+   are taken out of the body's flex flow, so no layout effect). `svh` keeps the
+   band height stable while mobile URL bars grow/shrink. z-index 25 sits ABOVE
+   page content but BELOW GlobalNav (sticky z-30) and the UniversalNav pills
+   (fixed z-40), so both navs stay crisp. pointer-events: none lets every
+   click / scroll / hover pass straight through.
+
+   Curve: opacity follows a reciprocal graph (y = 1/x) — steep at the very edge,
+   flattening inward ("dramatic yet natural"). With t = fraction into the band
+   and x = 1 + 11·t, band alpha A(t) = (1/x − 1/12) / (1 − 1/12); content opacity
+   is 1 − A. Stops are dense near the edge (high curvature) and sparse inward
+   (flat tail) so linear interpolation between them traces the hyperbola. */
+body::before,
+body::after {
+  content: "";
+  position: fixed;
+  inset-inline: 0;
+  height: 10svh; /* equal top & bottom; svh = stable under mobile URL-bar resize */
+  z-index: 25; /* above content, below GlobalNav (z-30) and UniversalNav (z-40) */
+  pointer-events: none;
+}
+/* rgba(255,255,255,…) === var(--color-canvas) (#ffffff). Keep in sync if the
+   page background ever changes. */
+body::before {
+  top: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 1) 0%,
+    rgba(255, 255, 255, 0.729) 3%,
+    rgba(255, 255, 255, 0.566) 6%,
+    rgba(255, 255, 255, 0.429) 10%,
+    rgba(255, 255, 255, 0.321) 15%,
+    rgba(255, 255, 255, 0.25) 20%,
+    rgba(255, 255, 255, 0.163) 30%,
+    rgba(255, 255, 255, 0.092) 45%,
+    rgba(255, 255, 255, 0.043) 65%,
+    rgba(255, 255, 255, 0) 100%
+  );
+}
+body::after {
+  bottom: 0;
+  background: linear-gradient(
+    to top,
+    rgba(255, 255, 255, 1) 0%,
+    rgba(255, 255, 255, 0.729) 3%,
+    rgba(255, 255, 255, 0.566) 6%,
+    rgba(255, 255, 255, 0.429) 10%,
+    rgba(255, 255, 255, 0.321) 15%,
+    rgba(255, 255, 255, 0.25) 20%,
+    rgba(255, 255, 255, 0.163) 30%,
+    rgba(255, 255, 255, 0.092) 45%,
+    rgba(255, 255, 255, 0.043) 65%,
+    rgba(255, 255, 255, 0) 100%
+  );
+}
+/* A fixed overlay would otherwise tint printed pages. */
+@media print {
+  body::before,
+  body::after {
+    display: none;
   }
 }
-@keyframes edge-fade-out {
-  from {
-    opacity: 1;
-  }
-  to {
-    opacity: 0.05;
-  }
-}
-@supports (animation-timeline: view()) {
-  @media (prefers-reduced-motion: no-preference) {
-    .edge-fade {
-      /* Two disjoint-range animations on one view timeline, symmetric top and
-         bottom: each edge dims to 5% over a 5vh band on a hyperbolic (expo)
-         curve. BOTTOM (cover 0–5%): fade IN 5% → 100% with easeInExpo. TOP
-         (cover 95–100%): fade OUT 100% → 5% with easeOutExpo — the mirror image,
-         so both edges dim identically. The ranges never overlap and neither
-         fills outside its own range (default fill: none), so the middle rests at
-         base opacity (1). A single full-range multi-stop keyframe set
-         mis-composites in Chromium, so this two-animation form is used. */
-      animation: edge-fade-in cubic-bezier(0.7, 0, 0.84, 0),
-        edge-fade-out cubic-bezier(0.16, 1, 0.3, 1);
-      animation-timeline: view(), view();
-      animation-range: cover 0% cover 5%, cover 95% cover 100%;
-    }
-  }
-}
+/* `.edge-fade` (still present on Reveal / RevealBlock / card wrappers) is now a
+   no-op: the old per-object scroll-timeline dim is gone. framer-motion owns the
+   entrance on the outer element, so those wrappers just render as plain blocks. */
 
 /* ── Width system ──────────────────────────────────────────────────────────
    One shell, one content column, two reading measures. Compose them; don't
@@ -302,6 +333,12 @@
 }
 .no-scrollbar::-webkit-scrollbar {
   display: none; /* WebKit / Blink */
+}
+
+/* 3D transform context — used by the CoverFlow cards (not a default Tailwind
+   utility). The stage that actually needs it also sets it inline. */
+.preserve-3d {
+  transform-style: preserve-3d;
 }
 
 /* Prose/content links keep the underline affordance (already the <a> default).

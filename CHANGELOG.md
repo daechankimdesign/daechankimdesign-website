@@ -56,6 +56,52 @@ build; roadmap Phase 5 is the runtime translation (`4348eec`).
 
 ## Log
 
+### 2026-07-05 — Furniture case study: migrate images off Framer CDN → Firebase
+
+- The furniture case study was the only content still hosted on `framerusercontent.com`
+  (13 refs). Downloaded all 12 originals to
+  `public/projects/translate-furniture-as-a-service-to-tackle-social-phenomenon/`
+  (working copies), uploaded to `media/projects/<slug>/` via `scripts/upload-media.mjs`,
+  and rewrote every MDX reference (incl. the frontmatter thumbnail) to the canonical
+  Firebase `?alt=media` URLs. All 12 verified `200`; page renders with zero Framer refs.
+- Removed the now-unused `framerusercontent.com` from `next.config.ts` `remotePatterns`
+  (takes effect on next dev restart). The project no longer depends on Framer storage.
+
+### 2026-07-05 — Furniture (ISHO CloudLiving) case study: image alignment
+
+- Same media↔narrative review on `translate-furniture-as-a-service-to-tackle-social-phenomenon.mdx`
+  (12 images, all on the Framer CDN — no local/Firebase copies), blind-verified
+  with a 12-agent pass.
+- **Fixed the one placement mismatch:** the `SmId` image was captioned "Concept 03,
+  a convertible bed and dining table" in **Design** but is actually the **"A Day in
+  the Life" time-use diagram** — moved to **Research** (beside the Think-Out-Loud
+  stimulus) and recaptioned. Design's "three directions" list is now text-only; the
+  convertible-bed concept has no asset (gap).
+- **Sharpened two over-claiming captions/alts:** the Service hero (`fDyY`) is a
+  delivery-tracking + empty→furnished shot, not a generic "final service"; the
+  Research stimulus (`cS2R`) alt now names the floor-plan layout tool.
+- The other 9 images verified well-placed. Note: `4RBx` (moodboard) also contains a
+  journey map that overlaps the standalone blueprint `UFFz` (left as-is).
+
+### 2026-07-05 — Oria case study: media ↔ narrative alignment
+
+- Reviewed every image/video in `accelerating-institutions-to-preserve-the-local-history.mdx`
+  against the **actual media** (stills read directly; videos frame-extracted with
+  ffmpeg into contact sheets), then blind-verified each caption with a 7-agent pass.
+- **Fixed two hard mismatches:** `network.jpg` was captioned "browse public
+  campaigns" but shows a neighbor *answering* a prompt (moved to the answering
+  beat, recaptioned); `oria-explore.mp4` was captioned "the Oria network / live
+  campaigns" but is a *full submission flow* (recaptioned honestly).
+- **Broadened / corrected partials:** `oria-admin.mp4` caption now names the whole
+  loop it shows; `oria-answer.mp4` recaptioned; `stories.jpg` recaptioned and its
+  intrinsic size corrected to 1800×1095.
+- **Deduped:** dropped `oria-archive.mp4` from the body (near-identical to
+  `stories.jpg`); the file stays in the repo/Storage, just unreferenced.
+- **Known gaps (assets to capture):** the "campaign creation / Gemini question
+  generation" paragraph and the "ownership + analytics" paragraph have no matching
+  screenshot; left text-only pending capture. Domain left as `missionoria.com` per
+  owner (screenshots are on `partner.missionoria.com`).
+
 ### 2026-07-03 — Sans-only typography (drop Noto Serif)
 
 - **Removed serif entirely.** `text-h3` (the last serif consumer — homepage

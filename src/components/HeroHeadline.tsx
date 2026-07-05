@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { ArrowDown, ArrowUpRight } from "iconoir-react";
+import { HeroImageStack, type HeroStackItem } from "./HeroImageStack";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
@@ -25,18 +26,21 @@ function scrollToWork() {
 /**
  * Hero headline. The subject line fades in, then the clauses STACK downward —
  * one every STEP ms, each lighting its "end-to-end" part 5% → 100% — then the
- * lede and finally the two CTA buttons ride in at the bottom. The whole sequence
- * plays ONCE per viewport visit (IntersectionObserver replays it on re-entry, and
- * it plays on mount so it never depends solely on the observer); it never loops.
- * Every line stays in flow (opacity/transform only) so nothing below shifts.
+ * lede and finally the two CTA buttons ride in. In sync, an image flies into the
+ * right-hand stack on each text reveal (3 clauses + lede = 4 cards). The whole
+ * sequence plays ONCE per viewport visit (IntersectionObserver replays on
+ * re-entry, plays on mount so it never waits on the observer); it never loops.
+ * Text lines stay in flow (opacity/transform only) so nothing below shifts.
  * Reduced-motion → everything static.
  */
 export function HeroHeadline({
   phrases,
   lede,
+  stack,
 }: {
   phrases: string[];
   lede: string;
+  stack: HeroStackItem[];
 }) {
   const reduce = useReducedMotion();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -107,86 +111,96 @@ export function HeroHeadline({
 
   const ledeShown = count > phrases.length;
   const buttonsShown = count > phrases.length + 1;
+  // One image reveals per clause + one for the lede (== stack.length).
+  const cardsRevealed = Math.min(count, stack.length);
 
   return (
-    <div ref={containerRef} className="flex w-full flex-col items-start">
-      <h1 className="text-display">
-        {/* Subject line — fades in on entry; "end-to-end" parts light with the stack. */}
-        <motion.span
-          className="block"
-          initial={false}
-          animate={{ opacity: entered ? 1 : 0, y: entered ? 0 : 20 }}
-          transition={{ duration: 0.6, ease: EASE }}
-        >
-          <span className="block">Daechan Kim,</span>
-          <span className="block">
-            a proven{" "}
-            <span className="whitespace-nowrap">
-              {HYPHEN_PARTS.map((part, i) => (
-                <motion.span
-                  key={i}
-                  initial={false}
-                  animate={{ opacity: i < count ? 1 : 0.05 }}
-                  transition={{ duration: 0.4, ease: EASE }}
-                >
-                  {part}
-                </motion.span>
-              ))}
-            </span>{" "}
-            product designer,
-          </span>
-        </motion.span>
-
-        {/* Stacking clauses — reveal at counts 1..N. */}
-        {phrases.map((line, i) => (
+    <div
+      ref={containerRef}
+      className="flex w-full flex-col gap-12 lg:flex-row lg:items-center lg:gap-16"
+    >
+      <div className="flex flex-1 flex-col items-start">
+        <h1 className="text-display">
+          {/* Subject line — fades in on entry; "end-to-end" parts light with the stack. */}
           <motion.span
-            key={i}
             className="block"
             initial={false}
-            animate={{ opacity: i < count ? 1 : 0, y: i < count ? 0 : 16 }}
-            transition={{ duration: 0.4, ease: EASE }}
+            animate={{ opacity: entered ? 1 : 0, y: entered ? 0 : 20 }}
+            transition={{ duration: 0.6, ease: EASE }}
           >
-            {line}
+            <span className="block">Daechan Kim,</span>
+            <span className="block">
+              a proven{" "}
+              <span className="whitespace-nowrap">
+                {HYPHEN_PARTS.map((part, i) => (
+                  <motion.span
+                    key={i}
+                    initial={false}
+                    animate={{ opacity: i < count ? 1 : 0.05 }}
+                    transition={{ duration: 0.4, ease: EASE }}
+                  >
+                    {part}
+                  </motion.span>
+                ))}
+              </span>{" "}
+              product designer,
+            </span>
           </motion.span>
-        ))}
-      </h1>
 
-      {/* Lede — rides in a beat after the last clause. */}
-      <motion.p
-        className="text-sub-display measure-lede mt-8 text-fg-muted"
-        initial={false}
-        animate={{ opacity: ledeShown ? 1 : 0, y: ledeShown ? 0 : 16 }}
-        transition={{ duration: 0.5, ease: EASE }}
-      >
-        {lede}
-      </motion.p>
+          {/* Stacking clauses — reveal at counts 1..N. */}
+          {phrases.map((line, i) => (
+            <motion.span
+              key={i}
+              className="block"
+              initial={false}
+              animate={{ opacity: i < count ? 1 : 0, y: i < count ? 0 : 16 }}
+              transition={{ duration: 0.4, ease: EASE }}
+            >
+              {line}
+            </motion.span>
+          ))}
+        </h1>
 
-      {/* CTA buttons — the final step, after the lede. */}
-      <motion.div
-        className="mt-8 flex flex-wrap items-center gap-6"
-        initial={false}
-        animate={{ opacity: buttonsShown ? 1 : 0, y: buttonsShown ? 0 : 16 }}
-        transition={{ duration: 0.5, ease: EASE }}
-        inert={!buttonsShown}
-      >
-        <button
-          type="button"
-          onClick={scrollToWork}
-          className="link-button hairline-b"
+        {/* Lede — rides in a beat after the last clause. */}
+        <motion.p
+          className="text-sub-display measure-lede mt-8 text-fg-muted"
+          initial={false}
+          animate={{ opacity: ledeShown ? 1 : 0, y: ledeShown ? 0 : 16 }}
+          transition={{ duration: 0.5, ease: EASE }}
         >
-          <span>Work</span>
-          <ArrowDown aria-hidden />
-        </button>
-        <a
-          href="/resume.pdf"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="link-button hairline-b"
+          {lede}
+        </motion.p>
+
+        {/* CTA buttons — the final step, after the lede. */}
+        <motion.div
+          className="mt-8 flex flex-wrap items-center gap-6"
+          initial={false}
+          animate={{ opacity: buttonsShown ? 1 : 0, y: buttonsShown ? 0 : 16 }}
+          transition={{ duration: 0.5, ease: EASE }}
+          inert={!buttonsShown}
         >
-          <span>Resume</span>
-          <ArrowUpRight aria-hidden />
-        </a>
-      </motion.div>
+          <button
+            type="button"
+            onClick={scrollToWork}
+            className="link-button hairline-b"
+          >
+            <span>Work</span>
+            <ArrowDown aria-hidden />
+          </button>
+          <a
+            href="/resume.pdf"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="link-button hairline-b"
+          >
+            <span>Resume</span>
+            <ArrowUpRight aria-hidden />
+          </a>
+        </motion.div>
+      </div>
+
+      {/* Right — image stack; a card flies in on each text reveal. */}
+      <HeroImageStack items={stack} revealed={cardsRevealed} reduce={!!reduce} />
     </div>
   );
 }
