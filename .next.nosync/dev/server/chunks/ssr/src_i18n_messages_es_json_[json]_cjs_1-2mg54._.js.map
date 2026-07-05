@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 3, "column": 0}, "map": {"version":3,"sources":["file:///Users/daechan/Desktop/Career/01.DaechanKim%20Studio/06.daechankimdesign%20website/portfolio_website_2026/src/i18n/messages/es.json.%5Bjson%5D.cjs/turbopack%3A/src/i18n/messages/es.json"],"sourcesContent":["{\"Nav\":{\"home\":\"Inicio\",\"projects\":\"Proyectos\",\"sandbox\":\"Sandbox\",\"blogs\":\"Blog\",\"about\":\"Acerca\",\"resume\":\"Currículum\",\"contact\":\"Contacto\",\"settings\":\"Ajustes\",\"backToIndex\":\"Index\"},\"Settings\":{\"title\":\"Ajustes\",\"language\":\"Idioma\",\"translating\":\"Traduciendo…\",\"rateLimited\":\"Ya has solicitado una traducción de esta página.\",\"error\":\"La traducción falló. Inténtalo de nuevo.\"},\"Content\":{\"untranslated\":\"Esta página aún no se ha traducido a tu idioma. Abre Ajustes y elige tu idioma para traducirla.\"},\"Common\":{\"comingSoon\":\"Próximamente\"}}"],"names":[],"mappings":""}}]
+}

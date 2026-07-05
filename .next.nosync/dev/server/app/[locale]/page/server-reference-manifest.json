@@ -1,0 +1,17 @@
+{
+  "node": {
+    "409eafe19369f774c18a9100b06425b6f02dcd3291": {
+      "workers": {
+        "app/[locale]/page": {
+          "moduleId": "[project]/.next-internal/server/app/[locale]/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/actions/translate.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": true,
+          "exportedName": "translatePage",
+          "filename": "src/app/actions/translate.ts"
+        }
+      },
+      "exportedName": "translatePage",
+      "filename": "src/app/actions/translate.ts"
+    }
+  },
+  "edge": {}
+}

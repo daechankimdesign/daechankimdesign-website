@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { ArrowUpRight } from "iconoir-react";
+import { ArrowUpRight, ArrowRight } from "iconoir-react";
 import { Link } from "@/i18n/navigation";
 
 type LinkButtonProps = {
@@ -7,25 +7,29 @@ type LinkButtonProps = {
   children: ReactNode;
   /** Render a plain external <a> (opens a new tab) instead of the locale-aware Link. */
   external?: boolean;
+  /** Arrow glyph: "up-right" (external/nav feel, default) or "right" (in-app forward). */
+  arrow?: "up-right" | "right";
   className?: string;
 };
 
 /**
  * Design-system link button: a text link styled as a control — 8px block
- * padding, an up-right arrow scaled to the text, and a hairline bottom rule.
+ * padding, an arrow scaled to the text, and a hairline bottom rule.
  * Internal/locale-aware by default; pass `external` for out-of-app links.
  */
 export function LinkButton({
   href,
   children,
   external = false,
+  arrow = "up-right",
   className = "",
 }: LinkButtonProps) {
   const cls = `link-button hairline-b ${className}`.trim();
+  const Arrow = arrow === "right" ? ArrowRight : ArrowUpRight;
   const inner = (
     <>
       <span>{children}</span>
-      <ArrowUpRight aria-hidden />
+      <Arrow aria-hidden />
     </>
   );
 

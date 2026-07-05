@@ -31,7 +31,9 @@ function ProjectMeta({
         </p>
       ) : null}
       <div className="mt-3">
-        <LinkButton href={`/project/${slug}`}>{detailsLabel}</LinkButton>
+        <LinkButton href={`/project/${slug}`} arrow="right">
+          {detailsLabel}
+        </LinkButton>
       </div>
     </div>
   );
@@ -118,14 +120,27 @@ function FeaturedProjectCard({
                 href={`/project/${slug}`}
                 className="edge-fade block no-underline overflow-hidden rounded-md border border-hairline transition-transform duration-300 hover:scale-[1.005]"
               >
-                <ProgressiveImage
-                  src={src}
-                  alt={`${frontmatter.title} preview ${i + 1}`}
-                  width={1600}
-                  height={900}
-                  sizes="(max-width: 1024px) 100vw, 1680px"
-                  className="w-full object-cover aspect-[16/9] rounded-md"
-                />
+                {/\.mp4($|\?)/i.test(src) ? (
+                  <video
+                    src={src}
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    preload="metadata"
+                    aria-label={`${frontmatter.title} preview ${i + 1}`}
+                    className="w-full object-cover aspect-[16/9] rounded-md bg-surface-subtle"
+                  />
+                ) : (
+                  <ProgressiveImage
+                    src={src}
+                    alt={`${frontmatter.title} preview ${i + 1}`}
+                    width={1600}
+                    height={900}
+                    sizes="(max-width: 1024px) 100vw, 1680px"
+                    className="w-full object-cover aspect-[16/9] rounded-md"
+                  />
+                )}
               </Link>
             ))
           : null}
