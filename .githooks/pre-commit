@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+#
+# Guard against local /public image paths in code + content.
+#
+# Firebase App Hosting does NOT serve the Next.js public/ directory, so any
+# root-relative image path (e.g. src="/home/hero/x.jpg", thumbnail: /about/x.png)
+# renders in dev but 404s in production. Media must live on Firebase Storage
+# (media/…) and be referenced by its ?alt=media URL. See docs/MEDIA-PIPELINE.md.
+#
+# This blocks the commit if any staged src/ file introduces such a path.
+# Bypass once (rarely needed): git commit --no-verify
+#
+set -euo pipefail
+
+# Match a root-relative image path only where it reads as a reference — right
+# after a quote / '(' / '=' / ',' / whitespace, or a YAML `key: /…` / `- /…`.
+# Remote URLs never match: their path segments follow an alphanumeric or ':' or
+# '%' (e.g. "https://…/o/media%2F…jpg", "https://placehold.co/…/x.png").
+PATTERN='(^|["(=,[:space:]])/[A-Za-z0-9._-]+(/[A-Za-z0-9._-]+)*\.(jpg|jpeg|png|webp|avif|gif|svg)([^A-Za-z]|$)'
+
+files=$(git diff --cached --name-only --diff-filter=ACM | grep -E '^src/.*\.(tsx?|jsx?|mdx?|md)$' || true)
+[ -z "$files" ] && exit 0
+
+fail=0
+while IFS= read -r f; do
+  [ -z "$f" ] && continue
+  hits=$(git show ":$f" | grep -nE "$PATTERN" || true)
+  if [ -n "$hits" ]; then
+    if [ "$fail" -eq 0 ]; then
+      printf '\n\033[31m✖ Local /public image path(s) found — these 404 on the App Hosting deploy.\033[0m\n'
+      printf '  Upload to Firebase Storage (media/…) and use the ?alt=media URL. See docs/MEDIA-PIPELINE.md\n\n'
+    fi
+    fail=1
+    printf '  \033[1m%s\033[0m\n' "$f"
+    printf '%s\n' "$hits" | sed 's/^/      /'
+  fi
+done <<< "$files"
+
+if [ "$fail" -eq 1 ]; then
+  printf '\n  Fix by hosting on Storage, or bypass once with: git commit --no-verify\n'
+  printf '  (false positive? tune the PATTERN in .githooks/pre-commit)\n\n'
+  exit 1
+fi
+exit 0

@@ -86,8 +86,8 @@ export function SandboxCarousel({
               items={covers}
               itemWidth={500}
               itemHeight={500}
-              centerGap={265}
-              stackSpacing={70}
+              centerGap={215}
+              stackSpacing={44}
               initialIndex={mid}
               showCaption={false}
               onIndexChange={setActive}

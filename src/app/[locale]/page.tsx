@@ -15,22 +15,22 @@ const HERO_ROTATIONS = [
 
 // Hero image stack — one card flies into the right-hand pile per text reveal
 // (3 clauses + the lede = 4). `src` = 480px card image (quick load), `full` =
-// full-res lightbox image; both live in public/home/hero/. NOTE: local public/
-// paths render in dev but 404 on the App Hosting deploy — migrate these to
-// uploaded Firebase Storage `?alt=media` URLs before shipping (docs/MEDIA-PIPELINE.md).
+// full-res lightbox image. Hosted on Firebase Storage (media/home/hero/) because
+// App Hosting does NOT serve public/ — local paths 404 on the deploy. Source
+// files are kept in public/home/hero/. See docs/MEDIA-PIPELINE.md.
 const HERO_STACK = [
   {
     // "conducts research to find insights" — the interview photo (landscape).
-    src: "/home/hero/research-480.jpg",
-    full: "/home/hero/research.avif",
+    src: "https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fhome%2Fhero%2Fresearch-480.jpg?alt=media",
+    full: "https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fhome%2Fhero%2Fresearch.avif?alt=media",
     w: 480,
     h: 364,
     caption: "Conducting user research — interviews and synthesis that surface the insight.",
   },
   {
     // "creates comprehensive designs" — the "comprehensive deployment" photo (portrait).
-    src: "/home/hero/design-480.jpg",
-    full: "/home/hero/design.webp",
+    src: "https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fhome%2Fhero%2Fdesign-480.jpg?alt=media",
+    full: "https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fhome%2Fhero%2Fdesign.webp?alt=media",
     w: 360,
     h: 480,
     caption: "Comprehensive design — the system, flows, and screens it produces.",
@@ -44,8 +44,8 @@ const HERO_STACK = [
   },
   {
     // The lede — the team photo ("the last photo", square).
-    src: "/home/hero/impact-480.jpg",
-    full: "/home/hero/impact.jpeg",
+    src: "https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fhome%2Fhero%2Fimpact-480.jpg?alt=media",
+    full: "https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fhome%2Fhero%2Fimpact.jpeg?alt=media",
     w: 480,
     h: 480,
     caption: "The team behind the work.",
