@@ -149,6 +149,12 @@ export interface CoverFlowProps {
   enableAudio?: boolean
   /** Built-in centered title/subtitle overlay. Set false to render your own. */
   showCaption?: boolean
+  /**
+   * Hover a card to slide it to center (after a short delay). Guarded so the
+   * layout shift it causes never re-triggers itself — only a fresh mouse move
+   * arms the next slide.
+   */
+  enableHoverSlide?: boolean
   scrollThreshold?: number
   reduceMotion?: boolean
   className?: string
@@ -187,6 +193,7 @@ export function CoverFlow({
   enableScroll = true,
   enableAudio = false,
   showCaption = true,
+  enableHoverSlide = false,
   scrollThreshold = 100,
   reduceMotion,
   className,
@@ -241,6 +248,13 @@ export function CoverFlow({
   const enableClickToSnapRef = useRef(enableClickToSnap)
   const onIndexChangeRef = useRef(onIndexChange)
   const isMountedForCallbackRef = useRef(false)
+  const enableHoverSlideRef = useRef(enableHoverSlide)
+  // Hover-to-slide is driven by each card's own mousemove — a REAL pointer move.
+  // A card sliding under a STATIONARY cursor fires mouseenter but never
+  // mousemove, so it can't re-trigger itself: the loop is impossible by
+  // construction (no arm/disarm bookkeeping needed). `hoverTimer` is the 0.5s
+  // settle delay; the last card the pointer rests on wins.
+  const hoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   activeIndexRef.current = activeIndex
   enableScrollRef.current = enableScroll
@@ -248,6 +262,7 @@ export function CoverFlow({
   onItemClickRef.current = onItemClick
   enableClickToSnapRef.current = enableClickToSnap
   onIndexChangeRef.current = onIndexChange
+  enableHoverSlideRef.current = enableHoverSlide
 
   const systemReducedMotion = useReducedMotion()
   const prefersReducedMotion = reduceMotion ?? systemReducedMotion
@@ -327,6 +342,22 @@ export function CoverFlow({
     },
     [jumpToIndex],
   )
+
+  // Called on a card's mousemove. Debounced (100ms): while the pointer keeps
+  // moving the timer resets, so it fires once the pointer settles on a card.
+  // Hovering the already-centered card is a no-op, so nothing repeats until the
+  // pointer actually moves onto a different card.
+  const handleCardHover = useCallback(
+    (index: number) => {
+      if (!enableHoverSlideRef.current) return
+      if (index === activeIndexRef.current) return
+      if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current)
+      hoverTimerRef.current = setTimeout(() => jumpToIndex(index), 100)
+    },
+    [jumpToIndex],
+  )
+
+  useEffect(() => () => { if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current) }, [])
 
   const onDragStart = useCallback(() => setIsDragging(true), [])
 
@@ -414,6 +445,7 @@ export function CoverFlow({
               reduceMotion={prefersReducedMotion ?? false}
               renderImage={renderImage}
               onCardClick={handleCardClick}
+              onCardHover={handleCardHover}
             />
           ))}
         </div>
@@ -462,6 +494,7 @@ interface CardProps {
   reduceMotion: boolean
   renderImage?: (props: RenderImageProps) => ReactNode
   onCardClick: (item: CoverFlowItem, index: number) => void
+  onCardHover: (index: number) => void
 }
 
 const CoverFlowItemCard = memo(function CoverFlowItemCard({
@@ -480,6 +513,7 @@ const CoverFlowItemCard = memo(function CoverFlowItemCard({
   reduceMotion,
   renderImage,
   onCardClick,
+  onCardHover,
 }: CardProps) {
   const rotateY = useTransform(scrollX, (value) => {
     if (reduceMotion) return 0
@@ -529,6 +563,7 @@ const CoverFlowItemCard = memo(function CoverFlowItemCard({
         pointerEvents: 'auto',
       }}
       onClick={() => onCardClick(item, index)}
+      onMouseMove={() => onCardHover(index)}
     >
       <div className="relative w-full h-full rounded-xl shadow-2xl bg-black">
         <div className="absolute inset-0 rounded-xl border border-white/10 z-20 pointer-events-none" />

@@ -90,6 +90,7 @@ export function SandboxCarousel({
               stackSpacing={44}
               initialIndex={mid}
               showCaption={false}
+              enableHoverSlide
               onIndexChange={setActive}
               onItemClick={(item) => router.push(`/sandbox/${item.id}`)}
               renderImage={(p) =>
