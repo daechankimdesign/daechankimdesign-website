@@ -185,6 +185,7 @@
   },
   "active": "739b7686e7cf8ead",
   "lastOpenFiles": [
+    "src/__hooktest.mdx",
     "public/projects/translate-furniture-as-a-service-to-tackle-social-phenomenon/presentation.png",
     "public/projects/translate-furniture-as-a-service-to-tackle-social-phenomenon/mobile-renewal.png",
     "public/projects/translate-furniture-as-a-service-to-tackle-social-phenomenon/mobile-feedback.png",
@@ -195,7 +196,6 @@
     "public/projects/translate-furniture-as-a-service-to-tackle-social-phenomenon/design-moodboard.png",
     "public/projects/translate-furniture-as-a-service-to-tackle-social-phenomenon/research-day-in-life.png",
     "public/projects/translate-furniture-as-a-service-to-tackle-social-phenomenon/research-affinity-map.png",
-    "public/projects/translate-furniture-as-a-service-to-tackle-social-phenomenon/research-floorplan-stimulus.png",
     "public/projects/translate-furniture-as-a-service-to-tackle-social-phenomenon",
     "src/components/CoverFlow.tsx",
     "src/lib/motion.ts",
