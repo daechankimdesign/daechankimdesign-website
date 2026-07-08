@@ -56,6 +56,31 @@ build; roadmap Phase 5 is the runtime translation (`4348eec`).
 
 ## Log
 
+### 2026-07-07 — Home entrance: harmonize the hero with the slug-page motion voice
+
+Brought the landing-page entrance into the same motion family as the project
+slug page (which uses the shared `src/lib/motion.ts` tokens) — **Option A:
+harmonize, don't replace the hero's signature stacking + fly-in sequence.**
+
+- `HeroHeadline.tsx` / `HeroImageStack.tsx`: dropped both local
+  `EASE = [0.22,1,0.36,1]` constants and adopted the shared `EASE_OUT =
+  [0.16,1,0.3,1]` (easeOutExpo) so every hero beat shares the slug family's
+  deceleration. Grew per-element settle durations modestly (subject 0.6→0.9,
+  clauses 0.4→0.55, lede/CTA 0.5→0.7, card 0.5→0.6) so the sharper expo tail
+  reads as a slow "settle." Kept `STEP`/`LEDE_DELAY` = 600 and the count-driven
+  timeline untouched — that chain IS the hero's delay ladder (the analog of
+  `DELAY.header → body → sideTab`). No new tokens: the lede/CTA reveals are
+  gated by the integer `count`, so `DELAY.home*` tokens would be dead code.
+- Hard constraint documented in-code: clause duration (0.55) must stay < `STEP`
+  (0.6) or the stacking clauses smear.
+- `app/[locale]/page.tsx`: removed the dead `delay={1}` on the Projects
+  `RevealOnView`. `#work` sits below the hero's `min-h-[70vh]` section, and
+  `RevealOnView` applies `delay` unconditionally on scroll-in — so the prop only
+  bought a 1s blank hold before the section faded in. Now reveals promptly.
+- Verified: `tsc --noEmit` clean; full home render with no console/server
+  errors; reduced-motion paths untouched; adversarial 2-reviewer diff review
+  returned no defects.
+
 ### 2026-07-05 — Furniture case study: migrate images off Framer CDN → Firebase
 
 - The furniture case study was the only content still hosted on `framerusercontent.com`

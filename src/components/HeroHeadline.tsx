@@ -4,12 +4,13 @@ import { useEffect, useRef, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { ArrowDown, ArrowUpRight } from "iconoir-react";
 import { HeroImageStack, type HeroStackItem } from "./HeroImageStack";
-
-const EASE = [0.22, 1, 0.36, 1] as const;
+import { EASE_OUT } from "@/lib/motion";
 
 // Reveal cadence: a clause every STEP ms (brisk — matches the lede beat); the
 // lede then the CTA buttons each follow after LEDE_DELAY. Plays ONCE per viewport
 // visit (no loop); replays when the hero leaves and re-enters.
+// NOTE: keep the clause tween duration (currently 0.55s, below) STRICTLY < STEP —
+// each clause must ~settle before the next stacks or the cascade smears together.
 const STEP = 600;
 const LEDE_DELAY = 600;
 
@@ -126,7 +127,7 @@ export function HeroHeadline({
             className="block"
             initial={false}
             animate={{ opacity: entered ? 1 : 0, y: entered ? 0 : 20 }}
-            transition={{ duration: 0.6, ease: EASE }}
+            transition={{ duration: 0.9, ease: EASE_OUT }}
           >
             <span className="block">Daechan Kim,</span>
             <span className="block">
@@ -137,7 +138,7 @@ export function HeroHeadline({
                     key={i}
                     initial={false}
                     animate={{ opacity: i < count ? 1 : 0.05 }}
-                    transition={{ duration: 0.4, ease: EASE }}
+                    transition={{ duration: 0.4, ease: EASE_OUT }}
                   >
                     {part}
                   </motion.span>
@@ -154,7 +155,7 @@ export function HeroHeadline({
               className="block"
               initial={false}
               animate={{ opacity: i < count ? 1 : 0, y: i < count ? 0 : 16 }}
-              transition={{ duration: 0.4, ease: EASE }}
+              transition={{ duration: 0.55, ease: EASE_OUT }}
             >
               {line}
             </motion.span>
@@ -166,7 +167,7 @@ export function HeroHeadline({
           className="text-sub-display measure-lede mt-8 text-fg-muted"
           initial={false}
           animate={{ opacity: ledeShown ? 1 : 0, y: ledeShown ? 0 : 16 }}
-          transition={{ duration: 0.5, ease: EASE }}
+          transition={{ duration: 0.7, ease: EASE_OUT }}
         >
           {lede}
         </motion.p>
@@ -176,7 +177,7 @@ export function HeroHeadline({
           className="mt-8 flex flex-wrap items-center gap-6"
           initial={false}
           animate={{ opacity: buttonsShown ? 1 : 0, y: buttonsShown ? 0 : 16 }}
-          transition={{ duration: 0.5, ease: EASE }}
+          transition={{ duration: 0.7, ease: EASE_OUT }}
           inert={!buttonsShown}
         >
           <button
