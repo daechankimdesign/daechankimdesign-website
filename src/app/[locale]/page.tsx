@@ -82,8 +82,9 @@ export default async function Home({
 
       {/* Projects — featured showcase. Opacity-only reveal (rise=false): the
           section holds a sticky heading, which a transformed ancestor breaks.
-          Delayed so it lands after the hero cascade (it's in view on load). */}
-      <RevealOnView rise={false} delay={1}>
+          No delay: it sits below the hero's min-h-[70vh] section, so it reveals
+          on scroll-in — a hold here would just be dead air before content. */}
+      <RevealOnView rise={false}>
         <section id="work" className="container-page py-16 grid grid-cols-1 lg:grid-cols-12 gap-x-8 lg:gap-x-16 gap-y-0 scroll-mt-24">
           <h3 className="text-h3 sticky top-24 z-20 lg:col-span-3">{t("projects")}</h3>
           <FeaturedProjects items={projects} detailsLabel="Details" />

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
+import { EASE_OUT } from "@/lib/motion";
 import { HeroGallery } from "./HeroGallery";
 
 // `src` is the 480px card image (quick load); `full` is the full-res lightbox
@@ -16,8 +17,6 @@ export type HeroStackItem = {
   w?: number;
   h?: number;
 };
-
-const EASE = [0.22, 1, 0.36, 1] as const;
 
 // Fly-in START rotation — each card enters clearly tilted, then settles to its
 // resting scatter angle as it rises (so the fly-in reads as a rotate + lift).
@@ -93,7 +92,7 @@ export function HeroImageStack({
                       : FLY_TILT[i],
                   scale: fan ? 1.02 : 1,
                 }}
-                transition={reduce ? { duration: 0 } : { duration: 0.5, ease: EASE }}
+                transition={reduce ? { duration: 0 } : { duration: 0.6, ease: EASE_OUT }}
               >
                 {item.src ? (
                   <Image
