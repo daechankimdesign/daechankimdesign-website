@@ -75,8 +75,8 @@ export default async function Home({
           on scroll-in — a hold here would just be dead air before content. */}
       <RevealOnView rise={false}>
         <section id="work" className="container-page py-16 grid grid-cols-1 lg:grid-cols-12 gap-x-8 lg:gap-x-16 gap-y-0 scroll-mt-24">
-          <h3 className="text-h3 sticky top-24 z-20 lg:col-span-3">{t("projects")}</h3>
-          <FeaturedProjects items={projects} detailsLabel="Details" />
+          <h3 className="text-h3 sticky top-24 z-20 lg:col-span-3">{t("caseStudy")}</h3>
+          <FeaturedProjects items={projects} detailsLabel={t("details")} />
         </section>
       </RevealOnView>
 
@@ -85,8 +85,8 @@ export default async function Home({
       <RevealOnView rise={false}>
         <SandboxCarousel
           items={sandbox}
-          heading={t("sandbox")}
-          detailsLabel="Details"
+          heading={t("play")}
+          detailsLabel={t("details")}
         />
       </RevealOnView>
     </>

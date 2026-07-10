@@ -1,8 +1,10 @@
 {
   "Nav": {
     "home": "홈",
-    "projects": "프로젝트",
-    "sandbox": "샌드박스",
+    "work": "작업",
+    "caseStudy": "케이스 스터디",
+    "play": "플레이",
+    "details": "자세히",
     "blogs": "블로그",
     "about": "소개",
     "resume": "이력서",

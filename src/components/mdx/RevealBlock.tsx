@@ -68,7 +68,18 @@ export function RevealBlock({
     if (node.getBoundingClientRect().top >= window.innerHeight) setDelay(0);
   }, []);
 
-  if (reduce) return createElement(as, rest, children);
+  // Headings carry an inline `.hl-mark` wrapper around their text: the side
+  // document tab flashes a snug, text-width highlighter over the section title
+  // when you jump to it (see src/lib/highlight.ts). Layout-inert — it's just a
+  // target box for rough-notation to measure.
+  const isHeading = as === "h1" || as === "h2" || as === "h3";
+  const inner: ReactNode = isHeading ? (
+    <span className="hl-mark">{children}</span>
+  ) : (
+    children
+  );
+
+  if (reduce) return createElement(as, rest, inner);
 
   const M = TAGS[as];
   // Entrance (framer) sits on M; the position-based edge-fade dim sits on an
@@ -76,9 +87,9 @@ export function RevealBlock({
   // around it) so M keeps its own margins — no collapsing surprises. Wrapper tag
   // matches the content model: a phrasing span for text headings/paragraphs, a
   // div for blockquote/media. Lists (ul/ol) and rules (hr) ride along undimmed.
-  let content: ReactNode = children;
-  if (as === "p" || as === "h1" || as === "h2" || as === "h3") {
-    content = <span className="edge-fade block">{children}</span>;
+  let content: ReactNode = inner;
+  if (as === "p" || isHeading) {
+    content = <span className="edge-fade block">{inner}</span>;
   } else if (as === "blockquote" || as === "div") {
     content = <div className="edge-fade">{children}</div>;
   }

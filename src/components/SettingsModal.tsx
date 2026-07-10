@@ -11,17 +11,18 @@ import { getAppCheckToken, isTranslationConfigured } from "@/lib/firebase/client
 import { ensureAnonymousIdToken } from "@/lib/firebase/auth";
 import type { ContentType } from "@/lib/mdx";
 
-// next-intl's usePathname is locale-stripped, e.g. "/project/oria". Only detail
-// pages carry a translatable (type, slug); the URL segment is singular.
+// next-intl's usePathname is locale-stripped, e.g. "/project/case-study/oria".
+// Only detail pages carry a translatable (type, slug). Detail URLs are now
+// two-segment under /project: the sub-section maps to the on-disk content type.
 const SEGMENT_TO_TYPE: Record<string, ContentType> = {
-  project: "projects",
-  sandbox: "sandbox",
+  "case-study": "projects",
+  play: "sandbox",
 };
 
 function parseDetail(
   pathname: string,
 ): { type: ContentType; slug: string } | null {
-  const match = pathname.match(/^\/(project|sandbox)\/([^/]+)\/?$/);
+  const match = pathname.match(/^\/project\/(case-study|play)\/([^/]+)\/?$/);
   if (!match) return null;
   const type = SEGMENT_TO_TYPE[match[1]];
   return type ? { type, slug: match[2] } : null;

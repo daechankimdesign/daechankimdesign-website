@@ -5,11 +5,12 @@ import { usePathname } from "@/i18n/navigation";
 import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 
-// Ordered navigation categories
+// Ordered navigation categories. Both merged detail trees live under /project
+// (/project/case-study/* and /project/play/*), so startsWith("/project") maps
+// them to the same ordinal — no separate sandbox entry needed.
 const NAV_PATHS = [
   "/",
   "/project",
-  "/sandbox",
   "/blog",
   "/about"
 ] as const;

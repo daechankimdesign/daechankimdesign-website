@@ -14,7 +14,7 @@ export async function generateStaticParams() {
   return slugs.map((slug) => ({ locale: routing.defaultLocale, slug }));
 }
 
-export default async function SandboxDetailPage({
+export default async function PlayDetailPage({
   params,
 }: {
   params: Promise<{ locale: string; slug: string }>;

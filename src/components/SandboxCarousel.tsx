@@ -69,7 +69,7 @@ export function SandboxCarousel({
               ) : null}
               {current ? (
                 <div className="mt-3">
-                  <LinkButton href={`/sandbox/${current.id}`} arrow="right">
+                  <LinkButton href={`/project/play/${current.id}`} arrow="right">
                     {detailsLabel}
                   </LinkButton>
                 </div>
@@ -92,7 +92,7 @@ export function SandboxCarousel({
               showCaption={false}
               enableHoverSlide
               onIndexChange={setActive}
-              onItemClick={(item) => router.push(`/sandbox/${item.id}`)}
+              onItemClick={(item) => router.push(`/project/play/${item.id}`)}
               renderImage={(p) =>
                 // Force eager loading: 3D-transformed covers can stop lazy
                 // loading from ever firing, leaving side covers blank.

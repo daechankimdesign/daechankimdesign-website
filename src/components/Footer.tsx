@@ -6,18 +6,20 @@ export async function Footer() {
   const year = new Date().getFullYear();
 
   return (
-    <footer className="surface-invert hairline-t sticky bottom-0 z-0">
-      {/* Reveal footer: sits UNDER the page as a sticky bottom-0 layer (z-0); the
-          opaque page card (z-10) slides up over the final footer-height of scroll
-          to uncover it. The headline + lede fade up one line at a time, but only
-          once the footer is fully uncovered (trigger="bottom"), replaying on each
-          return. Contact / resume + copyright are static (outside the sequence). */}
-      <SequenceReveal total={5} trigger="bottom" className="container-page py-12">
+    <footer className="surface-invert hairline-t reveal-footer">
+      {/* Reveal footer: a STATIONARY layer fixed to the viewport bottom (z-0),
+          behind the opaque page card (z-10). The card carries a margin-bottom of
+          the footer's height (--footer-reveal-h, set by <FooterReveal>), so it
+          slides up over exactly that scroll to uncover the footer. The headline +
+          lede fade up one line at a time, but only once the footer is ~fully
+          uncovered (trigger="bottom"), replaying on each return. Contact / resume
+          + copyright are static (outside the sequence). */}
+      <SequenceReveal total={5} trigger="bottom" className="container-page pt-32 pb-12">
         {/* Hero statement — copied from the home hero (HeroHeadline). Keep in sync
             with page.tsx HERO_ROTATIONS / lede if that copy changes. */}
         <h2 className="text-display">
           <SequenceItem order={0} as="span" className="block">
-            Daechan Kim, a proven end-to-end product designer,
+            Daechan Kim, a designer,
           </SequenceItem>
           <SequenceItem order={1} as="span" className="block">
             conducts research to find insights,

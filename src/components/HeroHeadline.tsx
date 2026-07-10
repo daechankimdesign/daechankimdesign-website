@@ -2,10 +2,12 @@
 
 import { useEffect, useRef, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import { ArrowDown, ArrowUpRight } from "iconoir-react";
+import { ArrowRight, ArrowUpRight } from "iconoir-react";
 import { HeroImageStack, type HeroStackItem } from "./HeroImageStack";
 import { Highlighter } from "./Highlighter";
+import { Link } from "@/i18n/navigation";
 import { EASE_OUT } from "@/lib/motion";
+import { HL_COLOR } from "@/lib/highlight";
 
 // Reveal cadence: one header line every STEP ms, then the sub text and the CTA
 // buttons each follow after LEDE_DELAY. Plays ONCE per viewport visit (no loop);
@@ -21,16 +23,13 @@ const HEADLINE = [
   "for fast-building teams.",
 ];
 
-// Magic UI Highlighter marker colour for the three sub-text action phrases. The
-// alpha lives here (not as a flat SVG opacity) so rough-notation's overlapping
-// strokes compound to a denser, hand-drawn marker where they cross.
-const HL_COLOR = "rgba(253, 231, 105, 0.55)";
-
-function scrollToWork() {
-  document
-    .getElementById("work")
-    ?.scrollIntoView({ behavior: "smooth", block: "start" });
-}
+// The header line + the exact word within it that gets the marker circle.
+const CIRCLE_LINE = 2;
+const CIRCLE_WORD = "fast-building";
+// Hand-drawn ellipse (viewBox 0 0 340 175): a single open loop with a tail at the
+// top-right, echoing a marker scribble. pathLength=1 lets dashoffset draw it in.
+const CIRCLE_PATH =
+  "M185 30 C110 12 40 34 30 84 C18 132 96 158 180 157 C264 156 325 128 320 82 C316 45 250 27 178 27 C205 27 240 24 300 21";
 
 /**
  * Hero headline. The header lines reveal one at a time (step by step), then the
@@ -51,6 +50,8 @@ export function HeroHeadline({ stack }: { stack: HeroStackItem[] }) {
   const [count, setCount] = useState(0);
   // How many of the three sub-text phrases have their highlighter drawn.
   const [hlActive, setHlActive] = useState(0);
+  // Whether the marker circle around "designer" has drawn in.
+  const [circleShown, setCircleShown] = useState(false);
 
   useEffect(() => {
     if (reduce) {
@@ -125,13 +126,17 @@ export function HeroHeadline({ stack }: { stack: HeroStackItem[] }) {
   useEffect(() => {
     if (!ledeShown) {
       setHlActive(0);
+      setCircleShown(false);
       return;
     }
     if (reduce) {
       setHlActive(3);
+      setCircleShown(true);
       return;
     }
     const timers: ReturnType<typeof setTimeout>[] = [];
+    // The circle leads the yellow annotation pass; the phrases stagger in after.
+    timers.push(setTimeout(() => setCircleShown(true), 350));
     const base = 750; // wait out the 0.7s sub-text fade before measuring
     const step = 280;
     [1, 2, 3].forEach((phrase, i) => {
@@ -141,6 +146,29 @@ export function HeroHeadline({ stack }: { stack: HeroStackItem[] }) {
   }, [ledeShown, reduce]);
 
   const hlDuration = reduce ? 0 : 700;
+
+  // Render a header line with CIRCLE_WORD wrapped in the drawn-in marker circle.
+  const renderCircledWord = (line: string) => {
+    const idx = line.indexOf(CIRCLE_WORD);
+    if (idx === -1) return line;
+    return (
+      <>
+        {line.slice(0, idx)}
+        <span className="relative inline-block isolate">
+          {CIRCLE_WORD}
+          <svg
+            className={`hl-circle${circleShown ? " hl-circle-on" : ""}`}
+            viewBox="0 0 340 175"
+            preserveAspectRatio="none"
+            aria-hidden
+          >
+            <path d={CIRCLE_PATH} pathLength={1} stroke={HL_COLOR} />
+          </svg>
+        </span>
+        {line.slice(idx + CIRCLE_WORD.length)}
+      </>
+    );
+  };
 
   return (
     <div
@@ -158,7 +186,7 @@ export function HeroHeadline({ stack }: { stack: HeroStackItem[] }) {
               animate={{ opacity: i < count ? 1 : 0, y: i < count ? 0 : 16 }}
               transition={{ duration: 0.55, ease: EASE_OUT }}
             >
-              {line}
+              {i === CIRCLE_LINE ? renderCircledWord(line) : line}
             </motion.span>
           ))}
         </h1>
@@ -215,14 +243,10 @@ export function HeroHeadline({ stack }: { stack: HeroStackItem[] }) {
           transition={{ duration: 0.7, ease: EASE_OUT }}
           inert={!buttonsShown}
         >
-          <button
-            type="button"
-            onClick={scrollToWork}
-            className="link-button hairline-b"
-          >
+          <Link href="/project" className="link-button hairline-b">
             <span>Work</span>
-            <ArrowDown aria-hidden />
-          </button>
+            <ArrowRight aria-hidden />
+          </Link>
           <a
             href="/resume.pdf"
             target="_blank"

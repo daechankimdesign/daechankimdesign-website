@@ -9,6 +9,7 @@ import { GlobalNav } from "@/components/GlobalNav";
 import { UniversalNav } from "@/components/UniversalNav";
 import { PageTransition } from "@/components/PageTransition";
 import { Footer } from "@/components/Footer";
+import { FooterReveal } from "@/components/FooterReveal";
 import "../globals.css";
 
 export const metadata: Metadata = {
@@ -44,12 +45,14 @@ export default async function LocaleLayout({
         <NextIntlClientProvider>
           <GlobalNav />
           <UniversalNav />
-          {/* z-10 lifts the opaque page card above the sticky reveal footer (z-0)
-              so it covers the footer and slides up to uncover it at the bottom. */}
-          <div className="relative z-10 flex flex-1 flex-col">
+          {/* The opaque page card: z-10 above the fixed reveal footer (z-0), and
+              `reveal-content` adds a margin-bottom of the footer's height so the
+              card can slide up to uncover the stationary footer at the bottom. */}
+          <div className="reveal-content relative z-10 flex flex-1 flex-col">
             <PageTransition>{children}</PageTransition>
           </div>
           <Footer />
+          <FooterReveal />
         </NextIntlClientProvider>
       </body>
     </html>

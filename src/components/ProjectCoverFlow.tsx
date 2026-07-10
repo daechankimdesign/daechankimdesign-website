@@ -37,7 +37,7 @@ function ProjectMeta({
         </p>
       ) : null}
       <div className="mt-3">
-        <LinkButton href={`/project/${slug}`} arrow="right">
+        <LinkButton href={`/project/case-study/${slug}`} arrow="right">
           {detailsLabel}
         </LinkButton>
       </div>
@@ -137,7 +137,7 @@ function PinnedProjectDeck({
                   stackSpacing={26}
                   rotation={38}
                   showCaption={false}
-                  onItemClick={() => router.push(`/project/${slug}`)}
+                  onItemClick={() => router.push(`/project/case-study/${slug}`)}
                   renderImage={(p) =>
                     isVideo(p.src) ? (
                       <video
@@ -204,7 +204,7 @@ function FallbackStack({ slug, frontmatter, images, detailsLabel }: Props) {
         {images.map((src, i) => (
           <Link
             key={src}
-            href={`/project/${slug}`}
+            href={`/project/case-study/${slug}`}
             className="edge-fade block no-underline overflow-hidden rounded-md border border-hairline"
           >
             {isVideo(src) ? (
