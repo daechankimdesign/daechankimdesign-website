@@ -220,7 +220,7 @@ export function HeroHeadline({ stack }: { stack: HeroStackItem[] }) {
             the highlighter (rough-notation) measures each phrase's box and anchors
             its SVG here, so the phrases must never move under it. */}
         <motion.div
-          className="measure-lede relative mt-8 hl-behind"
+          className="relative mt-8 hl-behind max-w-[42rem]"
           initial={false}
           animate={{ opacity: ledeShown ? 1 : 0 }}
           transition={{ duration: 0.7, ease: EASE_OUT }}
