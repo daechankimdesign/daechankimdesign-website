@@ -20,12 +20,18 @@ export function SandboxCarousel({
   items,
   heading,
   detailsLabel,
+  headingLevel = 3,
 }: {
   items: ContentItem[];
   heading: string;
   detailsLabel: string;
+  // Heading tag for the section label. Home uses h3 (sibling to the Work
+  // section's own h3); the /project index passes 2 so Play reads as an h2
+  // sibling of Case Study under the page's h1.
+  headingLevel?: 2 | 3;
 }) {
   const router = useRouter();
+  const HeadingTag = `h${headingLevel}` as "h2" | "h3";
 
   const covers: CoverFlowItem[] = items.map(
     ({ slug, frontmatter, images }) => ({
@@ -45,9 +51,20 @@ export function SandboxCarousel({
   const [active, setActive] = useState(mid);
   const current = covers[active];
 
+  // Empty state — mirrors the grid's fallback so a labeled section never renders
+  // an orphaned heading over blank space (e.g. if every entry is media-filtered).
+  if (items.length === 0) {
+    return (
+      <section className="container-page py-16 scroll-mt-24">
+        <HeadingTag className="text-h3 mb-8">{heading}</HeadingTag>
+        <p className="text-body text-fg-muted">Nothing here yet.</p>
+      </section>
+    );
+  }
+
   return (
     <section className="container-page py-16 scroll-mt-24">
-      <h3 className="text-h3 mb-8">{heading}</h3>
+      <HeadingTag className="text-h3 mb-8">{heading}</HeadingTag>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-x-8 gap-y-8 lg:gap-x-16">
         {/* Left: the centred entry's meta — same hierarchy as a project. */}

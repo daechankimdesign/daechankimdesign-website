@@ -25,7 +25,6 @@ export default async function CaseStudyDetailPage({
   if (!result) notFound();
   const { content, frontmatter, error, translated } = result;
   const showUntranslated = locale !== routing.defaultLocale && !translated;
-  const tContent = await getTranslations("Content");
 
   if (error) {
     return (
@@ -37,11 +36,17 @@ export default async function CaseStudyDetailPage({
     );
   }
 
+  // Only the non-English, untranslated case renders the notice — fetch its copy
+  // lazily so English requests don't await translations they never use.
+  const untranslatedNotice = showUntranslated
+    ? (await getTranslations("Content"))("untranslated")
+    : null;
+
   return (
     <main className="container-page pt-32 pb-16">
-      {showUntranslated ? (
+      {untranslatedNotice ? (
         <p className="text-caption mb-6 rounded-md border border-hairline bg-surface-subtle px-4 py-3 text-fg-muted">
-          {tContent("untranslated")}
+          {untranslatedNotice}
         </p>
       ) : null}
 

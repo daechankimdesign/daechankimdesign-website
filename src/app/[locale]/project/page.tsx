@@ -23,6 +23,11 @@ export default async function WorkIndexPage({
 
   return (
     <main className="pt-24">
+      {/* Page title for a11y/SEO — the visible design carries the two section
+          labels (Case Study / Play), so the top-level "Work" heading is
+          screen-reader/crawler-only. */}
+      <h1 className="sr-only">{t("work")}</h1>
+
       {/* Case Study — each piece is its own vertical cover-flow deck. Opacity-only
           reveal (rise=false): the section holds a sticky heading, which a
           transformed ancestor would break. */}
@@ -44,6 +49,7 @@ export default async function WorkIndexPage({
           items={play}
           heading={t("play")}
           detailsLabel={t("details")}
+          headingLevel={2}
         />
       </RevealOnView>
     </main>
