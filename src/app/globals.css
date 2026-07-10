@@ -43,6 +43,14 @@
        past the footer elastic-lifts the page card off the fixed footer and
        re-exposes the rounded-corner gap at the seam. */
     overscroll-behavior-y: none;
+    /* Kill horizontal page scroll at the root. Fixed full-width chrome (top bar,
+       reveal-footer) uses `inset-x-0`, which resolves to the viewport width
+       INCLUDING the classic-scrollbar gutter — so with a non-overlay scrollbar
+       they sit `scrollbar-width` past the content box and expose a sliver of the
+       dark footer. `clip` contains it without creating a scroll container (so
+       vertical scroll, scroll-snap, sticky, and the footer-reveal are untouched);
+       body carries the same clip for its in-flow content. */
+    overflow-x: clip;
   }
 
   /* Index-page section snapping (desktop). PROXIMITY — never mandatory — so the
@@ -80,6 +88,14 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
+    /* Contain decorative wide content — chiefly the Sandbox cover-flow deck,
+       whose off-centre cards fan out past the viewport — so it can never push
+       the page wider and expose the fixed reveal-footer at the sides. `clip`
+       (not `hidden`) stops the horizontal bleed at the viewport edge without
+       creating a scroll container, so sticky headings and the footer-reveal
+       keep working; the position:fixed footer escapes body overflow and still
+       spans the full width. overflow-y stays visible (html owns page scroll). */
+    overflow-x: clip;
   }
 
   /* Links: underline only, inherit color, no color change on hover (rules §3).
@@ -420,7 +436,7 @@ body::before {
 }
 .hl-circle path {
   fill: none;
-  stroke-width: 7;
+  stroke-width: 5;
   stroke-linecap: round;
   stroke-linejoin: round;
   vector-effect: non-scaling-stroke;
@@ -435,6 +451,18 @@ body::before {
   .hl-circle path {
     transition: none;
   }
+}
+
+/* Marks sit BEHIND the text: `.hl-behind` is a stacking context (isolation) on
+   the mark's container, and rough-notation's highlight SVG drops to z-index -1
+   within it — below the letters, above the page — so the highlight never covers
+   the text. Scoped to `.hl-behind` so section-flash highlights elsewhere (which
+   read on top) are unaffected. The circle SVG already carries its own z-index. */
+.hl-behind {
+  isolation: isolate;
+}
+.hl-behind svg.rough-annotation {
+  z-index: -1;
 }
 
 /* Link button — a text link styled as a control: 8px block padding, an

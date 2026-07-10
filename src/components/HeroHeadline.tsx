@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { ArrowRight, ArrowUpRight } from "iconoir-react";
 import { HeroImageStack, type HeroStackItem } from "./HeroImageStack";
@@ -16,30 +16,63 @@ import { HL_COLOR } from "@/lib/highlight";
 const STEP = 600;
 const LEDE_DELAY = 600;
 
-// The headline, revealed one line at a time (step by step).
+// The headline, revealed one line at a time (step by step). Line index 1 is
+// rendered specially below (it carries the "end-to-end" circle + "product
+// designer" highlight); the string here is kept for the reveal step count.
 const HEADLINE = [
   "Daechan Kim,",
   "a proven end-to-end product designer",
-  "for fast-building teams.",
+  "for fast-moving, mission-driven teams.",
 ];
 
-// The header line + the exact word within it that gets the marker circle.
-const CIRCLE_LINE = 2;
-const CIRCLE_WORD = "fast-building";
 // Hand-drawn ellipse (viewBox 0 0 340 175): a single open loop with a tail at the
 // top-right, echoing a marker scribble. pathLength=1 lets dashoffset draw it in.
 const CIRCLE_PATH =
   "M185 30 C110 12 40 34 30 84 C18 132 96 158 180 157 C264 156 325 128 320 82 C316 45 250 27 178 27 C205 27 240 24 300 21";
 
+// Thin the highlighter band (negative vertical padding) so it reads closer to the
+// circle's line weight and stops bleeding into the neighbouring line.
+const HL_PAD: [number, number] = [-4, 3];
+
+/**
+ * A word/phrase wrapped in the hand-drawn marker circle. The circle is a CSS-
+ * positioned SVG (see `.hl-circle` in globals.css) that draws in via
+ * stroke-dashoffset when `active`, sits behind the text (z-index), and scales in
+ * `em` so it fits whatever it wraps.
+ */
+function MarkCircle({
+  children,
+  active,
+}: {
+  children: ReactNode;
+  active: boolean;
+}) {
+  return (
+    <span className="relative inline-block">
+      {children}
+      <svg
+        className={`hl-circle${active ? " hl-circle-on" : ""}`}
+        viewBox="0 0 340 175"
+        preserveAspectRatio="none"
+        aria-hidden
+      >
+        <path d={CIRCLE_PATH} pathLength={1} stroke={HL_COLOR} />
+      </svg>
+    </span>
+  );
+}
+
 /**
  * Hero headline. The header lines reveal one at a time (step by step), then the
- * sub text and finally the two CTA buttons ride in. Once the sub text has
- * settled, a Magic UI Highlighter (rough-notation) draws a marker over its three
- * action phrases, staggered left to right. In sync with the text, an image flies
- * into the right-hand stack on each reveal (3 lines + sub text = 4 cards). The
- * sequence plays ONCE per viewport visit (IntersectionObserver replays on
- * re-entry; plays on mount so it never waits on the observer); it never loops.
- * Reduced motion → everything static.
+ * sub text and finally the two CTA buttons ride in. Once everything has settled,
+ * a single yellow annotation pass draws four marks in sequence: a circle on
+ * "end-to-end" and a Highlighter over "product designer" (headline), then a
+ * circle on "3+" and a Highlighter over "B2B2C startup and global client work"
+ * (sub text). In sync with the text, an image flies into the right-hand stack on
+ * each reveal (3 lines + sub text = 4 cards). The sequence plays ONCE per
+ * viewport visit (IntersectionObserver replays on re-entry; plays on mount so it
+ * never waits on the observer); it never loops. Reduced motion → everything
+ * static.
  */
 export function HeroHeadline({ stack }: { stack: HeroStackItem[] }) {
   const reduce = useReducedMotion();
@@ -48,10 +81,8 @@ export function HeroHeadline({ stack }: { stack: HeroStackItem[] }) {
   const total = HEADLINE.length + 2;
   const [entered, setEntered] = useState(false);
   const [count, setCount] = useState(0);
-  // How many of the three sub-text phrases have their highlighter drawn.
-  const [hlActive, setHlActive] = useState(0);
-  // Whether the marker circle around "designer" has drawn in.
-  const [circleShown, setCircleShown] = useState(false);
+  // How many of the four annotation marks have drawn in (0..4).
+  const [markStep, setMarkStep] = useState(0);
 
   useEffect(() => {
     if (reduce) {
@@ -120,55 +151,28 @@ export function HeroHeadline({ stack }: { stack: HeroStackItem[] }) {
   // One image reveals per header line + one for the sub text (== stack.length).
   const cardsRevealed = Math.min(count, stack.length);
 
-  // Draw the highlighters only after the sub text has faded in and settled
-  // (rough-notation measures the final box). Staggered left to right; reduced
-  // motion draws all three at once. Cleared when the hero resets/leaves view.
+  // Draw the four marks only after the sub text has settled (rough-notation
+  // measures the final box). Staggered in reading order; reduced motion draws
+  // all at once. Cleared when the hero resets / leaves view.
   useEffect(() => {
     if (!ledeShown) {
-      setHlActive(0);
-      setCircleShown(false);
+      setMarkStep(0);
       return;
     }
     if (reduce) {
-      setHlActive(3);
-      setCircleShown(true);
+      setMarkStep(4);
       return;
     }
     const timers: ReturnType<typeof setTimeout>[] = [];
-    // The circle leads the yellow annotation pass; the phrases stagger in after.
-    timers.push(setTimeout(() => setCircleShown(true), 350));
-    const base = 750; // wait out the 0.7s sub-text fade before measuring
-    const step = 280;
-    [1, 2, 3].forEach((phrase, i) => {
-      timers.push(setTimeout(() => setHlActive(phrase), base + i * step));
+    const base = 550; // let the sub-text fade settle before measuring
+    const step = 320;
+    [1, 2, 3, 4].forEach((n, i) => {
+      timers.push(setTimeout(() => setMarkStep(n), base + i * step));
     });
     return () => timers.forEach(clearTimeout);
   }, [ledeShown, reduce]);
 
   const hlDuration = reduce ? 0 : 700;
-
-  // Render a header line with CIRCLE_WORD wrapped in the drawn-in marker circle.
-  const renderCircledWord = (line: string) => {
-    const idx = line.indexOf(CIRCLE_WORD);
-    if (idx === -1) return line;
-    return (
-      <>
-        {line.slice(0, idx)}
-        <span className="relative inline-block isolate">
-          {CIRCLE_WORD}
-          <svg
-            className={`hl-circle${circleShown ? " hl-circle-on" : ""}`}
-            viewBox="0 0 340 175"
-            preserveAspectRatio="none"
-            aria-hidden
-          >
-            <path d={CIRCLE_PATH} pathLength={1} stroke={HL_COLOR} />
-          </svg>
-        </span>
-        {line.slice(idx + CIRCLE_WORD.length)}
-      </>
-    );
-  };
 
   return (
     <div
@@ -176,64 +180,81 @@ export function HeroHeadline({ stack }: { stack: HeroStackItem[] }) {
       className="flex w-full flex-col gap-12 lg:flex-row lg:items-center lg:gap-16"
     >
       <div className="flex flex-1 flex-col items-start">
-        <h1 className="text-display">
-          {/* Header — lines step in one at a time at counts 1..N. */}
+        <h1 className="text-display relative hl-behind">
+          {/* Header — lines step in one at a time at counts 1..N. Line 1 carries
+              the "end-to-end" circle and the "product designer" highlight.
+              Opacity-only (no y-transform): the highlighter (rough-notation)
+              measures and anchors its SVG to the line, so a transform on the line
+              would throw the mark off-position. */}
           {HEADLINE.map((line, i) => (
             <motion.span
               key={i}
               className="block"
               initial={false}
-              animate={{ opacity: i < count ? 1 : 0, y: i < count ? 0 : 16 }}
+              animate={{ opacity: i < count ? 1 : 0 }}
               transition={{ duration: 0.55, ease: EASE_OUT }}
             >
-              {i === CIRCLE_LINE ? renderCircledWord(line) : line}
+              {i === 1 ? (
+                <>
+                  a proven{" "}
+                  <Highlighter
+                    action="highlight"
+                    color={HL_COLOR}
+                    active={markStep > 0}
+                    animationDuration={hlDuration}
+                    padding={HL_PAD}
+                  >
+                    end-to-end
+                  </Highlighter>{" "}
+                  product designer
+                </>
+              ) : (
+                line
+              )}
             </motion.span>
           ))}
         </h1>
 
-        {/* Sub text — fades in a beat after the last header line; the three
-            action phrases get a staggered Magic UI Highlighter once it's in.
-            Opacity-only (no y-transform) and position:relative on purpose: the
-            highlighter (rough-notation) measures each phrase's box and anchors
-            its SVG to this paragraph, so the phrases must never move under it. */}
-        <motion.p
-          className="text-sub-display measure-lede relative mt-8 text-fg-muted"
+        {/* Sub text — fades in a beat after the last header line, then its marks
+            draw. Opacity-only (no y-transform) and position:relative on purpose:
+            the highlighter (rough-notation) measures each phrase's box and anchors
+            its SVG here, so the phrases must never move under it. */}
+        <motion.div
+          className="measure-lede relative mt-8 hl-behind"
           initial={false}
           animate={{ opacity: ledeShown ? 1 : 0 }}
           transition={{ duration: 0.7, ease: EASE_OUT }}
         >
-          I&apos;m a designer, researcher, and builder, always looking to expand
-          my horizons and learn new things. With 3+ years across a B2B2C startup
-          and global client work, I&apos;d love to talk about opportunities where
-          I get to{" "}
-          <Highlighter
-            action="highlight"
-            color={HL_COLOR}
-            active={hlActive > 0}
-            animationDuration={hlDuration}
-          >
-            listen to people
-          </Highlighter>
-          ,{" "}
-          <Highlighter
-            action="highlight"
-            color={HL_COLOR}
-            active={hlActive > 1}
-            animationDuration={hlDuration}
-          >
-            obsess over a detail all night
-          </Highlighter>
-          , and{" "}
-          <Highlighter
-            action="highlight"
-            color={HL_COLOR}
-            active={hlActive > 2}
-            animationDuration={hlDuration}
-          >
-            get it into their hands
-          </Highlighter>
-          .
-        </motion.p>
+          <p className="text-sub-display text-fg-muted">
+            I&apos;m a designer, researcher, and builder with{" "}
+            <MarkCircle active={markStep > 1}>3+</MarkCircle> years experience
+            across a{" "}
+            <Highlighter
+              action="highlight"
+              color={HL_COLOR}
+              active={markStep > 2}
+              animationDuration={hlDuration}
+              padding={HL_PAD}
+            >
+              B2B2C startup
+            </Highlighter>{" "}
+            and{" "}
+            <Highlighter
+              action="highlight"
+              color={HL_COLOR}
+              active={markStep > 3}
+              animationDuration={hlDuration}
+              padding={HL_PAD}
+            >
+              global client work
+            </Highlighter>
+            .
+          </p>
+          <p className="text-sub-display mt-4 text-fg-muted">
+            I&apos;d love to talk about opportunities where I get to research,
+            design, make to expand my horizon.
+          </p>
+        </motion.div>
 
         {/* CTA buttons — the final step, after the sub text. */}
         <motion.div

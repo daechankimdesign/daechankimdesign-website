@@ -2,9 +2,9 @@ import { ProjectCoverFlow } from "./ProjectCoverFlow";
 import type { ContentItem } from "@/lib/mdx";
 
 /**
- * Featured (Selected Work) list. Each project is rendered as its own VERTICAL
- * cover flow of its images (see ProjectCoverFlow): you flip through one
- * project's media, then the page scrolls on to the next project's deck.
+ * Featured (Selected Work) list. Each project renders as a plain vertical stack
+ * of its images (see ProjectCoverFlow): the page scrolls top-to-bottom through
+ * one project's media, then on to the next.
  */
 export function FeaturedProjects({
   items,
