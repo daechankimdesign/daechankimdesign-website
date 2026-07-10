@@ -5,16 +5,8 @@ import { HeroHeadline } from "@/components/HeroHeadline";
 import { FeaturedProjects } from "@/components/FeaturedProjects";
 import { SandboxCarousel } from "@/components/SandboxCarousel";
 
-// Ubiquitous prefix stays fixed; only this trailing clause rotates (from
-// content/Website notes). TODO(i18n): move to messages once finalized.
-const HERO_ROTATIONS = [
-  "conducts research to find insights,",
-  "creates comprehensive designs,",
-  "tests prototypes and deploys products.",
-];
-
-// Hero image stack — one card flies into the right-hand pile per text reveal
-// (3 clauses + the lede = 4). `src` = 480px card image (quick load), `full` =
+// Hero image stack: one card flies into the right-hand pile per reveal step
+// (3 header lines + the sub text = 4). `src` = 480px card image (quick load), `full` =
 // full-res lightbox image. Hosted on Firebase Storage (media/home/hero/) because
 // App Hosting does NOT serve public/ — local paths 404 on the deploy. Source
 // files are kept in public/home/hero/. See docs/MEDIA-PIPELINE.md.
@@ -67,14 +59,11 @@ export default async function Home({
 
   return (
     <>
-      {/* Hero — lede pinned on top; the clauses stack downward on a timed loop
-          inside HeroHeadline. TODO(i18n): move copy to messages once finalized */}
-      <section className="container-page flex min-h-[70vh] flex-col items-start justify-center py-16 text-left sm:py-24">
-        <HeroHeadline
-          phrases={HERO_ROTATIONS}
-          lede="3+ years across a B2B2C startup and global client work, creating comprehensive designs and building impactful products validated by users, with the latest AI tools for prototyping and deployment."
-          stack={HERO_STACK}
-        />
+      {/* Hero — header lines reveal step by step, then the sub text and CTAs,
+          with a card flying into the stack per step (see HeroHeadline).
+          TODO(i18n): move copy to messages once finalized */}
+      <section className="snap-section container-page flex min-h-[70vh] flex-col items-start justify-center py-16 text-left sm:py-24">
+        <HeroHeadline stack={HERO_STACK} />
       </section>
       {/* Marks the hero's bottom edge — GlobalNav reveals once this scrolls past
           the top of the viewport. */}

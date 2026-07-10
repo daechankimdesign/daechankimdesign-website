@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
+import { ArrowLeft } from "iconoir-react";
 import { useTranslations } from "next-intl";
-import { Link, usePathname } from "@/i18n/navigation";
+import { Link, usePathname, useRouter } from "@/i18n/navigation";
 import { EASE_OUT, DURATION, DELAY } from "@/lib/motion";
 
 type Heading = { id: string; text: string; level: number };
@@ -26,14 +27,52 @@ export function SideDocumentTab({
   const [activeId, setActiveId] = useState("");
   const t = useTranslations("Nav");
   const pathname = usePathname();
+  const router = useRouter();
   const reduce = useReducedMotion();
 
   // The "← Index" backlink only belongs on a project/sandbox detail page; on
   // other pages (e.g. About) the tab is a plain scroll-spy outline.
   const isDetail =
     pathname.startsWith("/project/") || pathname.startsWith("/sandbox/");
+  // Fallback index when there's no in-app history to return to (e.g. the page
+  // was opened directly in a fresh tab or from an external link).
   const backTo = pathname.startsWith("/sandbox") ? "/sandbox" : "/project";
-  const backLabel = t("backToIndex");
+  const backLabel = t("back");
+
+  // Prefer returning to wherever the user actually came from. When there's
+  // in-app history we go back(); otherwise the Link's href navigates to the
+  // fixed index. The href is kept so the control works without JS and exposes
+  // a real destination to assistive tech / hover preview.
+  const handleBack = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    if (window.history.length > 1) {
+      e.preventDefault();
+      router.back();
+    }
+  };
+
+  // Jumping to a section must NOT create a history entry. A plain `#id` anchor
+  // pushes one per click, so scrolling around a long article stacks up entries
+  // and the Back button unwinds them one by one instead of leaving the page.
+  // We scroll manually and reflect the hash with replaceState (no new entry),
+  // so Back always returns to the previous page. Modified / non-primary clicks
+  // keep their native behavior (open-in-new-tab, copy link).
+  const handleTocClick = (
+    e: React.MouseEvent<HTMLAnchorElement>,
+    id: string,
+  ) => {
+    if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey)
+      return;
+    const el = document.getElementById(id);
+    if (!el) return;
+    e.preventDefault();
+    // Smoothly bring the section to the VERTICAL CENTRE of the viewport (not the
+    // top). Reduced-motion jumps instantly.
+    el.scrollIntoView({
+      behavior: reduce ? "auto" : "smooth",
+      block: "center",
+    });
+    window.history.replaceState(window.history.state, "", `#${id}`);
+  };
 
   useEffect(() => {
     if (hidden) return;
@@ -98,9 +137,10 @@ export function SideDocumentTab({
       {isDetail ? (
         <Link
           href={backTo}
+          onClick={handleBack}
           className="inline-flex items-center gap-1.5 text-body text-fg-muted no-underline transition-colors hover:text-fg"
         >
-          <span>←</span>
+          <ArrowLeft width={16} height={16} aria-hidden />
           <span>{backLabel}</span>
         </Link>
       ) : null}
@@ -111,6 +151,7 @@ export function SideDocumentTab({
             <li key={h.id} style={{ paddingLeft: indent }}>
               <a
                 href={`#${h.id}`}
+                onClick={(e) => handleTocClick(e, h.id)}
                 className={`block text-body no-underline transition-colors ${
                   activeId === h.id
                     ? "font-medium text-fg"

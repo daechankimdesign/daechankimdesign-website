@@ -60,7 +60,7 @@ export function SandboxEmbed({
   const shot = posters?.[device] ?? poster;
 
   return (
-    <div className="my-8">
+    <div className="mt-0 mb-8">
       {/* Device toggle — resizes the frame below to each viewport */}
       <div className="mb-4 hidden justify-center sm:flex">
         <div

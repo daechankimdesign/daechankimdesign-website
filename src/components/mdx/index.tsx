@@ -42,7 +42,7 @@ export const mdxComponents: MDXComponents = {
   h3: (props) => <RevealBlock as="h3" className="text-h3 mt-8 mb-2" {...props} />,
   p: (props) => <RevealBlock as="p" className="text-body my-4 measure" {...props} />,
   ul: (props) => (
-    <RevealBlock as="ul" className="text-body my-4 list-disc pl-6" {...props} />
+    <RevealBlock as="ul" className="text-body my-4 list-dash" {...props} />
   ),
   ol: (props) => (
     <RevealBlock as="ol" className="text-body my-4 list-decimal pl-6" {...props} />

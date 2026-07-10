@@ -1,19 +1,29 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import {
   motion,
   useScroll,
-  useTransform,
+  useMotionValueEvent,
   useReducedMotion,
-  type MotionValue,
 } from "framer-motion";
+import { EASE_OUT } from "@/lib/motion";
 import { ProgressiveImage } from "./ProgressiveImage";
 
-// Deterministic per-card resting tilt + horizontal nudge (no random → SSR-safe,
-// so the scattered stack looks the same on server and client).
-const TILT = [-6, 5, -4, 7, -3, 6];
-const NUDGE = [0, 8, -7, 6, -5, 7];
+// Fly-in START tilt — each card enters clearly tilted, then settles to its
+// resting scatter angle as it rises (matches the hero image stack's fly-in).
+const FLY_TILT = [-18, 16, -15, 18, -14, 17];
+// Resting scatter — a light, tight pile (deterministic → SSR-safe). Kept small
+// so the last card (highest z) sits mostly on top rather than fanning wide.
+const REST_TILT = [-6, 4, -3, 7, -4, 5];
+const REST_X = [0, 8, -7, 6, -5, 7];
+
+// Where in the page scroll the cards deal in. Spread across the scroll so a new
+// photo flies in as you move through the page's sections; the last one lands by
+// RANGE_END (before the bottom) and stays on top.
+const RANGE_START = 0.06;
+const RANGE_END = 0.9;
 
 type Props = {
   portrait: string;
@@ -25,11 +35,14 @@ type Props = {
 };
 
 /**
- * The About portrait as the base of a scroll-driven card stack. As the page
- * scrolls, the gallery images fly up one at a time and settle into a lightly
- * scattered pile on top of the portrait (a deck dealt onto it); scrolling back
- * up sends them away again. Built on the project's framer-motion + next/image —
- * no new dependency. Respects prefers-reduced-motion (portrait only, no fly-in).
+ * The About portrait + gallery. Scrolling THROUGH the page deals the gallery
+ * photos in one at a time: each scroll threshold TRIGGERS a card to fly up from
+ * below the portrait — rising with a tilt and settling into a light pile on top,
+ * exactly like the hero image stack. The scroll only triggers each card; the
+ * fly-in itself is a state-driven tween that plays through cleanly (NOT
+ * scroll-scrubbed), so photos never freeze mid-fade or ghost over each other.
+ * Scrolling back up sends them away again. Reduced motion → the full pile
+ * renders static.
  */
 export function ProfileStack({
   portrait,
@@ -40,13 +53,43 @@ export function ProfileStack({
   sizes = "(max-width: 1024px) 20rem, 14rem",
 }: Props) {
   const reduce = useReducedMotion();
-  // Whole-page scroll drives the fly-in. The portrait is sticky, so its own
+  const total = images.length;
+  // How many cards have been dealt so far (0..total), driven by scroll position.
+  const [revealed, setRevealed] = useState(0);
+
+  // Whole-page scroll drives the deal. The portrait is sticky, so its own
   // position freezes while pinned — page progress is what actually advances.
   const { scrollYProgress } = useScroll();
 
+  // Map scroll progress → how many cards should be in. Just past RANGE_START the
+  // first card fires; by RANGE_END all are in. Discrete count → each increment
+  // plays one clean fly-in tween (no scrubbing of the animation itself).
+  const countFor = (p: number) => {
+    if (total === 0) return 0;
+    const frac = (p - RANGE_START) / (RANGE_END - RANGE_START);
+    return Math.max(0, Math.min(total, Math.ceil(frac * total)));
+  };
+
+  useMotionValueEvent(scrollYProgress, "change", (p) => {
+    if (reduce) return;
+    const c = countFor(p);
+    setRevealed((prev) => (prev === c ? prev : c));
+  });
+
+  // Reduced motion → whole pile static. Otherwise seed from the current scroll
+  // position on mount (so a page loaded already-scrolled shows the right count).
+  useEffect(() => {
+    if (reduce) {
+      setRevealed(total);
+      return;
+    }
+    setRevealed(countFor(scrollYProgress.get()));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [reduce, total]);
+
   return (
     <div className="relative">
-      {/* Base: the portrait. */}
+      {/* Base: the portrait — shown first, then the gallery deals in over it. */}
       <ProgressiveImage
         src={portrait}
         alt={alt}
@@ -56,54 +99,30 @@ export function ProfileStack({
         className="rounded-md"
       />
 
-      {/* Fly-in cards, absolutely stacked over the portrait. */}
-      {!reduce &&
-        images.map((src, i) => (
-          <StackCard
+      {/* Gallery cards — each flies up from below and settles into the pile as
+          scroll deals it in. */}
+      {images.map((src, i) => {
+        const shown = reduce ? true : i < revealed;
+        return (
+          <motion.div
             key={`${src}-${i}`}
-            src={src}
-            index={i}
-            total={images.length}
-            progress={scrollYProgress}
-            sizes={sizes}
-          />
-        ))}
+            className="absolute inset-0 origin-bottom overflow-hidden rounded-md border border-hairline bg-surface-subtle shadow-sm"
+            style={{ zIndex: i + 1 }}
+            initial={false}
+            animate={{
+              opacity: shown ? 1 : 0,
+              y: shown ? 0 : "60%",
+              x: REST_X[i % REST_X.length],
+              rotate: shown
+                ? REST_TILT[i % REST_TILT.length]
+                : FLY_TILT[i % FLY_TILT.length],
+            }}
+            transition={reduce ? { duration: 0 } : { duration: 0.6, ease: EASE_OUT }}
+          >
+            <Image src={src} alt="" fill sizes={sizes} className="object-cover" />
+          </motion.div>
+        );
+      })}
     </div>
-  );
-}
-
-function StackCard({
-  src,
-  index,
-  total,
-  progress,
-  sizes,
-}: {
-  src: string;
-  index: number;
-  total: number;
-  progress: MotionValue<number>;
-  sizes: string;
-}) {
-  // Each card flies in over its own slice of the early scroll range, in order.
-  const span = 0.5 / Math.max(total, 1);
-  const start = 0.06 + index * span;
-  const end = start + span;
-
-  const y = useTransform(progress, [start, end], ["65%", "0%"]);
-  const opacity = useTransform(progress, [start, end], [0, 1]);
-  const rotate = useTransform(
-    progress,
-    [start, end],
-    [index % 2 ? 16 : -16, TILT[index % TILT.length]],
-  );
-
-  return (
-    <motion.div
-      className="absolute inset-0 origin-bottom overflow-hidden rounded-md border border-hairline bg-surface-subtle shadow-sm"
-      style={{ y, opacity, rotate, x: NUDGE[index % NUDGE.length] }}
-    >
-      <Image src={src} alt="" fill sizes={sizes} className="object-cover" />
-    </motion.div>
   );
 }
