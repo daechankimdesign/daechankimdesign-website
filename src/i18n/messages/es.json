@@ -1,8 +1,10 @@
 {
   "Nav": {
     "home": "Inicio",
-    "projects": "Proyectos",
-    "sandbox": "Sandbox",
+    "work": "Trabajo",
+    "caseStudy": "Caso de estudio",
+    "play": "Play",
+    "details": "Detalles",
     "blogs": "Blog",
     "about": "Acerca",
     "resume": "Currículum",

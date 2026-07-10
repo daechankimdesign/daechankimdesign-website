@@ -6,6 +6,7 @@ import { ArrowLeft } from "iconoir-react";
 import { useTranslations } from "next-intl";
 import { Link, usePathname, useRouter } from "@/i18n/navigation";
 import { EASE_OUT, DURATION, DELAY } from "@/lib/motion";
+import { flashHighlight } from "@/lib/highlight";
 
 type Heading = { id: string; text: string; level: number };
 
@@ -30,13 +31,14 @@ export function SideDocumentTab({
   const router = useRouter();
   const reduce = useReducedMotion();
 
-  // The "← Index" backlink only belongs on a project/sandbox detail page; on
+  // The "← Back" backlink only belongs on a case-study/play detail page; on
   // other pages (e.g. About) the tab is a plain scroll-spy outline.
   const isDetail =
-    pathname.startsWith("/project/") || pathname.startsWith("/sandbox/");
+    pathname.startsWith("/project/case-study/") ||
+    pathname.startsWith("/project/play/");
   // Fallback index when there's no in-app history to return to (e.g. the page
   // was opened directly in a fresh tab or from an external link).
-  const backTo = pathname.startsWith("/sandbox") ? "/sandbox" : "/project";
+  const backTo = "/project";
   const backLabel = t("back");
 
   // Prefer returning to wherever the user actually came from. When there's
@@ -72,6 +74,26 @@ export function SideDocumentTab({
       block: "center",
     });
     window.history.replaceState(window.history.state, "", `#${id}`);
+
+    // Flash the highlighter over the section title once it lands. Reduced motion
+    // (instant scroll) draws right away; otherwise wait for the smooth scroll to
+    // settle — `scrollend` when supported, with a timeout fallback for browsers
+    // without it and for clicks where the section was already on screen (no
+    // scroll → no scrollend).
+    if (reduce) {
+      flashHighlight(el, true);
+      return;
+    }
+    let fired = false;
+    const fire = () => {
+      if (fired) return;
+      fired = true;
+      clearTimeout(fallback);
+      document.removeEventListener("scrollend", fire);
+      flashHighlight(el);
+    };
+    const fallback = setTimeout(fire, 700);
+    document.addEventListener("scrollend", fire, { once: true });
   };
 
   useEffect(() => {

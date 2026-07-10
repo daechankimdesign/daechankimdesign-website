@@ -7,8 +7,9 @@ import { Link, usePathname } from "@/i18n/navigation";
 
 const NAV = [
   { href: "/", key: "home" },
-  { href: "/project", key: "projects" },
-  { href: "/sandbox", key: "sandbox" },
+  // Unified Work tab — spans both /project/case-study/* and /project/play/*
+  // (isActive uses startsWith(`${href}/`), so it lights on either sub-section).
+  { href: "/project", key: "work" },
   { href: "/blog", key: "blogs" },
   { href: "/about", key: "about" },
 ] as const;

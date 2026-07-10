@@ -13,7 +13,7 @@ export async function generateStaticParams() {
   return slugs.map((slug) => ({ locale: routing.defaultLocale, slug }));
 }
 
-export default async function ProjectDetailPage({
+export default async function CaseStudyDetailPage({
   params,
 }: {
   params: Promise<{ locale: string; slug: string }>;

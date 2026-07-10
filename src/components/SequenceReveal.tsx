@@ -78,23 +78,30 @@ export function SequenceReveal({
       setCount(0);
     };
 
-    // "bottom" mode: play only when the page is scrolled fully to the bottom
-    // (the reveal footer is uncovered); reset on leaving, so it replays on each
-    // return. rAF-throttled so the scroll listener stays cheap.
+    // "bottom" mode: play once the reveal footer is (nearly) fully uncovered, and
+    // — with HYSTERESIS — only reset once it's scrolled back to nearly hidden, so
+    // a small scroll-up doesn't kill it. The reveal band ≈ the footer's own height
+    // (this container ≈ the footer), so the thresholds scale with screen/content.
+    // rAF-throttled so the scroll listener stays cheap.
     if (trigger === "bottom") {
-      let atBottom = false;
+      let playing = false;
       let raf = 0;
-      const SLACK = 4;
+      // Fractions of the footer height, measured from the page's true bottom:
+      // PLAY when within 10% of the bottom (footer ~90% uncovered); RESET only
+      // past 85% away (footer ~15% uncovered).
+      const PLAY_AT = 0.1;
+      const RESET_AT = 0.85;
       const check = () => {
         raf = 0;
-        const now =
-          window.innerHeight + window.scrollY >=
-          document.documentElement.scrollHeight - SLACK;
-        if (now && !atBottom) {
-          atBottom = true;
+        const band = Math.max(1, el.offsetHeight);
+        const distFromBottom =
+          document.documentElement.scrollHeight -
+          (window.scrollY + window.innerHeight);
+        if (!playing && distFromBottom <= band * PLAY_AT) {
+          playing = true;
           play();
-        } else if (!now && atBottom) {
-          atBottom = false;
+        } else if (playing && distFromBottom > band * RESET_AT) {
+          playing = false;
           reset();
         }
       };

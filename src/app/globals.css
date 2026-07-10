@@ -39,6 +39,10 @@
 @layer base {
   html {
     -webkit-text-size-adjust: 100%;
+    /* No rubber-band overscroll past the page boundaries. Otherwise force-scrolling
+       past the footer elastic-lifts the page card off the fixed footer and
+       re-exposes the rounded-corner gap at the seam. */
+    overscroll-behavior-y: none;
   }
 
   /* Index-page section snapping (desktop). PROXIMITY — never mandatory — so the
@@ -55,6 +59,16 @@
     scroll-snap-align: start;
     /* Clears the fixed top bar; harmlessly clamps to 0 for the hero. */
     scroll-margin-top: 5rem;
+  }
+
+  /* Reveal-from-underneath footer: the <footer> is position:fixed at the viewport
+     bottom (behind the opaque page card). This margin is the footer's height
+     (measured into --footer-reveal-h by <FooterReveal>; fallback keeps it reachable
+     pre-JS) MINUS a 2rem overlap. The overlap (> the card's 28px bottom radius)
+     makes the card's rounded bottom corners sit OVER the footer's black, so the
+     rounded notch reveals black — no white triangle gap at the seam. */
+  .reveal-content {
+    margin-bottom: calc(var(--footer-reveal-h, 70vh) - 2.5rem);
   }
 
   body {
@@ -81,6 +95,18 @@
   }
 }
 
+/* Reveal footer positioning. MUST be UNLAYERED (not inside @layer base) and use
+   element+class specificity: `.hairline-t` on the footer sets position:relative
+   and — being unlayered — beats Tailwind's layered `fixed` utility. This rule
+   (also unlayered, higher specificity) wins, making the footer TRULY fixed at the
+   viewport bottom so the page card reveals it. Height → --footer-reveal-h. */
+footer.reveal-footer {
+  position: fixed;
+  inset-inline: 0;
+  bottom: 0;
+  z-index: 0;
+}
+
 /* ============================================================================
    Typography scale (px values per rules §3).
    Fluid on smaller viewports via clamp(); round() snaps to whole-integer px
@@ -89,25 +115,25 @@
    ============================================================================ */
 @utility text-display {
   font-weight: 500;
-  line-height: 1.35;
+  line-height: 1.2;
   letter-spacing: -0.04em;
   font-size: clamp(20px, 13px + 1.85vw, 32px);
   font-size: round(clamp(20px, 13px + 1.85vw, 32px), 1px);
 }
 @utility text-h1 {
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1.2;
   letter-spacing: -0.03em;
-  font-size: clamp(22px, 14px + 2vw, 28px);
-  font-size: round(clamp(22px, 14px + 2vw, 28px), 1px);
+  font-size: clamp(18px, 13px + 1.23vw, 26px);
+  font-size: round(clamp(18px, 13px + 1.23vw, 26px), 1px);
 }
 @utility text-h2 {
-  font-weight: 700;
+  font-weight: 600;
   font-family: var(--font-sans), system-ui, sans-serif;
   line-height: 1.3;
   letter-spacing: -0.03em;
-  font-size: clamp(18px, 13px + 1.3vw, 20px);
-  font-size: round(clamp(18px, 13px + 1.3vw, 20px), 1px);
+  font-size: clamp(17px, 15px + 0.47vw, 20px);
+  font-size: round(clamp(17px, 15px + 0.47vw, 20px), 1px);
 }
 /* Sub-display: h2's size, lighter weight — for hero sub-copy that should read
    large but quiet. */
@@ -116,8 +142,8 @@
   font-family: var(--font-sans), system-ui, sans-serif;
   line-height: 1.3;
   letter-spacing: -0.03em;
-  font-size: clamp(18px, 13px + 1.3vw, 20px);
-  font-size: round(clamp(18px, 13px + 1.3vw, 20px), 1px);
+  font-size: clamp(17px, 15px + 0.47vw, 20px);
+  font-size: round(clamp(17px, 15px + 0.47vw, 20px), 1px);
 }
 @utility text-h3 {
   font-weight: 500;
@@ -282,7 +308,7 @@ body::before {
      .container-page  structural shell — full width, max 1440px, page gutters.
                       Use for every <main>, the nav, the footer, and grids.
      .content-column  document text/media column (56rem). The reading column on
-                      About and project/sandbox detail pages, inside the shell.
+                      About and case-study/play detail pages, inside the shell.
      .measure         body-prose line length (70ch). Paragraphs and article copy.
      .measure-lede    lede / summary / caption line length (60ch). Shorter copy.
    ────────────────────────────────────────────────────────────────────────── */
@@ -368,6 +394,49 @@ body::before {
    marker COLOUR's alpha (an rgba in HeroHeadline), so overlapping rough strokes
    compound to a denser, hand-drawn marker where they cross. */
 
+/* Hand-drawn marker circle around the hero word "designer" (HeroHeadline). A
+   single SVG path (pathLength normalised to 1) drawn in by animating
+   stroke-dashoffset 1 → 0, like the Magic UI highlighter's draw-on. The stroke
+   is the same translucent yellow as the phrase markers; non-scaling-stroke keeps
+   its width even though the SVG is stretched to the word's box. */
+.hl-circle {
+  position: absolute;
+  /* A fixed-height band centred on the word. Height is set EXPLICITLY (not via
+     top/bottom insets): an <svg> otherwise derives its height from its width via
+     the viewBox aspect ratio and balloons far past the word. width spans the word
+     plus a little overshoot each side. translate centres it, and the extra -6%
+     lift on Y raises the ellipse's middle onto the glyphs' optical centre (which
+     sits above the line-box middle) so the word reads centred, not top-aligned. */
+  left: 50%;
+  top: 50%;
+  width: calc(100% + 1.2em);
+  height: 1.5em;
+  transform: translate(-50%, -56%);
+  /* Sit BEHIND the word: the marker reads as drawn under the ink, and the
+     letters stay crisp where the stroke crosses them. */
+  z-index: -1;
+  overflow: visible;
+  pointer-events: none;
+}
+.hl-circle path {
+  fill: none;
+  stroke-width: 7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  transition: stroke-dashoffset 0.7s ease;
+}
+.hl-circle-on path {
+  stroke-dashoffset: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .hl-circle path {
+    transition: none;
+  }
+}
+
 /* Link button — a text link styled as a control: 8px block padding, an
    up-right arrow scaled to the text (1em), and a hairline bottom rule. Compose
    with `.hairline-b` (the LinkButton component does this) for the crisp border. */
@@ -392,7 +461,7 @@ body::before {
 
 /* Editorial list marker — a hanging en-dash instead of a disc, used site-wide
    for MDX bullet lists so long-form bullets read in the project's restrained
-   typographic voice (and About matches project/sandbox detail pages). The dash
+   typographic voice (and About matches case-study/play detail pages). The dash
    hangs in the gutter; wrapped lines align under the text, not the marker. */
 .list-dash {
   list-style: none;

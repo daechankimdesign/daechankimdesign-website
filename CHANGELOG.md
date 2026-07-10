@@ -56,6 +56,34 @@ build; roadmap Phase 5 is the runtime translation (`4348eec`).
 
 ## Log
 
+### 2026-07-08 — Reveal footer: switch to fixed, add hysteresis
+
+Two fixes to the reveal footer:
+
+1. **It wasn't actually revealing** — it behaved like a normal footer scrolling up
+   with the page. **Root cause (a CSS cascade-layers trap):** the footer carries
+   `.hairline-t`, which is defined **unlayered** as `position: relative`. Tailwind's
+   `sticky`/`fixed` utilities live in `@layer utilities`, and unlayered rules beat
+   layered ones — so `.hairline-t` silently forced `position: relative`, defeating
+   BOTH the earlier `sticky` and the `fixed` attempt (the footer stayed in flow and
+   scrolled; the `margin-bottom` just opened a white gap above it). Fix: an
+   **unlayered, higher-specificity** rule `footer.reveal-footer { position: fixed;
+   inset-inline: 0; bottom: 0; z-index: 0 }` that wins over `.hairline-t`. The
+   `<footer>` is now truly **fixed at the viewport bottom** (`z-0`, behind the
+   `z-10` page card), and the page card's `margin-bottom` (the footer's height) lets
+   it lift to uncover the stationary footer. Footer height is measured by a new
+   **`FooterReveal`** client component (`ResizeObserver` → `--footer-reveal-h`,
+   consumed by `.reveal-content`); fallback `70vh` keeps it reachable pre-JS.
+2. **The word reveal reset too soon on scroll-back.** Replaced the near-absolute-
+   bottom trigger with **hysteresis keyed to the footer's own height** (responsive):
+   play when the footer is ~90% uncovered (`distFromBottom ≤ 0.1·footerH`), reset
+   only once it's scrolled back to ~15% uncovered (`> 0.85·footerH`) — so a small
+   scroll-up no longer kills it.
+
+Files: `Footer.tsx` (fixed), `layout.tsx` (`reveal-content` + `<FooterReveal/>`),
+`globals.css` (`.reveal-content` margin), new `FooterReveal.tsx`, `SequenceReveal.tsx`
+(hysteresis). `PageTransition` rounded-b + shadow unchanged.
+
 ### 2026-07-08 — Reveal-from-underneath footer (all pages)
 
 The universal footer now sits UNDER the page: the opaque page card lifts/slides up

@@ -47,12 +47,12 @@
 - **Sitemap / structure:**
   - `/` — Index/Home
   - `/about` — Profile/About
-  - `/project` — Projects index
-  - `/project/[slug]` — individual project (e.g. `/project/projecturl01`)
-  - `/sandbox` — Sandbox index
-  - `/sandbox/[slug]` — individual sandbox item (e.g. `/sandbox/sandboxurl01`)
+  - `/project` — unified **Work** index (two labeled showcases: Case Study + Play)
+  - `/project/case-study/[slug]` — individual case study (e.g. `/project/case-study/projecturl01`)
+  - `/project/play/[slug]` — individual play item (e.g. `/project/play/sandboxurl01`)
+  - Legacy `/sandbox`, `/sandbox/[slug]`, and flat `/project/[slug]` URLs 308-redirect into the above (see `next.config.ts`). On-disk content dirs stay `projects`/`sandbox`; only the URLs and labels changed.
 - **URL structure & i18n:** localized pathnames via a single `[locale]` route tree (`next-intl`, `localePrefix: 'as-needed'`). **English is the default locale and renders with NO prefix** (`/about`); other locales use an ISO 639-1 prefix — Korean `/ko`, Spanish `/es` (not `/kr`). All routes above live within this structure.
 - **Controlled language list:** selectable locales are defined in one config (`i18n/routing.ts`); the language selector is a dropdown bound to that list — users cannot request a locale outside it.
 - **Slugs are never translated** — they stay English across all locales.
-- **State persistence:** the active locale persists across all routing and interactions. Entering via `/ko` keeps the `/ko` prefix on every nested/dynamic route (`/ko/project/projecturl01`) and on all internal navigation automatically.
+- **State persistence:** the active locale persists across all routing and interactions. Entering via `/ko` keeps the `/ko` prefix on every nested/dynamic route (`/ko/project/case-study/projecturl01`) and on all internal navigation automatically.
 - **Missing translation:** render English content while keeping the localized URL intact; never 404. (The on-demand translation flow is defined in the master prompt.)

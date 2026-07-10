@@ -22,7 +22,7 @@ This project is governed by a separate rules file, **`portfolio-project-rules.md
 
 **Controlled language list.** Selectable target locales live in one config array (`i18n/routing.ts`); the language dropdown is bound to it. Users can never request a locale outside the list. Editing the array is the only way to add/remove a language.
 
-**English fallback.** Visiting a localized route with no translation yet (e.g. `/ko/project/single-mold-stool`) renders the English MDX while keeping the `/ko/` URL intact — never a 404. Show a small "translation pending — translate this page?" affordance.
+**English fallback.** Visiting a localized route with no translation yet (e.g. `/ko/project/case-study/single-mold-stool`) renders the English MDX while keeping the `/ko/` URL intact — never a 404. Show a small "translation pending — translate this page?" affordance.
 
 **On-demand translation (public, one-shot per user, globally cached):**
 1. The user picks a language from the controlled dropdown and triggers translation.
