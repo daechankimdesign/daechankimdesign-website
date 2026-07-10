@@ -88,11 +88,11 @@
    not — no @supports needed. Every clamp min is >= the 11px floor.
    ============================================================================ */
 @utility text-display {
-  font-weight: 600;
+  font-weight: 500;
   line-height: 1.35;
   letter-spacing: -0.04em;
-  font-size: clamp(28px, 16px + 3vw, 40px);
-  font-size: round(clamp(28px, 16px + 3vw, 40px), 1px);
+  font-size: clamp(20px, 13px + 1.85vw, 32px);
+  font-size: round(clamp(20px, 13px + 1.85vw, 32px), 1px);
 }
 @utility text-h1 {
   font-weight: 700;
