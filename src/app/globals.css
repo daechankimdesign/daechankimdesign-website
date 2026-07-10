@@ -41,6 +41,22 @@
     -webkit-text-size-adjust: 100%;
   }
 
+  /* Index-page section snapping (desktop). PROXIMITY — never mandatory — so the
+     multi-viewport pinned project decks stay freely scrollable through their
+     images between snap points, and the page can still reach the footer. Only
+     elements marked `.snap-section` are snap targets, so routes without them
+     (project detail, about, …) are entirely unaffected. */
+  @media (min-width: 1024px) and (pointer: fine) {
+    html {
+      scroll-snap-type: y proximity;
+    }
+  }
+  .snap-section {
+    scroll-snap-align: start;
+    /* Clears the fixed top bar; harmlessly clamps to 0 for the hero. */
+    scroll-margin-top: 5rem;
+  }
+
   body {
     background-color: var(--color-canvas);
     color: var(--color-fg);
@@ -221,12 +237,12 @@
    and x = 1 + 11·t, band alpha A(t) = (1/x − 1/12) / (1 − 1/12); content opacity
    is 1 − A. Stops are dense near the edge (high curvature) and sparse inward
    (flat tail) so linear interpolation between them traces the hyperbola. */
-body::before,
-body::after {
+/* Top-edge fade only. (The bottom edge-fade was removed: the viewport bottom is
+   now always the sticky reveal footer, which a white dissolve would haze.) */
+body::before {
   content: "";
   position: fixed;
   inset-inline: 0;
-  height: 10svh; /* equal top & bottom; svh = stable under mobile URL-bar resize */
   z-index: 25; /* above content, below GlobalNav (z-30) and UniversalNav (z-40) */
   pointer-events: none;
 }
@@ -234,6 +250,7 @@ body::after {
    page background ever changes. */
 body::before {
   top: 0;
+  height: 20svh; /* taller than the bottom (10svh) so the fade spans the sticky top nav */
   background: linear-gradient(
     to bottom,
     rgba(255, 255, 255, 1) 0%,
@@ -248,26 +265,9 @@ body::before {
     rgba(255, 255, 255, 0) 100%
   );
 }
-body::after {
-  bottom: 0;
-  background: linear-gradient(
-    to top,
-    rgba(255, 255, 255, 1) 0%,
-    rgba(255, 255, 255, 0.729) 3%,
-    rgba(255, 255, 255, 0.566) 6%,
-    rgba(255, 255, 255, 0.429) 10%,
-    rgba(255, 255, 255, 0.321) 15%,
-    rgba(255, 255, 255, 0.25) 20%,
-    rgba(255, 255, 255, 0.163) 30%,
-    rgba(255, 255, 255, 0.092) 45%,
-    rgba(255, 255, 255, 0.043) 65%,
-    rgba(255, 255, 255, 0) 100%
-  );
-}
 /* A fixed overlay would otherwise tint printed pages. */
 @media print {
-  body::before,
-  body::after {
+  body::before {
     display: none;
   }
 }
@@ -288,6 +288,20 @@ body::after {
    ────────────────────────────────────────────────────────────────────────── */
 
 /* Page container: full width, max 1440px, 20px gutters (mobile) → 60px (>=768) */
+/* Inverted surface — re-scopes the neutral palette so a dark block reads as
+   light-on-dark. Every text-fg / text-fg-muted / bg-canvas utility inside adapts
+   automatically because it resolves these CSS variables (and hover:text-fg still
+   brightens to white). The hairline token stays light for a crisp top divider.
+   Used by the universal footer. */
+.surface-invert {
+  --color-canvas: #1e1e1e;
+  --color-fg: #ffffff;
+  --color-fg-muted: #a3a3a3;
+  --color-fg-subtle: #6b6b6b;
+  background-color: var(--color-canvas);
+  color: var(--color-fg);
+}
+
 .container-page {
   width: 100%;
   max-width: 1440px;
@@ -349,6 +363,11 @@ body::after {
   color: inherit;
 }
 
+/* Hero sub-text highlighter is the Magic UI <Highlighter> / rough-notation
+   component (src/components/Highlighter.tsx). Its translucency comes from the
+   marker COLOUR's alpha (an rgba in HeroHeadline), so overlapping rough strokes
+   compound to a denser, hand-drawn marker where they cross. */
+
 /* Link button — a text link styled as a control: 8px block padding, an
    up-right arrow scaled to the text (1em), and a hairline bottom rule. Compose
    with `.hairline-b` (the LinkButton component does this) for the crisp border. */
@@ -369,5 +388,37 @@ body::after {
   width: 1em;
   height: 1em;
   flex-shrink: 0;
+}
+
+/* Editorial list marker — a hanging en-dash instead of a disc, used site-wide
+   for MDX bullet lists so long-form bullets read in the project's restrained
+   typographic voice (and About matches project/sandbox detail pages). The dash
+   hangs in the gutter; wrapped lines align under the text, not the marker. */
+.list-dash {
+  list-style: none;
+  padding-left: 0;
+}
+.list-dash > li {
+  position: relative;
+  padding-left: 1.4em;
+}
+.list-dash > li::before {
+  content: "–";
+  position: absolute;
+  left: 0.15em;
+  color: var(--color-fg-muted);
+}
+
+/* About document — the `location · date` line under each role/degree title reads
+   as quiet meta (matching the project's caption treatment for meta rows): small,
+   muted, and pulled up tight under its heading. Scoped to the About article so
+   real body paragraphs elsewhere are untouched. */
+.about-doc h3 + p {
+  font-size: 12px;
+  line-height: 1.4;
+  letter-spacing: -0.01em;
+  color: var(--color-fg-muted);
+  margin-top: 0.25rem;
+  margin-bottom: 1rem;
 }
 

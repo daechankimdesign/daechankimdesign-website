@@ -44,7 +44,9 @@ export default async function LocaleLayout({
         <NextIntlClientProvider>
           <GlobalNav />
           <UniversalNav />
-          <div className="relative flex flex-1 flex-col">
+          {/* z-10 lifts the opaque page card above the sticky reveal footer (z-0)
+              so it covers the footer and slides up to uncover it at the bottom. */}
+          <div className="relative z-10 flex flex-1 flex-col">
             <PageTransition>{children}</PageTransition>
           </div>
           <Footer />

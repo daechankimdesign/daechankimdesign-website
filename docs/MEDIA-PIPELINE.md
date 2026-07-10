@@ -49,6 +49,11 @@ remote URL (below).
   (Other areas: `media/<area>/…`.)
 - **Access (`storage.rules`):** `media/**` is **public-read**, **client-write-
   denied**. Uploads are done as the **project owner** — see _Uploading_ below.
+- **Local source of truth:** the **git-ignored `media-src/`** folder holds the
+  original of every object, mirroring this tree with a numeric display-order
+  prefix (`media-src/<area>/<slug>/<NN>-<label>.<ext>` → `media/<area>/<slug>/<label>.<ext>`).
+  It is the organize + upload source — **read `media-src/README.md`**. Sync it with
+  `node scripts/upload-media.mjs` (`--dry-run` to preview + list orphans).
 
 ## Uploading
 
@@ -82,10 +87,12 @@ https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorag
 
 ## Process — adding an image (in this order)
 
-1. **Produce the file**; keep a working copy in `public/sandbox/<slug>/<file>`
-   (source for re-upload — **not** referenced by content).
-2. **Upload it to Firebase:** console → Storage → `media/sandbox/<slug>/` → upload
-   `<file>` (same place existing assets like `emerald-necklace.png` sit).
+1. **Produce the file**; put it in `media-src/<area>/<slug>/<NN>-<label>.<ext>`
+   with the next display-order number (see `media-src/README.md`). This is the
+   original — **not** referenced by content.
+2. **Upload it to Firebase:** `node scripts/upload-media.mjs` (syncs all of
+   media-src; strips the `NN-` prefix → `media/<area>/<slug>/<label>.<ext>`). Or
+   console → Storage for a one-off.
 3. **Reference it** by the canonical URL in frontmatter / MDX.
 4. **VERIFY — the step that prevents every past breakage:**
    ```bash
@@ -136,11 +143,10 @@ strictly need it, but list new hosts anyway.)
 ## Screenshots / captures
 
 `npm run screenshots [slug]` captures device shots of a sandbox `embed`, writes
-them to `public/sandbox/<slug>/app-shot-*.png`, and sets `embedPoster*` to **local**
-paths. Those local paths are **working copies only.** After running it you must:
-**(1)** upload the PNGs to `media/sandbox/<slug>/`, **(2)** repoint `embedPoster*`
-to the Firebase URLs, **(3)** verify each is `200`. Local paths do not survive
-deploy.
+them to `media-src/sandbox/<slug>/0N-app-shot-*.png`, and sets `embedPoster*` to
+their **Firebase URLs**. After running it: **(1)** `node scripts/upload-media.mjs`
+to push the files, **(2)** `curl` each `embedPoster*` URL for `200`. The URLs are
+already correct; they just 404 until the upload runs.
 
 ---
 

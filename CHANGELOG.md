@@ -56,6 +56,176 @@ build; roadmap Phase 5 is the runtime translation (`4348eec`).
 
 ## Log
 
+### 2026-07-08 — Reveal-from-underneath footer (all pages)
+
+The universal footer now sits UNDER the page: the opaque page card lifts/slides up
+over the final footer-height of scroll to uncover a stationary footer beneath it.
+
+- **Mechanism (pure CSS, self-sizing, no JS measurement):** the `<footer>` becomes
+  `sticky bottom-0 z-0` (in flow, natural height, `mt-24` removed). `sticky bottom-0`
+  pins it to the viewport-bottom band throughout the scroll (shifted up within its
+  containing block), where the content wrapper (now `z-10`) covers it; the card lifts
+  off it over the last footer-height of scroll and it un-sticks seamlessly at the end.
+  No ResizeObserver, no `--footer-h` var, no first-paint jump; auto-sizes per locale.
+- **Rounded lift edge:** `rounded-b-[28px]` + a tight downward `shadow` go on the
+  `PageTransition` motion.div — the only element that owns the opaque `bg-canvas`, so
+  its clipped bg reveals the footer at the seam. (An outer wrapper's radius wouldn't
+  show under the square inner bg.)
+- **Word animation retimed:** `SequenceReveal` gained a `trigger="bottom"` mode — a
+  rAF-throttled at-bottom detector that plays the headline+lede reveal ONLY once the
+  footer is fully uncovered, and replays each time you return to the bottom. The
+  **Contact / Resume / © line is now static** (plain elements outside the sequence),
+  visible from first paint. `total` 7 → 5.
+- **Removed the bottom edge-fade** (`body::after`): the viewport bottom is now always
+  the dark footer, which a white dissolve would haze. Top nav fade (`body::before`)
+  unchanged.
+- **Sticky-safety:** every added style (`z-index`, `relative`, `border-radius`,
+  `box-shadow`, `margin`) is sticky-inert — none create an overflow-clip or transform
+  containing block — so the home ProjectCoverFlow pinned decks, the sticky "Projects"
+  h3, and the About rails keep pinning, and `useScroll` progress is unchanged.
+- Files: `layout.tsx`, `PageTransition.tsx`, `Footer.tsx`, `SequenceReveal.tsx`,
+  `globals.css`. `tsc`-shaped changes are lint-clean.
+
+### 2026-07-08 — Home: free the footer (stop snapping the sandbox)
+
+The footer was getting stranded — scrolling to the bottom sprang back up to the
+section above. **Cause:** with `scroll-snap-type: y proximity`, the last snap
+target was the **sandbox** `.snap-section`, which sits only ~0.5 viewport above
+the page bottom (`sandbox + footer − viewport ≈ 420px`). That whole tail is
+inside Chrome's proximity snap zone, so releasing near the footer snapped back to
+the sandbox. Removing the footer's own `align: end` (per an earlier request) left
+it with no competing rest point, so it stranded every time.
+
+**Fix:** dropped `snap-section` from the Sandbox `<section>` (`SandboxCarousel.tsx`),
+so the sandbox + footer are now a free-scrolling tail. Snapping remains on the
+hero, project 01, and project 02. No footer snap is reintroduced. (Trade-off: the
+sandbox no longer snaps into place vertically — it's a horizontal strip, so that
+was never essential; the alternative — keeping the sandbox snap — would require
+giving the footer its own snap rest, which we don't want.)
+
+### 2026-07-08 — Selected Work: cover-flow visual refinements
+
+- **Project meta to the top-left.** The pinned project title/tags/Details no
+  longer vertically centres — it now sits at the top of the left column (`pt-32`,
+  just below the sticky "Projects" heading at `top-24`); the deck stays centred.
+  (`ProjectCoverFlow.tsx`: the sticky block dropped `flex items-center`; the deck
+  column is now its own `flex h-full items-center`.)
+- **Taller, viewport-responsive images.** Card height is now **viewport-height
+  based**, not a fixed px: `CoverFlow` needs a numeric px `itemHeight`, so
+  `PinnedProjectDeck` measures `innerHeight` (desktop-only path → stable) and
+  passes `itemHeight = round(innerHeight * 0.7)`, recomputed on resize; the deck
+  box is `h-[80svh]`. `itemWidth` stays fixed (760) so height tracks the viewport
+  while width still responds to the column via CoverFlow's own width-scaling
+  (deriving both from vh at a fixed aspect would let width-scaling cap the height
+  and defeat the vh response; the trade-off is the 16:9 image crops a bit more
+  horizontally as the card gets taller). The pin/snap math is unaffected (it keys
+  off `pinRef` height, not the deck box).
+- **#ffffff overlays, not black** (`CoverFlow.tsx`, affects both decks): card
+  background `bg-black` → `bg-white`; border `white/10` → `black/10`; and the
+  off-centre dim changed from `filter: brightness(0.5)` (darken → black) to a
+  white veil (`bg-white` overlay, opacity 0 centred → 0.5 off-centre) so side
+  cards fade toward the canvas instead of going dark.
+
+### 2026-07-08 — Selected Work: deck rests on a straight image (per-image snap)
+
+The scroll-linked cover flow was resting at FRACTIONAL positions (a card caught
+mid-flip, angled). Now the deck snaps to whole images: at rest exactly one card
+faces straight (0° tilt).
+
+- **`ProjectCoverFlow.tsx`** — replaced the continuous
+  `pos = useTransform(scrollYProgress, [0,0.9], [0,last])` with a rounded target
+  + spring:
+  ```
+  const target = useTransform(scrollYProgress, (v) =>
+    Math.min(Math.max(Math.round(v * last), 0), last));   // integer for ANY scroll
+  const pos = useSpring(target, { stiffness: 260, damping: 34, mass: 1, restDelta: 0.001 });
+  ```
+  `round()` yields an integer at every scroll position, so at rest `pos` settles
+  on an exact integer → the centered card's rotation is exactly 0° (proven, and
+  browser-independent). During scroll the spring chases each new integer, which
+  reads as the deck flipping through images. Damping 34 is just past critical
+  (2·√260 ≈ 32.25) so it eases INTO straight with no overshoot/wobble.
+- Chose this JS approach over CSS per-image scroll-snap markers: the marker
+  approach's straightness depends on the UA proximity threshold (tilt dead-zone
+  on stingier engines) and risks mandatory-snap traps (unreachable footer /
+  oversized inter-section gaps). JS rounding adds NO page-scroll snap points, so
+  those traps are structurally impossible; the section-level proximity snap is
+  untouched. (Design chosen via a 3-lens design workflow + math proof.)
+- Untouched: CoverFlow.tsx, the horizontal sandbox deck, and the mobile /
+  reduced-motion FallbackStack (flat images, no pos pipeline).
+- ⚠️ **Runtime verification pending.** Types/lint are clean and the design is
+  math-proven, but this session's dev environment degraded (RAM/disk limits —
+  repeated dev-server OOM/deaths) and a competing dev-server lock blocked live
+  in-browser testing. During debugging the pinned deck appeared frozen on image
+  0 on a throwaway server; that server had a partially-deleted Turbopack chunk
+  cache, and a clean build serves HTTP 200 with the correct markup — so the
+  freeze is believed environmental, not a code defect. Confirm in a healthy dev
+  server: scroll through a project and check the image always rests straight and
+  the deck still advances image→image with scroll.
+
+### 2026-07-08 — Home: per-section scroll snapping
+
+The index page now **snaps to each section** — hero, project 01, project 02,
+sandbox — as you scroll (desktop, fine pointer).
+
+- **`globals.css`** — `scroll-snap-type: y proximity` on the scroll container
+  (set on both `html` and `body` to cover either resolving as the scroller),
+  gated to `(min-width: 1024px) and (pointer: fine)`. A `.snap-section` utility
+  sets `scroll-snap-align: start` + `scroll-margin-top` (clears the fixed bar).
+- **`.snap-section`** applied to the hero (`page.tsx`), each project article
+  (`ProjectCoverFlow` — both the pinned and fallback variants), and the sandbox
+  section (`SandboxCarousel`).
+- **Why proximity, not mandatory:** projects 01/02 are multi-viewport *pinned*
+  cover-flow regions. `mandatory` would make everything between two section
+  snap points unreachable — you could not stop on images 1..n; the scroll would
+  jump straight to the next project. `proximity` snaps firmly at the section
+  boundaries while leaving the in-project image scroll (and the footer) freely
+  reachable. Verified: a mid-pin scroll rests freely (not yanked to the next
+  section), confirming the pinned decks are not trapped.
+- Scoped safely: only `.snap-section` elements are snap targets, so other routes
+  (project detail, about, …) are unaffected even though the type is on `html`.
+- Verified: `scroll-snap-type` active at desktop width; 4 snap targets with
+  `align: start`; mid-pin scroll stays free; no console errors. (A real
+  trackpad/wheel gesture can't be simulated in the headless preview, so the
+  final snap *feel* is best confirmed by you in the browser.)
+
+### 2026-07-08 — Selected Work: scroll-linked vertical per-project cover flow
+
+The home "Selected Work" section now shows each project's images as a **vertical
+cover flow** (the sandbox's Apple-style 3D deck, re-oriented to the Y axis),
+**driven by the page's own scroll** (not a separate, hover-captured wheel).
+Each project is **pinned** to the viewport for a tall scroll region; scrolling
+advances the deck through that project's images, and when the last image centres
+the pin releases and the page flows on to the next project — one continuous
+scroll motion ("Model B" — one deck per project). Clicking the centred card
+opens the case study (`/project/[slug]`); the meta is pinned in the left column.
+
+- **`CoverFlow.tsx`** — added two props:
+  - `orientation` (`horizontal` default | `vertical`): vertical drives cards
+    along Y with `rotateX` (sign-flipped). The horizontal sandbox is unchanged.
+  - `positionValue?: MotionValue<number>`: an external fractional-position
+    driver. When set, the deck is **controlled** by it — its own wheel + drag
+    are disabled (`touch-auto`, no capture) so the page scroll drives the cards;
+    the centred index is derived by rounding it (`useMotionValueEvent`).
+- **`ProjectCoverFlow.tsx`** — per-project wrapper. On capable clients
+  (desktop, fine pointer, non-reduced-motion) it renders `PinnedProjectDeck`: a
+  tall `pinRef` region + a `sticky top-0 h-svh` inner block; `useScroll` over
+  the region maps `scrollYProgress` → `[0, lastImage]` (with a brief hold at the
+  end) and feeds it to `CoverFlow` via `positionValue`. Video cards (`.mp4`)
+  autoplay muted/looping. Scroll distance per image ≈ `SCROLL_PER_IMAGE` svh
+  (tunable). Falls back to a plain vertical image stack on **mobile /
+  coarse-pointer** and **reduced-motion** (natural page scroll already reads as
+  one continuous motion). SSR renders the fallback; desktop upgrades after mount
+  (no hydration mismatch).
+- **`FeaturedProjects.tsx`** — now just maps projects → `ProjectCoverFlow`.
+- Superseded the earlier same-day hover-captured wheel version (which felt like
+  a separate, disjointed scroll). The `vertical` wheel/drag path still exists in
+  `CoverFlow` but is bypassed whenever `positionValue` is supplied.
+- Verified: `tsc` + `eslint` clean; cold-server load, no console/server errors;
+  page-scroll drives the active card `0→last` monotonically per project; project
+  1 → project 2 pin hand-off flows; click-through navigates; sandbox horizontal
+  deck un-regressed; mobile + reduced-motion fall back to the stack.
+
 ### 2026-07-07 — Home entrance: harmonize the hero with the slug-page motion voice
 
 Brought the landing-page entrance into the same motion family as the project

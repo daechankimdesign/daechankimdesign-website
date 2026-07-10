@@ -56,27 +56,9 @@ export default async function SandboxDetailPage({
 
         {/* Right Side: Main Content */}
         <div className="flex-1 min-w-0 content-column">
-          <header className="mb-8 measure">
-            <Reveal>
-              <RevealItem as="h1" className="text-display">
-                {frontmatter.title}
-              </RevealItem>
-              {frontmatter.summary ? (
-                <RevealItem as="p" className="text-body mt-3 text-fg-muted">
-                  {frontmatter.summary}
-                </RevealItem>
-              ) : null}
-              {frontmatter.tags && frontmatter.tags.length > 0 ? (
-                <RevealItem as="p" className="text-caption mt-3 text-fg-muted">
-                  {frontmatter.tags.join("  ·  ")}
-                </RevealItem>
-              ) : null}
-            </Reveal>
-          </header>
-
-          {/* Interactive project embed — sits atop the body when the piece has
-              a live demo (`embed` in frontmatter). Pieces without one (e.g. a
-              Chrome extension) render no frame at all. */}
+          {/* Interactive project embed — sits above the title/header when the
+              piece has a live demo (`embed` in frontmatter). Pieces without one
+              (e.g. a Chrome extension) render no frame at all. */}
           {frontmatter.embed ? (
             <SandboxEmbed
               src={frontmatter.embed}
@@ -102,6 +84,24 @@ export default async function SandboxDetailPage({
               }
             />
           ) : null}
+
+          <header className="mb-8 measure">
+            <Reveal>
+              <RevealItem as="h1" className="text-display">
+                {frontmatter.title}
+              </RevealItem>
+              {frontmatter.summary ? (
+                <RevealItem as="p" className="text-body mt-3 text-fg-muted">
+                  {frontmatter.summary}
+                </RevealItem>
+              ) : null}
+              {frontmatter.tags && frontmatter.tags.length > 0 ? (
+                <RevealItem as="p" className="text-caption mt-3 text-fg-muted">
+                  {frontmatter.tags.join("  ·  ")}
+                </RevealItem>
+              ) : null}
+            </Reveal>
+          </header>
 
           <article>{content}</article>
         </div>

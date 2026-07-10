@@ -50,6 +50,19 @@ firestore-debug.log*
 # vercel
 .vercel
 
+# media source-of-truth: local original of the Firebase media/ tree. Never
+# committed (it's the upload source, not deploy input) — except its spec README.
+# Deployed media is hosted on Firebase Storage and referenced by URL.
+/media-src/*
+!/media-src/README.md
+# Dead working copies: images used to live here, but App Hosting doesn't serve
+# public/ (they 404 on deploy). The real files now live in media-src/ + Firebase.
+/public/home/
+/public/about/portrait.png
+/public/about/stack/
+/public/projects/
+/public/sandbox/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

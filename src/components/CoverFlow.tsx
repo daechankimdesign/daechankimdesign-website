@@ -17,6 +17,7 @@ import {
   AnimatePresence,
   motion,
   useMotionValue,
+  useMotionValueEvent,
   useReducedMotion,
   useSpring,
   useTransform,
@@ -147,6 +148,21 @@ export interface CoverFlowProps {
   enableClickToSnap?: boolean
   enableScroll?: boolean
   enableAudio?: boolean
+  /**
+   * Axis the deck flips along. `vertical` drives the cards along Y with rotateX
+   * and reads vertical wheel / drag / ↑↓ keys, releasing the wheel at the deck's
+   * ends so the page keeps scrolling. `horizontal` (default) is the classic
+   * cover flow used by the sandbox.
+   */
+  orientation?: 'horizontal' | 'vertical'
+  /**
+   * External fractional position driver — e.g. page-scroll progress mapped to
+   * [0, items.length - 1]. When provided the deck is CONTROLLED by this value:
+   * its own wheel and drag are disabled so the page's own scroll drives the
+   * cards (no separate, hover-captured scroll). The centred card is derived by
+   * rounding this value.
+   */
+  positionValue?: MotionValue<number>
   /** Built-in centered title/subtitle overlay. Set false to render your own. */
   showCaption?: boolean
   /**
@@ -192,6 +208,8 @@ export function CoverFlow({
   enableClickToSnap = true,
   enableScroll = true,
   enableAudio = false,
+  orientation = 'horizontal',
+  positionValue,
   showCaption = true,
   enableHoverSlide = false,
   scrollThreshold = 100,
@@ -268,8 +286,18 @@ export function CoverFlow({
   const prefersReducedMotion = reduceMotion ?? systemReducedMotion
   const scrollX = useMotionValue(safeInitial)
   const springX = useSpring(scrollX, { stiffness: 150, damping: 30, mass: 1 })
-  const effectiveScrollX = prefersReducedMotion ? scrollX : springX
+  // Externally driven (scroll-linked) → the deck follows `positionValue` directly
+  // so it stays locked to the page scroll; otherwise it uses its own spring.
+  const effectiveScrollX = positionValue ?? (prefersReducedMotion ? scrollX : springX)
   const tick = useTickAudio(enableAudio)
+
+  // Scroll-driven mode: mirror the fractional position into activeIndex so the
+  // centred card lights and handles clicks. No-op when self-driven.
+  useMotionValueEvent(effectiveScrollX, 'change', (v) => {
+    if (!positionValue) return
+    const i = clampIndex(Math.round(v), items.length)
+    if (i !== activeIndexRef.current) setActiveIndex(i)
+  })
 
   useEffect(() => {
     const clamped = clampIndex(initialIndex, items.length)
@@ -300,6 +328,8 @@ export function CoverFlow({
   useEffect(() => {
     const container = containerRef.current
     if (!container) return
+    // Scroll-driven decks are controlled by the page scroll; never capture wheel.
+    if (positionValue) return
 
     let accumulator = 0
     let lastTime = Date.now()
@@ -307,13 +337,25 @@ export function CoverFlow({
 
     const handleWheel = (e: WheelEvent) => {
       if (!enableScrollRef.current) return
-      if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) return
+      const vertical = orientation === 'vertical'
+      // React to the deck's own axis; let the cross axis fall through to the page.
+      const primary = vertical ? e.deltaY : e.deltaX
+      const cross = vertical ? e.deltaX : e.deltaY
+      if (Math.abs(cross) > Math.abs(primary)) return
+
+      // Vertical only: at the first/last cover, release the wheel in the
+      // outward direction so the page scrolls on to the next/prev project
+      // instead of trapping the reader inside the deck.
+      if (vertical) {
+        const at = activeIndexRef.current
+        if ((primary > 0 && at >= items.length - 1) || (primary < 0 && at <= 0)) return
+      }
       e.preventDefault()
 
       const now = Date.now()
       if (now - lastTime > 200) accumulator = 0
       lastTime = now
-      accumulator += e.deltaX
+      accumulator += primary
 
       const threshold = scrollThresholdRef.current
       const shouldJump =
@@ -322,7 +364,7 @@ export function CoverFlow({
 
       if (shouldJump) {
         const dir = accumulator > 0 ? 'right' : 'left'
-        jumpToIndex(Math.round(scrollX.get()) + (dir === 'right' ? 1 : -1), Math.abs(e.deltaX), dir)
+        jumpToIndex(Math.round(scrollX.get()) + (dir === 'right' ? 1 : -1), Math.abs(primary), dir)
         accumulator = 0
         lastJump = now
       }
@@ -330,17 +372,20 @@ export function CoverFlow({
 
     container.addEventListener('wheel', handleWheel, { passive: false })
     return () => container.removeEventListener('wheel', handleWheel)
-  }, [jumpToIndex, scrollX])
+  }, [jumpToIndex, scrollX, orientation, items.length, positionValue])
 
   const handleCardClick = useCallback(
     (item: CoverFlowItem, index: number) => {
-      if (index === activeIndexRef.current) {
+      // Scroll-driven decks own their position via the page scroll, so they
+      // can't snap on click. Route ANY card click to onItemClick (open the item)
+      // instead of firing a no-op jump that would transiently desync activeIndex.
+      if (positionValue || index === activeIndexRef.current) {
         onItemClickRef.current?.(item, index)
       } else if (enableClickToSnapRef.current) {
         jumpToIndex(index)
       }
     },
-    [jumpToIndex],
+    [jumpToIndex, positionValue],
   )
 
   // Called on a card's mousemove. Debounced (100ms): while the pointer keeps
@@ -363,31 +408,35 @@ export function CoverFlow({
 
   const onDrag = useCallback(
     (_: unknown, info: PanInfo) => {
-      scrollX.set(scrollX.get() - info.delta.x / (effectiveCenterGap * 0.8))
+      const delta = orientation === 'vertical' ? info.delta.y : info.delta.x
+      scrollX.set(scrollX.get() - delta / (effectiveCenterGap * 0.8))
     },
-    [effectiveCenterGap, scrollX],
+    [effectiveCenterGap, orientation, scrollX],
   )
 
   const onDragEnd = useCallback(
     (_: unknown, info: PanInfo) => {
       setIsDragging(false)
-      const projected = scrollX.get() - info.velocity.x * 0.002
+      const velocity = orientation === 'vertical' ? info.velocity.y : info.velocity.x
+      const projected = scrollX.get() - velocity * 0.002
       const clamped = clampIndex(Math.round(projected), items.length)
       const prev = activeIndexRef.current
       const dir: Direction = clamped >= prev ? 'right' : 'left'
       setActiveIndex(clamped)
       scrollX.set(clamped)
-      if (clamped !== prev) tick(dir, Math.abs(info.velocity.x))
+      if (clamped !== prev) tick(dir, Math.abs(velocity))
     },
-    [items.length, scrollX, tick],
+    [items.length, orientation, scrollX, tick],
   )
 
   const onKeyDown = useCallback(
     (e: ReactKeyboardEvent) => {
-      if (e.key === 'ArrowLeft') { e.preventDefault(); jumpToIndex(activeIndexRef.current - 1, 120, 'left') }
-      if (e.key === 'ArrowRight') { e.preventDefault(); jumpToIndex(activeIndexRef.current + 1, 120, 'right') }
+      const prevKey = orientation === 'vertical' ? 'ArrowUp' : 'ArrowLeft'
+      const nextKey = orientation === 'vertical' ? 'ArrowDown' : 'ArrowRight'
+      if (e.key === prevKey) { e.preventDefault(); jumpToIndex(activeIndexRef.current - 1, 120, 'left') }
+      if (e.key === nextKey) { e.preventDefault(); jumpToIndex(activeIndexRef.current + 1, 120, 'right') }
     },
-    [jumpToIndex],
+    [jumpToIndex, orientation],
   )
 
   if (items.length === 0) return null
@@ -407,16 +456,31 @@ export function CoverFlow({
       )}
       <motion.div
         ref={containerRef}
-        className={`group/cf relative w-full h-full flex flex-col justify-center items-center overflow-visible bg-transparent focus:outline-none touch-pan-y ${
-          isDragging ? 'is-dragging cursor-grabbing' : 'cursor-grab'
+        className={`group/cf relative w-full h-full flex flex-col justify-center items-center overflow-visible bg-transparent focus:outline-none ${
+          positionValue
+            ? 'touch-auto'
+            : orientation === 'vertical'
+              ? 'touch-pan-x'
+              : 'touch-pan-y'
+        } ${
+          positionValue ? '' : isDragging ? 'is-dragging cursor-grabbing' : 'cursor-grab'
         } ${className ?? ''}`}
         style={{ perspective: 1000 }}
         role="region"
         aria-label="Cover Flow"
         tabIndex={0}
         onKeyDown={onKeyDown}
-        drag="x"
-        dragConstraints={{ left: 0, right: 0 }}
+        drag={positionValue ? false : orientation === 'vertical' ? 'y' : 'x'}
+        // Pin the DRAG axis to 0 so the container itself never translates — the
+        // gesture only feeds scrollX (which moves the cards). Must match `drag`:
+        // vertical pins top/bottom, horizontal pins left/right. A left/right pin
+        // on a vertical drag leaves Y unbounded, so the deck would slide away and
+        // never return (dragElastic=0, no snap-to-origin).
+        dragConstraints={
+          orientation === 'vertical'
+            ? { top: 0, bottom: 0 }
+            : { left: 0, right: 0 }
+        }
         dragElastic={0}
         dragMomentum={false}
         onDragStart={onDragStart}
@@ -443,6 +507,7 @@ export function CoverFlow({
               reflectionFilterId={reflectionFilterId}
               enableClickToSnap={enableClickToSnap}
               reduceMotion={prefersReducedMotion ?? false}
+              orientation={orientation}
               renderImage={renderImage}
               onCardClick={handleCardClick}
               onCardHover={handleCardHover}
@@ -492,6 +557,7 @@ interface CardProps {
   reflectionFilterId?: string
   enableClickToSnap: boolean
   reduceMotion: boolean
+  orientation: 'horizontal' | 'vertical'
   renderImage?: (props: RenderImageProps) => ReactNode
   onCardClick: (item: CoverFlowItem, index: number) => void
   onCardHover: (index: number) => void
@@ -511,18 +577,22 @@ const CoverFlowItemCard = memo(function CoverFlowItemCard({
   reflectionFilterId,
   enableClickToSnap,
   reduceMotion,
+  orientation,
   renderImage,
   onCardClick,
   onCardHover,
 }: CardProps) {
-  const rotateY = useTransform(scrollX, (value) => {
+  const rotate = useTransform(scrollX, (value) => {
     if (reduceMotion) return 0
     const pos = index - value
     const absPos = Math.abs(pos)
-    return absPos < 0.5 ? -pos * (rotation * 2) : pos < 0 ? rotation : -rotation
+    const base = absPos < 0.5 ? -pos * (rotation * 2) : pos < 0 ? rotation : -rotation
+    // Vertical tilts around the X axis; the sign flips so each off-centre card's
+    // edge nearest the centre leans toward the viewer (a vertical cover flow).
+    return orientation === 'vertical' ? -base : base
   })
 
-  const x = useTransform(scrollX, (value) => {
+  const offset = useTransform(scrollX, (value) => {
     const pos = index - value
     const absPos = Math.abs(pos)
     if (absPos < 1) return pos * centerGap
@@ -539,9 +609,11 @@ const CoverFlowItemCard = memo(function CoverFlowItemCard({
 
   const zIndex = useTransform(scrollX, (value) => 1000 - Math.abs(index - value) * 10)
 
-  const filterStyle = useTransform(
+  // Off-centre cards fade toward WHITE (a #ffffff veil), not darkened, so the
+  // deck reads cleanly on the light canvas; the centred card stays fully opaque.
+  const veilOpacity = useTransform(
     scrollX,
-    (value) => `brightness(${Math.abs(index - value) < 0.5 ? 1 : 0.5})`,
+    (value) => (Math.abs(index - value) < 0.5 ? 0 : 0.5),
   )
 
   const imageRenderer = renderImage ?? defaultRenderImage
@@ -555,18 +627,23 @@ const CoverFlowItemCard = memo(function CoverFlowItemCard({
         height,
         marginTop: -height / 2,
         marginLeft: -width / 2,
-        x,
+        ...(orientation === 'vertical'
+          ? { y: offset, rotateX: rotate }
+          : { x: offset, rotateY: rotate }),
         z,
-        rotateY,
         zIndex,
-        filter: filterStyle,
         pointerEvents: 'auto',
       }}
       onClick={() => onCardClick(item, index)}
       onMouseMove={() => onCardHover(index)}
     >
-      <div className="relative w-full h-full rounded-xl shadow-2xl bg-black">
-        <div className="absolute inset-0 rounded-xl border border-white/10 z-20 pointer-events-none" />
+      <div className="relative w-full h-full rounded-xl shadow-2xl bg-white">
+        <div className="absolute inset-0 rounded-xl border border-black/10 z-20 pointer-events-none" />
+        {/* #ffffff veil — fades off-centre cards toward the canvas, not to black. */}
+        <motion.div
+          className="absolute inset-0 rounded-xl bg-white pointer-events-none z-30"
+          style={{ opacity: veilOpacity }}
+        />
         <div className="relative w-full h-full overflow-hidden rounded-xl">
           {imageRenderer({
             src: item.image,

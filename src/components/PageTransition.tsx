@@ -95,7 +95,7 @@ export function PageTransition({ children }: { children: ReactNode }) {
       variants={slideVariants}
       onAnimationStart={() => setTransitioning(true)}
       onAnimationComplete={() => setTransitioning(false)}
-      className={`flex flex-1 flex-col bg-canvas relative ${
+      className={`flex flex-1 flex-col bg-canvas relative rounded-b-[28px] shadow-[0_18px_40px_-16px_rgba(0,0,0,0.45)] ${
         transitioning ? "overflow-hidden" : ""
       }`}
     >

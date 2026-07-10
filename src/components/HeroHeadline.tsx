@@ -4,19 +4,27 @@ import { useEffect, useRef, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { ArrowDown, ArrowUpRight } from "iconoir-react";
 import { HeroImageStack, type HeroStackItem } from "./HeroImageStack";
+import { Highlighter } from "./Highlighter";
 import { EASE_OUT } from "@/lib/motion";
 
-// Reveal cadence: a clause every STEP ms (brisk — matches the lede beat); the
-// lede then the CTA buttons each follow after LEDE_DELAY. Plays ONCE per viewport
-// visit (no loop); replays when the hero leaves and re-enters.
-// NOTE: keep the clause tween duration (currently 0.55s, below) STRICTLY < STEP —
-// each clause must ~settle before the next stacks or the cascade smears together.
+// Reveal cadence: one header line every STEP ms, then the sub text and the CTA
+// buttons each follow after LEDE_DELAY. Plays ONCE per viewport visit (no loop);
+// replays when the hero leaves and re-enters. Keep the line tween duration
+// (0.55s, below) STRICTLY < STEP so each line settles before the next steps in.
 const STEP = 600;
 const LEDE_DELAY = 600;
 
-// The three parts of "end-to-end" — one per clause (3 of each). Each brightens
-// from 5% → 100% as its matching clause lands.
-const HYPHEN_PARTS = ["end", "-to-", "end"];
+// The headline, revealed one line at a time (step by step).
+const HEADLINE = [
+  "Daechan Kim,",
+  "a proven end-to-end product designer",
+  "for fast-building teams.",
+];
+
+// Magic UI Highlighter marker colour for the three sub-text action phrases. The
+// alpha lives here (not as a flat SVG opacity) so rough-notation's overlapping
+// strokes compound to a denser, hand-drawn marker where they cross.
+const HL_COLOR = "rgba(253, 231, 105, 0.55)";
 
 function scrollToWork() {
   document
@@ -25,30 +33,24 @@ function scrollToWork() {
 }
 
 /**
- * Hero headline. The subject line fades in, then the clauses STACK downward —
- * one every STEP ms, each lighting its "end-to-end" part 5% → 100% — then the
- * lede and finally the two CTA buttons ride in. In sync, an image flies into the
- * right-hand stack on each text reveal (3 clauses + lede = 4 cards). The whole
+ * Hero headline. The header lines reveal one at a time (step by step), then the
+ * sub text and finally the two CTA buttons ride in. Once the sub text has
+ * settled, a Magic UI Highlighter (rough-notation) draws a marker over its three
+ * action phrases, staggered left to right. In sync with the text, an image flies
+ * into the right-hand stack on each reveal (3 lines + sub text = 4 cards). The
  * sequence plays ONCE per viewport visit (IntersectionObserver replays on
- * re-entry, plays on mount so it never waits on the observer); it never loops.
- * Text lines stay in flow (opacity/transform only) so nothing below shifts.
- * Reduced-motion → everything static.
+ * re-entry; plays on mount so it never waits on the observer); it never loops.
+ * Reduced motion → everything static.
  */
-export function HeroHeadline({
-  phrases,
-  lede,
-  stack,
-}: {
-  phrases: string[];
-  lede: string;
-  stack: HeroStackItem[];
-}) {
+export function HeroHeadline({ stack }: { stack: HeroStackItem[] }) {
   const reduce = useReducedMotion();
   const containerRef = useRef<HTMLDivElement>(null);
-  // Reveal steps: one per clause, then the lede, then the buttons.
-  const total = phrases.length + 2;
+  // Reveal steps: one per header line, then the sub text, then the buttons.
+  const total = HEADLINE.length + 2;
   const [entered, setEntered] = useState(false);
   const [count, setCount] = useState(0);
+  // How many of the three sub-text phrases have their highlighter drawn.
+  const [hlActive, setHlActive] = useState(0);
 
   useEffect(() => {
     if (reduce) {
@@ -65,16 +67,18 @@ export function HeroHeadline({
       n += 1;
       setCount(n);
       if (n < total) {
-        const nextIsClause = n + 1 <= phrases.length;
-        t = setTimeout(build, nextIsClause ? STEP : LEDE_DELAY);
+        const nextIsLine = n + 1 <= HEADLINE.length;
+        t = setTimeout(build, nextIsLine ? STEP : LEDE_DELAY);
       }
       // n === total → sequence complete; stop (no loop).
     };
     const play = () => {
       clearTimeout(t);
-      n = 0;
+      // First line shows immediately so the hero never starts blank; the rest
+      // step in on the timer.
+      n = 1;
       setEntered(true);
-      setCount(0);
+      setCount(1);
       t = setTimeout(build, STEP);
     };
     const reset = () => {
@@ -110,10 +114,33 @@ export function HeroHeadline({
     };
   }, [reduce, total]);
 
-  const ledeShown = count > phrases.length;
-  const buttonsShown = count > phrases.length + 1;
-  // One image reveals per clause + one for the lede (== stack.length).
+  const ledeShown = count > HEADLINE.length;
+  const buttonsShown = count > HEADLINE.length + 1;
+  // One image reveals per header line + one for the sub text (== stack.length).
   const cardsRevealed = Math.min(count, stack.length);
+
+  // Draw the highlighters only after the sub text has faded in and settled
+  // (rough-notation measures the final box). Staggered left to right; reduced
+  // motion draws all three at once. Cleared when the hero resets/leaves view.
+  useEffect(() => {
+    if (!ledeShown) {
+      setHlActive(0);
+      return;
+    }
+    if (reduce) {
+      setHlActive(3);
+      return;
+    }
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    const base = 750; // wait out the 0.7s sub-text fade before measuring
+    const step = 280;
+    [1, 2, 3].forEach((phrase, i) => {
+      timers.push(setTimeout(() => setHlActive(phrase), base + i * step));
+    });
+    return () => timers.forEach(clearTimeout);
+  }, [ledeShown, reduce]);
+
+  const hlDuration = reduce ? 0 : 700;
 
   return (
     <div
@@ -122,34 +149,8 @@ export function HeroHeadline({
     >
       <div className="flex flex-1 flex-col items-start">
         <h1 className="text-display">
-          {/* Subject line — fades in on entry; "end-to-end" parts light with the stack. */}
-          <motion.span
-            className="block"
-            initial={false}
-            animate={{ opacity: entered ? 1 : 0, y: entered ? 0 : 20 }}
-            transition={{ duration: 0.9, ease: EASE_OUT }}
-          >
-            <span className="block">Daechan Kim,</span>
-            <span className="block">
-              a proven{" "}
-              <span className="whitespace-nowrap">
-                {HYPHEN_PARTS.map((part, i) => (
-                  <motion.span
-                    key={i}
-                    initial={false}
-                    animate={{ opacity: i < count ? 1 : 0.05 }}
-                    transition={{ duration: 0.4, ease: EASE_OUT }}
-                  >
-                    {part}
-                  </motion.span>
-                ))}
-              </span>{" "}
-              product designer,
-            </span>
-          </motion.span>
-
-          {/* Stacking clauses — reveal at counts 1..N. */}
-          {phrases.map((line, i) => (
+          {/* Header — lines step in one at a time at counts 1..N. */}
+          {HEADLINE.map((line, i) => (
             <motion.span
               key={i}
               className="block"
@@ -162,17 +163,51 @@ export function HeroHeadline({
           ))}
         </h1>
 
-        {/* Lede — rides in a beat after the last clause. */}
+        {/* Sub text — fades in a beat after the last header line; the three
+            action phrases get a staggered Magic UI Highlighter once it's in.
+            Opacity-only (no y-transform) and position:relative on purpose: the
+            highlighter (rough-notation) measures each phrase's box and anchors
+            its SVG to this paragraph, so the phrases must never move under it. */}
         <motion.p
-          className="text-sub-display measure-lede mt-8 text-fg-muted"
+          className="text-sub-display measure-lede relative mt-8 text-fg-muted"
           initial={false}
-          animate={{ opacity: ledeShown ? 1 : 0, y: ledeShown ? 0 : 16 }}
+          animate={{ opacity: ledeShown ? 1 : 0 }}
           transition={{ duration: 0.7, ease: EASE_OUT }}
         >
-          {lede}
+          I&apos;m a designer, researcher, and builder, always looking to expand
+          my horizons and learn new things. With 3+ years across a B2B2C startup
+          and global client work, I&apos;d love to talk about opportunities where
+          I get to{" "}
+          <Highlighter
+            action="highlight"
+            color={HL_COLOR}
+            active={hlActive > 0}
+            animationDuration={hlDuration}
+          >
+            listen to people
+          </Highlighter>
+          ,{" "}
+          <Highlighter
+            action="highlight"
+            color={HL_COLOR}
+            active={hlActive > 1}
+            animationDuration={hlDuration}
+          >
+            obsess over a detail all night
+          </Highlighter>
+          , and{" "}
+          <Highlighter
+            action="highlight"
+            color={HL_COLOR}
+            active={hlActive > 2}
+            animationDuration={hlDuration}
+          >
+            get it into their hands
+          </Highlighter>
+          .
         </motion.p>
 
-        {/* CTA buttons — the final step, after the lede. */}
+        {/* CTA buttons — the final step, after the sub text. */}
         <motion.div
           className="mt-8 flex flex-wrap items-center gap-6"
           initial={false}
