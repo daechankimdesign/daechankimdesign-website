@@ -28,7 +28,7 @@ export function ContentGrid({
                 width={1600}
                 height={900}
                 sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                className="mb-4 rounded-md"
+                className="mb-4"
               />
             ) : null}
             <h2 className="text-h3 text-fg transition-opacity group-hover:opacity-60">

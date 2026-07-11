@@ -78,7 +78,7 @@ export function HeroImageStack({
                 aria-label={`Enlarge image ${i + 1}: ${item.caption}`}
                 onClick={() => setOpenIndex(i)}
                 inert={!shown}
-                className="pointer-events-auto relative w-full origin-bottom cursor-pointer overflow-hidden rounded-lg border border-hairline bg-surface-subtle shadow-sm"
+                className="pointer-events-auto relative w-full origin-bottom cursor-pointer overflow-hidden bg-surface-subtle shadow-sm"
                 style={{ aspectRatio: ratio }}
                 initial={false}
                 animate={{

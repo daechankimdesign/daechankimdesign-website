@@ -10,7 +10,8 @@ const NAV = [
   // Unified Work tab — spans both /project/case-study/* and /project/play/*
   // (isActive uses startsWith(`${href}/`), so it lights on either sub-section).
   { href: "/project", key: "work" },
-  { href: "/blog", key: "blogs" },
+  // Blog is hidden from navigation for now (no posts yet). The /blog route still
+  // exists but is unlinked — re-add this entry to surface it again.
   { href: "/about", key: "about" },
 ] as const;
 
@@ -70,7 +71,7 @@ function NavPill({
     <nav
       aria-label="Primary"
       onMouseLeave={() => setHoveredItem(null)}
-      className="isolate flex items-center gap-1 rounded-full border-[0.6px] border-hairline bg-canvas px-1.5 py-1"
+      className="isolate flex items-center gap-1 rounded-full border-[0.6px] border-[#ececec] bg-canvas px-1.5 py-1"
     >
       {NAV.map((item) => {
         const active = isActive(item.href);

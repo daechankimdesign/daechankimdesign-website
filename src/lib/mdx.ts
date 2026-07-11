@@ -31,6 +31,13 @@ export type Frontmatter = {
   embedHeight?: number;
   /** Curated home-preview media — image + .mp4 loop URLs, in order. Overrides auto-extraction. */
   cover?: string[];
+  /** Work-board layout weight — drives the tile's column span (standard/feature/
+      wide). Read from the EN source only (language-agnostic), so it never needs
+      translating and never enters the translation-preservation contract. */
+  span?: "standard" | "feature" | "wide";
+  /** Optional explicit tile aspect ratio (e.g. "4/3"); falls back to the span
+      tier default. EN-only, like `span`. */
+  aspect?: string;
   [key: string]: unknown;
 };
 
@@ -151,6 +158,77 @@ export const getAllFrontmatter = cache(async (
         String(a.frontmatter.date ?? ""),
       ),
     );
+});
+
+// ── Work board ───────────────────────────────────────────────────────────────
+// The unified /project board merges the two work content types at the PRESENTATION
+// layer only: each on-disk type stays separate and routes to its own detail
+// sub-tree. See docs / the work-board plan.
+
+export type WorkType = "projects" | "sandbox";
+export type Span = "standard" | "feature" | "wide";
+
+/** A work item tagged for the board: its content type, detail base path, resolved
+    layout weight, and a normalized ISO sort key. */
+export type BoardItem = ContentItem & {
+  type: WorkType;
+  basePath: string;
+  span: Span;
+  aspect?: string;
+  sortKey: string;
+};
+
+// case-study ↔ projects, play ↔ sandbox (mirrors SettingsModal's SEGMENT_TO_TYPE).
+const WORK_BASE_PATH: Record<WorkType, string> = {
+  projects: "/project/case-study",
+  sandbox: "/project/play",
+};
+
+// YAML coerces an UNQUOTED `date: 2026-03-01` to a Date but leaves a QUOTED
+// "2025-05-04" a string. String(Date) is "Fri Mar 01 2026 …", which sorts wrong
+// against ISO strings — so normalize everything to `YYYY-MM-DD` before merging.
+function normalizeDate(d: unknown): string {
+  if (d instanceof Date) return d.toISOString().slice(0, 10);
+  return typeof d === "string" ? d : "";
+}
+
+function resolveSpan(s: unknown): Span {
+  return s === "feature" || s === "wide" ? s : "standard";
+}
+
+/**
+ * The merged, sorted board dataset. Loads both work types for the requested
+ * locale, then reads the LAYOUT fields (`span`, `aspect`) and the sort `date`
+ * from the canonical EN item — those are language-agnostic, so they live only in
+ * the EN source and never enter the ko/es translation-preservation contract.
+ * Reverse-chronological across both types. Items whose only media is a
+ * placeholder are already dropped upstream by getAllFrontmatter.
+ */
+export const getWorkBoardItems = cache(async (
+  locale: string = routing.defaultLocale,
+): Promise<BoardItem[]> => {
+  const types: WorkType[] = ["projects", "sandbox"];
+  const perType = await Promise.all(
+    types.map(async (type) => {
+      const [items, enItems] = await Promise.all([
+        getAllFrontmatter(type, locale),
+        getAllFrontmatter(type, routing.defaultLocale),
+      ]);
+      const enBySlug = new Map(enItems.map((it) => [it.slug, it.frontmatter]));
+      return items.map((it): BoardItem => {
+        const en = enBySlug.get(it.slug) ?? it.frontmatter;
+        return {
+          ...it,
+          type,
+          basePath: WORK_BASE_PATH[type],
+          span: resolveSpan(en.span),
+          aspect: typeof en.aspect === "string" ? en.aspect : undefined,
+          sortKey: normalizeDate(en.date ?? it.frontmatter.date),
+        };
+      });
+    }),
+  );
+  return perType.flat().sort((a, b) => b.sortKey.localeCompare(a.sortKey));
 });
 
 /** Full compile for a detail page. Returns null if the source is missing. */

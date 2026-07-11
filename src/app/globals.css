@@ -144,7 +144,7 @@ footer.reveal-footer {
   font-size: round(clamp(18px, 13px + 1.23vw, 26px), 1px);
 }
 @utility text-h2 {
-  font-weight: 600;
+  font-weight: 500;
   font-family: var(--font-sans), system-ui, sans-serif;
   line-height: 1.3;
   letter-spacing: -0.03em;
@@ -316,6 +316,15 @@ body::before {
 /* `.edge-fade` (still present on Reveal / RevealBlock / card wrappers) is now a
    no-op: the old per-object scroll-timeline dim is gone. framer-motion owns the
    entrance on the outer element, so those wrappers just render as plain blocks. */
+
+/* Highlight host — the heading wrapper that rough-notation drops its absolutely-
+   positioned highlight SVG into. `position: relative` makes it the SVG's
+   containing block, so the mark anchors AT the title (small, scroll-independent
+   coordinates) instead of the document root. Without this the section-flash
+   wipe (src/lib/highlight.ts) mis-clips headings far down the page. */
+.hl-host {
+  position: relative;
+}
 
 /* ── Width system ──────────────────────────────────────────────────────────
    One shell, one content column, two reading measures. Compose them; don't

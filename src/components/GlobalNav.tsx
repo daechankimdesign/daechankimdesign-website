@@ -38,6 +38,14 @@ export function GlobalNav() {
   // When true, the next visibility change snaps (no slide). Used for the initial
   // measure and route changes, so ONLY genuine scroll-driven reveals/hides animate.
   const [instant, setInstant] = useState(true);
+  // Plays the slide-down entrance ONCE on mount (from above the viewport into
+  // place), then hands visibility control to the scroll/route logic below. Takes
+  // precedence over `instant` so the bar always eases in on first paint.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    const id = requestAnimationFrame(() => setMounted(true));
+    return () => cancelAnimationFrame(id);
+  }, []);
 
   // <GlobalNav /> lives in the layout OUTSIDE the keyed PageTransition, so it
   // never unmounts on client-side navigation and `shown` persists across routes.
@@ -91,17 +99,23 @@ export function GlobalNav() {
   return (
     <motion.header
       className="fixed inset-x-0 top-0 z-30 mix-blend-difference"
-      initial={false}
+      // Start above the viewport so the first paint slides DOWN into place.
+      initial={{ y: "-100%" }}
       animate={{ y: shown ? "0%" : "-100%" }}
       transition={
-        reduce || instant
+        reduce
           ? { duration: 0 }
-          : {
-              type: "spring",
-              stiffness: 380,
-              damping: 40,
-              delay: shown ? 0.15 : 0,
-            }
+          : !mounted
+            ? // Entrance: ease the bar down from the top on first paint.
+              { type: "spring", stiffness: 320, damping: 34, delay: 0.2 }
+            : instant
+              ? { duration: 0 }
+              : {
+                  type: "spring",
+                  stiffness: 380,
+                  damping: 40,
+                  delay: shown ? 0.15 : 0,
+                }
       }
     >
       <nav className="container-page flex items-center justify-between gap-6 py-4">

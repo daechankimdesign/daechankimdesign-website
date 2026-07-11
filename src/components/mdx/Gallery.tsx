@@ -18,7 +18,6 @@ export function Gallery({ images = [] }: { images?: GalleryImage[] }) {
           width={800}
           height={800}
           sizes="(max-width: 640px) 50vw, 33vw"
-          className="rounded-md"
         />
       ))}
     </div>

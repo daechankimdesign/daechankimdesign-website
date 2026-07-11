@@ -1,0 +1,118 @@
+import { Link } from "@/i18n/navigation";
+import { ProgressiveImage } from "./ProgressiveImage";
+import type { BoardItem, Span } from "@/lib/mdx";
+
+const isVideo = (src: string) => /\.mp4($|\?)/i.test(src);
+
+// Fixed ratio + representative dims per span tier (Phase 1: rhythm from SIZE, not
+// per-item ratio). `sizes` is a best-effort hint — on the App Hosting deploy the
+// optimizer is off and files serve raw, so the real budget lever is source file
+// size, not this string (kept correct for local dev regardless).
+const TIER: Record<Span, { w: number; h: number; sizes: string }> = {
+  standard: {
+    w: 1200,
+    h: 900, // 4:3
+    sizes: "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 30vw",
+  },
+  feature: {
+    w: 1500,
+    h: 1000, // 3:2
+    sizes: "(max-width: 640px) 100vw, (max-width: 1024px) 100vw, 46vw",
+  },
+  wide: {
+    w: 1600,
+    h: 900, // 16:9
+    sizes: "(max-width: 1024px) 100vw, 62vw",
+  },
+};
+
+/**
+ * One tile on the work board. The whole tile is a single Link to its detail page
+ * (case-study or play, resolved from the item's `basePath`). Media sits flush and
+ * flat (image-frame rule: no rounded/border on content images), with the caption
+ * block beneath: a type eyebrow, the title, a clamped one-line descriptor, and a
+ * tag row — all using the project's existing type tokens.
+ */
+export function WorkTile({
+  item,
+  typeLabel,
+  priority = false,
+}: {
+  item: BoardItem;
+  /** Localized "Case Study" / "Play" label for the eyebrow. */
+  typeLabel: string;
+  /** Eager-load this tile's image (use only for the first/LCP tile). */
+  priority?: boolean;
+}) {
+  const { frontmatter, slug, images, basePath, span } = item;
+  const tier = TIER[span];
+  const ratio = `${tier.w} / ${tier.h}`;
+
+  // Resolve media: the first still is the poster/image; the first .mp4 (if any,
+  // e.g. a curated `cover`) makes this a motion tile. cover overrides images[]
+  // upstream, so scanning images[] finds both.
+  const still = images.find((s) => !isVideo(s)) ?? frontmatter.thumbnail;
+  const video = images.find(isVideo);
+
+  return (
+    <Link href={`${basePath}/${slug}`} className="group block no-underline">
+      {/* Media — flat, borderless. A 2% black veil rests over it and lifts on
+          hover (the whole tile is the hover group). */}
+      <div className="relative mb-4">
+        {video ? (
+          <video
+            src={video}
+            poster={still}
+            autoPlay
+            loop
+            muted
+            playsInline
+            preload="metadata"
+            aria-label={`${frontmatter.title} preview`}
+            className="w-full bg-surface-subtle object-cover"
+            style={{ aspectRatio: ratio }}
+          />
+        ) : still ? (
+          <ProgressiveImage
+            src={still}
+            alt={frontmatter.title}
+            width={tier.w}
+            height={tier.h}
+            sizes={tier.sizes}
+            priority={priority}
+          />
+        ) : (
+          <div
+            className="w-full bg-surface-subtle"
+            style={{ aspectRatio: ratio }}
+          />
+        )}
+        <span
+          aria-hidden
+          style={{ backgroundColor: "rgb(0 0 0 / 0.02)" }}
+          className="pointer-events-none absolute inset-0 transition-opacity duration-300 group-hover:opacity-0"
+        />
+      </div>
+
+      {/* Type eyebrow — the sole Case Study vs Play signal; fg-muted for legible
+          contrast (fg-subtle would fail WCAG on canvas). */}
+      <p className="text-caption text-fg-muted">{typeLabel}</p>
+
+      <h3 className="text-h3 mt-1 text-fg transition-opacity group-hover:opacity-60">
+        {frontmatter.title}
+      </h3>
+
+      {frontmatter.summary ? (
+        <p className="text-body mt-1 text-fg-muted line-clamp-2">
+          {frontmatter.summary}
+        </p>
+      ) : null}
+
+      {frontmatter.tags && frontmatter.tags.length > 0 ? (
+        <p className="text-caption mt-2 text-fg-muted">
+          {frontmatter.tags.join("  ·  ")}
+        </p>
+      ) : null}
+    </Link>
+  );
+}

@@ -8,6 +8,7 @@ import { routing } from "@/i18n/routing";
 import { GlobalNav } from "@/components/GlobalNav";
 import { UniversalNav } from "@/components/UniversalNav";
 import { PageTransition } from "@/components/PageTransition";
+import { PageFadeProvider } from "@/components/PageFade";
 import { Footer } from "@/components/Footer";
 import { FooterReveal } from "@/components/FooterReveal";
 import "../globals.css";
@@ -43,16 +44,21 @@ export default async function LocaleLayout({
     >
       <body className="flex min-h-full flex-col font-sans" suppressHydrationWarning>
         <NextIntlClientProvider>
-          <GlobalNav />
-          <UniversalNav />
-          {/* The opaque page card: z-10 above the fixed reveal footer (z-0), and
-              `reveal-content` adds a margin-bottom of the footer's height so the
-              card can slide up to uncover the stationary footer at the bottom. */}
-          <div className="reveal-content relative z-10 flex flex-1 flex-col">
-            <PageTransition>{children}</PageTransition>
-          </div>
-          <Footer />
-          <FooterReveal />
+          {/* PageFadeProvider hosts the transition curtain (z-20) and wraps
+              everything that navigates, so the transition-aware Link/useRouter
+              can drive the fade-out → navigate → fade-in on every route change. */}
+          <PageFadeProvider>
+            <GlobalNav />
+            <UniversalNav />
+            {/* The opaque page card: z-10 above the fixed reveal footer (z-0), and
+                `reveal-content` adds a margin-bottom of the footer's height so the
+                card can slide up to uncover the stationary footer at the bottom. */}
+            <div className="reveal-content relative z-10 flex flex-1 flex-col">
+              <PageTransition>{children}</PageTransition>
+            </div>
+            <Footer />
+            <FooterReveal />
+          </PageFadeProvider>
         </NextIntlClientProvider>
       </body>
     </html>

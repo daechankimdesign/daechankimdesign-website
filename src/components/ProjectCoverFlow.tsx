@@ -53,7 +53,7 @@ export function ProjectCoverFlow({
   return (
     <article className="relative pb-16 mb-16 hairline-b col-span-1 lg:col-span-12 grid grid-cols-1 lg:grid-cols-12 gap-x-8 gap-y-6 lg:gap-x-16">
       <div className="hidden lg:col-span-3 lg:col-start-1 lg:block">
-        <div className="flex flex-col items-start lg:sticky lg:top-[136px]">
+        <div className="flex flex-col items-start lg:sticky lg:top-[151px]">
           <ProjectMeta
             slug={slug}
             frontmatter={frontmatter}
@@ -75,7 +75,7 @@ export function ProjectCoverFlow({
           <Link
             key={src}
             href={`/project/case-study/${slug}`}
-            className="edge-fade block no-underline overflow-hidden rounded-md border border-hairline"
+            className="edge-fade block no-underline overflow-hidden"
           >
             {isVideo(src) ? (
               <video
@@ -86,7 +86,7 @@ export function ProjectCoverFlow({
                 playsInline
                 preload="metadata"
                 aria-label={`${frontmatter.title} preview ${i + 1}`}
-                className="w-full object-cover aspect-[16/9] rounded-md bg-surface-subtle"
+                className="w-full object-cover aspect-[16/9] bg-surface-subtle"
               />
             ) : (
               <ProgressiveImage
@@ -95,7 +95,7 @@ export function ProjectCoverFlow({
                 width={1600}
                 height={900}
                 sizes="(max-width: 1024px) 100vw, 1680px"
-                className="w-full object-cover aspect-[16/9] rounded-md"
+                className="w-full object-cover aspect-[16/9]"
               />
             )}
           </Link>

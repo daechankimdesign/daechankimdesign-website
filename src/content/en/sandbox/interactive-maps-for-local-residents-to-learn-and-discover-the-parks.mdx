@@ -42,6 +42,8 @@ I came onto the project after the first round of design and took the map over �
 
 ## How it works
 
+<Dek>See it all at once, and looking for a place becomes wandering, not searching.</Dek>
+
 It opens on the full necklace so the through-line reads at a glance, then invites you in. Pan and zoom the system, tap a park to focus it, or tap a point of interest to open its details — photo, hours, accessibility, the story of the place — with a filter panel to narrow by park, facility, or activity. Everything is tuned to feel like exploring rather than searching: the parks ease into their green, overlapping pins fan apart so none get buried, and even the loading moment keeps you company — _finding a sun-basking painted turtle_, drawn from the critters that actually live along the Necklace.
 
 <MDXImage
@@ -59,6 +61,8 @@ It opens on the full necklace so the through-line reads at a glance, then invite
 />
 
 ## The build
+
+<Dek>One React component drops into Framer: Mapbox, a custom tileset, Airtable content, and a Worker hiding the keys.</Dek>
 
 One custom React component that drops straight into the Conservancy's Framer site. Mapbox GL renders a bespoke style over a custom Emerald Necklace tileset; all the content lives in Airtable and is pulled through a small Cloudflare Worker, so no keys ever reach the browser. It's data-driven by convention — add a field named `Filter--Activities` in Airtable and an "Activities" filter just appears, no code change needed. And to keep it fast and cheap, the billable Mapbox map doesn't even load until your first interaction; before that it's a static image of the necklace. Built with Claude Code, matched to the design screen by screen.
 

@@ -142,7 +142,7 @@ export function HeroGallery({
       <figure className="relative mx-14 flex w-full max-w-3xl flex-col items-center gap-5">
         {/* Image — enters after the backdrop. */}
         <motion.div
-          className="overflow-hidden rounded-lg border border-hairline bg-canvas shadow-md"
+          className="overflow-hidden bg-canvas shadow-md"
           initial={{ opacity: 0, y: 18, scale: 0.98 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ duration: 0.45, ease: EASE, delay: 0.28 }}
