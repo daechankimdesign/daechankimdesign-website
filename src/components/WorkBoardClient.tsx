@@ -109,7 +109,7 @@ export function WorkBoardClient({
         {shown.length === 0 ? (
           <p className="text-body text-fg-muted">No work yet.</p>
         ) : (
-          <ul className="grid grid-cols-1 gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-12 lg:gap-y-16">
+          <ul className="grid grid-cols-1 items-start gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-12 lg:gap-y-16">
             {shown.map((item, i) => (
               <li
                 key={`${item.type}-${item.slug}`}

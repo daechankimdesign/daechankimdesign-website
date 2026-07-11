@@ -1,5 +1,10 @@
+"use client";
+
+import { useEffect, useRef } from "react";
+import { useReducedMotion } from "framer-motion";
 import { Link } from "@/i18n/navigation";
 import { ProgressiveImage } from "./ProgressiveImage";
+import { drawHighlight } from "@/lib/highlight";
 import type { BoardItem, Span } from "@/lib/mdx";
 
 const isVideo = (src: string) => /\.mp4($|\?)/i.test(src);
@@ -32,6 +37,10 @@ const TIER: Record<Span, { w: number; h: number; sizes: string }> = {
  * flat (image-frame rule: no rounded/border on content images), with the caption
  * block beneath: a type eyebrow, the title, a clamped one-line descriptor, and a
  * tag row — all using the project's existing type tokens.
+ *
+ * Hover: the title gets the shared hand-drawn highlighter — drawn on pointer-in,
+ * wiped out left→right on pointer-out — the SAME mark the About experience items
+ * use, instead of a plain opacity dim.
  */
 export function WorkTile({
   item,
@@ -44,6 +53,26 @@ export function WorkTile({
   /** Eager-load this tile's image (use only for the first/LCP tile). */
   priority?: boolean;
 }) {
+  const reduce = useReducedMotion();
+  const markRef = useRef<HTMLSpanElement>(null);
+  const wipeRef = useRef<(() => void) | null>(null);
+  const removeRef = useRef<(() => void) | null>(null);
+
+  const drawOnHover = () => {
+    const { wipe, remove } = drawHighlight(markRef.current, {
+      instant: !!reduce,
+    });
+    wipeRef.current = wipe;
+    removeRef.current = remove;
+  };
+  const wipeOnLeave = () => {
+    wipeRef.current?.();
+    wipeRef.current = null;
+  };
+  // Instant cleanup on unmount (e.g. when filtered out) so no rough-notation
+  // observers leak.
+  useEffect(() => () => removeRef.current?.(), []);
+
   const { frontmatter, slug, images, basePath, span } = item;
   const tier = TIER[span];
   const ratio = `${tier.w} / ${tier.h}`;
@@ -55,7 +84,12 @@ export function WorkTile({
   const video = images.find(isVideo);
 
   return (
-    <Link href={`${basePath}/${slug}`} className="group block no-underline">
+    <Link
+      href={`${basePath}/${slug}`}
+      className="group block no-underline"
+      onMouseEnter={drawOnHover}
+      onMouseLeave={wipeOnLeave}
+    >
       {/* Media — flat, borderless. A 2% black veil rests over it and lifts on
           hover (the whole tile is the hover group). */}
       <div className="relative mb-4">
@@ -98,8 +132,11 @@ export function WorkTile({
           contrast (fg-subtle would fail WCAG on canvas). */}
       <p className="text-caption text-fg-muted">{typeLabel}</p>
 
-      <h3 className="text-h3 mt-1 text-fg transition-opacity group-hover:opacity-60">
-        {frontmatter.title}
+      {/* Title — hand-drawn highlighter on hover (see ExperienceItem), not a dim. */}
+      <h3 className="text-h3 mt-1 text-fg">
+        <span ref={markRef} className="hl-mark">
+          {frontmatter.title}
+        </span>
       </h3>
 
       {frontmatter.summary ? (

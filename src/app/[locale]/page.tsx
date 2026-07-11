@@ -17,7 +17,10 @@ const HERO_STACK = [
     full: "https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fhome%2Fhero%2Fresearch.avif?alt=media",
     w: 480,
     h: 364,
-    caption: "Conducting user research — interviews and synthesis that surface the insight.",
+    headline:
+      "If I'm financially stable and settle in one place, I will definitely buy better furniture.",
+    caption:
+      "My design research starts with stakeholder interviews. It is a crucial part of the project to listen and understand people's pain beyond their surface language.",
   },
   {
     // "creates comprehensive designs" — the "comprehensive deployment" photo (portrait).
@@ -25,14 +28,18 @@ const HERO_STACK = [
     full: "https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fhome%2Fhero%2Fdesign.webp?alt=media",
     w: 360,
     h: 480,
-    caption: "Comprehensive design — the system, flows, and screens it produces.",
+    headline: "",
+    caption:
+      "Comprehensive design (the system, flows, and screens it produces).",
   },
   {
-    // "tests prototypes and deploys products" — no photo supplied yet.
-    src: "",
-    full: "",
-    caption:
-      "Prototype, test, and ship. (Placeholder — add a photo; use a Firebase Storage URL for the deploy.)",
+    // The critique photo (landscape) — reviewing the work pinned to the wall.
+    src: "https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fhome%2Fhero%2Fcritique-480.jpg?alt=media",
+    full: "https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fhome%2Fhero%2Fcritique.jpg?alt=media",
+    w: 480,
+    h: 356,
+    headline: "",
+    caption: "A design critique, working through the board pinned to the wall.",
   },
   {
     // The lede — the team photo ("the last photo", square).
@@ -40,6 +47,7 @@ const HERO_STACK = [
     full: "https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fhome%2Fhero%2Fimpact.jpeg?alt=media",
     w: 480,
     h: 480,
+    headline: "",
     caption: "The team behind the work.",
   },
 ];
@@ -62,7 +70,7 @@ export default async function Home({
       {/* Hero — header lines reveal step by step, then the sub text and CTAs,
           with a card flying into the stack per step (see HeroHeadline).
           TODO(i18n): move copy to messages once finalized */}
-      <section className="snap-section container-page flex min-h-[70vh] flex-col items-start justify-center py-16 text-left sm:py-24">
+      <section className="snap-section container-page flex min-h-[70vh] flex-col items-start pt-16 pb-24 text-left lg:pt-40">
         <HeroHeadline stack={HERO_STACK} />
       </section>
       {/* Marks the hero's bottom edge — GlobalNav reveals once this scrolls past

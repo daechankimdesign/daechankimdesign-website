@@ -9,6 +9,7 @@ import { GlobalNav } from "@/components/GlobalNav";
 import { UniversalNav } from "@/components/UniversalNav";
 import { PageTransition } from "@/components/PageTransition";
 import { PageFadeProvider } from "@/components/PageFade";
+import { LoveLetterProvider } from "@/components/LoveLetter";
 import { Footer } from "@/components/Footer";
 import { FooterReveal } from "@/components/FooterReveal";
 import "../globals.css";
@@ -48,6 +49,9 @@ export default async function LocaleLayout({
               everything that navigates, so the transition-aware Link/useRouter
               can drive the fade-out → navigate → fade-in on every route change. */}
           <PageFadeProvider>
+            {/* LoveLetterProvider hosts the letter modal (portal, z-50) and the
+                open()/close() bridge for the footer button + envelope. */}
+            <LoveLetterProvider>
             <GlobalNav />
             <UniversalNav />
             {/* The opaque page card: z-10 above the fixed reveal footer (z-0), and
@@ -58,6 +62,7 @@ export default async function LocaleLayout({
             </div>
             <Footer />
             <FooterReveal />
+            </LoveLetterProvider>
           </PageFadeProvider>
         </NextIntlClientProvider>
       </body>

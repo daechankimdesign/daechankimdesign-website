@@ -2,9 +2,10 @@
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import { ArrowRight, ArrowUpRight } from "iconoir-react";
+import { ArrowRight } from "iconoir-react";
 import { HeroImageStack, type HeroStackItem } from "./HeroImageStack";
 import { Highlighter } from "./Highlighter";
+import { LoveLetterButton } from "./LoveLetter";
 import { Link } from "@/i18n/navigation";
 import { EASE_OUT } from "@/lib/motion";
 import { HL_COLOR } from "@/lib/highlight";
@@ -177,9 +178,9 @@ export function HeroHeadline({ stack }: { stack: HeroStackItem[] }) {
   return (
     <div
       ref={containerRef}
-      className="flex w-full flex-col gap-12 lg:flex-row lg:items-center lg:gap-16"
+      className="flex w-full flex-col gap-12 lg:flex-row lg:items-start lg:gap-16"
     >
-      <div className="flex flex-1 flex-col items-start">
+      <div className="flex flex-1 flex-col items-start min-w-0">
         <h1 className="text-display relative hl-behind">
           {/* Header — lines step in one at a time at counts 1..N. Line 1 carries
               the "end-to-end" circle and the "product designer" highlight.
@@ -268,15 +269,7 @@ export function HeroHeadline({ stack }: { stack: HeroStackItem[] }) {
             <span>Work</span>
             <ArrowRight aria-hidden />
           </Link>
-          <a
-            href="/resume.pdf"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="link-button hairline-b"
-          >
-            <span>Resume</span>
-            <ArrowUpRight aria-hidden />
-          </a>
+          <LoveLetterButton />
         </motion.div>
       </div>
 

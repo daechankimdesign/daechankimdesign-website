@@ -1,6 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import { SequenceReveal, SequenceItem } from "./SequenceReveal";
 import { LinkButton } from "./LinkButton";
+import { LoveLetterButton, LoveLetterPortrait } from "./LoveLetter";
 
 export async function Footer() {
   const t = await getTranslations("Nav");
@@ -15,7 +16,8 @@ export async function Footer() {
           lede fade up one line at a time, but only once the footer is ~fully
           uncovered (trigger="bottom"), replaying on each return. Contact / resume
           + copyright are static (outside the sequence). */}
-      <SequenceReveal total={6} trigger="bottom" className="container-page pt-48 pb-20">
+      <div className="container-page relative flex flex-col-reverse gap-12 pt-48 pb-20 lg:flex-row lg:items-start lg:justify-between lg:gap-16">
+        <SequenceReveal total={6} trigger="bottom" className="flex-1">
         {/* Statement — footer copy (independent of the home hero, which has
             diverged to its own headline). */}
         <h2 className="text-display">
@@ -50,10 +52,7 @@ export async function Footer() {
           <LinkButton href="/about" arrow="right">
             About
           </LinkButton>
-          {/* TODO: point at the real "Love letter to design" destination. */}
-          <LinkButton href="#" external arrow="up-right">
-            Love letter to design
-          </LinkButton>
+          <LoveLetterButton />
         </SequenceItem>
 
         {/* Contact / resume + copyright — STATIC (visible from first paint, not
@@ -77,7 +76,9 @@ export async function Footer() {
         <p className="text-caption mt-4 text-fg-muted">
           © {year} Daechan Kim. All rights reserved.
         </p>
-      </SequenceReveal>
+        </SequenceReveal>
+        <LoveLetterPortrait className="w-[58vw] max-w-[220px] shrink-0 self-start lg:w-[300px] lg:max-w-none lg:pt-4" />
+      </div>
     </footer>
   );
 }

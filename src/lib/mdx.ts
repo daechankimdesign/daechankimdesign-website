@@ -192,8 +192,12 @@ function normalizeDate(d: unknown): string {
   return typeof d === "string" ? d : "";
 }
 
-function resolveSpan(s: unknown): Span {
-  return s === "feature" || s === "wide" ? s : "standard";
+// Default tile size by TYPE (Pentagram-style editorial rhythm): case studies read
+// as the large ⅔-width tiles, play pieces as the small ⅓-width tiles. An explicit
+// `span` in the EN frontmatter still overrides, for hand-tuning a standout piece.
+function resolveSpan(s: unknown, type: WorkType): Span {
+  if (s === "standard" || s === "feature" || s === "wide") return s;
+  return type === "projects" ? "wide" : "standard";
 }
 
 /**
@@ -221,14 +225,24 @@ export const getWorkBoardItems = cache(async (
           ...it,
           type,
           basePath: WORK_BASE_PATH[type],
-          span: resolveSpan(en.span),
+          span: resolveSpan(en.span, type),
           aspect: typeof en.aspect === "string" ? en.aspect : undefined,
           sortKey: normalizeDate(en.date ?? it.frontmatter.date),
         };
       });
     }),
   );
-  return perType.flat().sort((a, b) => b.sortKey.localeCompare(a.sortKey));
+  const sorted = perType
+    .flat()
+    .sort((a, b) => b.sortKey.localeCompare(a.sortKey));
+  // Always open the board on a case study (project), never a play piece: hoist
+  // the most recent project to the front; everything else stays reverse-chron.
+  const lead = sorted.findIndex((it) => it.type === "projects");
+  if (lead > 0) {
+    const [project] = sorted.splice(lead, 1);
+    sorted.unshift(project);
+  }
+  return sorted;
 });
 
 /** Full compile for a detail page. Returns null if the source is missing. */

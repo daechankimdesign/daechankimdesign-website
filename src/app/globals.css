@@ -496,6 +496,60 @@ body::before {
   flex-shrink: 0;
 }
 
+/* ============================================================================
+   Love letter modal. Editorial SERIF prose (a deliberate exception to the
+   sans-only rule, matching the letter mockup). The marker highlight is CSS — it
+   flows and scrolls WITH the text (rough-notation pins its SVG in document
+   coords and detaches inside the modal's own scroll). Each mark wipes in only
+   once its line has settled (LoveLetter.tsx gates `data-on`). HL_COLOR yellow.
+   ============================================================================ */
+.ll-prose {
+  font-family: Georgia, "Times New Roman", "Noto Serif", serif;
+  font-size: clamp(16px, 14px + 0.55vw, 20px);
+  line-height: 2;
+  color: var(--color-fg);
+}
+.ll-prose .ll-line + .ll-line {
+  margin-top: 1.5em;
+}
+.ll-mark {
+  color: inherit;
+  background-image: linear-gradient(
+    rgba(253, 231, 105, 0.55),
+    rgba(253, 231, 105, 0.55)
+  );
+  background-repeat: no-repeat;
+  background-position: 0 90%;
+  background-size: 0% 62%;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  padding: 0 0.06em;
+  transition: background-size 0.55s ease;
+}
+.ll-mark[data-on="1"] {
+  background-size: 100% 62%;
+}
+/* Hide the scrollbar inside the letter — it still scrolls. */
+.ll-scroll {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* old Edge */
+}
+.ll-scroll::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
+}
+
+.ll-email {
+  color: inherit;
+  text-decoration: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ll-mark {
+    transition: none;
+  }
+}
+
 /* Editorial list marker — a hanging en-dash instead of a disc, used site-wide
    for MDX bullet lists so long-form bullets read in the project's restrained
    typographic voice (and About matches case-study/play detail pages). The dash
