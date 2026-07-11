@@ -3,6 +3,7 @@ import { VideoPlayer } from "./VideoPlayer";
 import { MDXImage } from "./MDXImage";
 import { ProjectMeta } from "./ProjectMeta";
 import { Gallery } from "./Gallery";
+import { ExperienceItem } from "./ExperienceItem";
 import { RevealBlock } from "./RevealBlock";
 
 // Passed explicitly on every RSC evaluate() call (MDXProvider is effectless in
@@ -32,6 +33,11 @@ export const mdxComponents: MDXComponents = {
       <Gallery {...props} />
     </RevealBlock>
   ),
+  ExperienceItem: (props) => (
+    <RevealBlock as="div">
+      <ExperienceItem {...props} />
+    </RevealBlock>
+  ),
   img: (props) => (
     <RevealBlock as="div">
       <MDXImage src={String(props.src ?? "")} alt={props.alt ?? ""} />
@@ -40,6 +46,15 @@ export const mdxComponents: MDXComponents = {
   h1: (props) => <RevealBlock as="h1" className="text-h1 mt-12 mb-4" {...props} />,
   h2: (props) => <RevealBlock as="h2" className="text-h2 mt-10 mb-3" {...props} />,
   h3: (props) => <RevealBlock as="h3" className="text-h3 mt-8 mb-2" {...props} />,
+  // Section dek — a quiet one-line summary that sits just under an h2, briefing
+  // the section. Muted and body-sized so it reads as a subtitle, not a heading.
+  Dek: (props) => (
+    <RevealBlock
+      as="p"
+      className="text-body text-fg-muted measure-lede mt-0 mb-6"
+      {...props}
+    />
+  ),
   p: (props) => <RevealBlock as="p" className="text-body my-4 measure" {...props} />,
   ul: (props) => (
     <RevealBlock as="ul" className="text-body my-4 list-dash" {...props} />

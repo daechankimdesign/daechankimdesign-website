@@ -11,6 +11,31 @@ import { flashHighlight } from "@/lib/highlight";
 type Heading = { id: string; text: string; level: number };
 
 /**
+ * Flash the highlighter over `el` once it has SETTLED after a scroll-to. We must
+ * wait for BOTH the smooth scroll to stop AND the heading's reveal to finish:
+ * RevealBlock fades every heading in over ~2s the first time it enters view, and
+ * drawing mid-reveal marks a faint, still-moving heading (the bug where sections
+ * below the fold don't sweep). rAF-poll for scroll-idle + near-full opacity;
+ * already-visible sections pass in a frame, freshly revealed ones wait out their
+ * fade. Capped at 2.5s so it can't hang. Module scope so its DOM/time reads
+ * aren't analysed as component render.
+ */
+function flashWhenSettled(el: HTMLElement) {
+  const startedAt = performance.now();
+  const step = (lastY: number, idleFrames: number) => {
+    const y = window.scrollY;
+    const idle = Math.abs(y - lastY) < 1 ? idleFrames + 1 : 0;
+    const opacity = parseFloat(getComputedStyle(el).opacity || "1");
+    if ((idle >= 3 && opacity >= 0.95) || performance.now() - startedAt > 2500) {
+      flashHighlight(el);
+      return;
+    }
+    requestAnimationFrame(() => step(y, idle));
+  };
+  requestAnimationFrame(() => step(window.scrollY, 0));
+}
+
+/**
  * Open scroll-spy outline sidebar. Tracks the article's h1–h3 (with ids from
  * rehype-slug) via an IntersectionObserver with a centered rootMargin, so the
  * heading nearest the viewport center is "active". Displays a ← Index backlink
@@ -75,25 +100,14 @@ export function SideDocumentTab({
     });
     window.history.replaceState(window.history.state, "", `#${id}`);
 
-    // Flash the highlighter over the section title once it lands. Reduced motion
-    // (instant scroll) draws right away; otherwise wait for the smooth scroll to
-    // settle — `scrollend` when supported, with a timeout fallback for browsers
-    // without it and for clicks where the section was already on screen (no
-    // scroll → no scrollend).
+    // Flash the highlighter over the section title once it has settled. Reduced
+    // motion (instant scroll, no reveal) draws right away; otherwise wait out the
+    // smooth scroll + heading reveal (see flashWhenSettled).
     if (reduce) {
       flashHighlight(el, true);
-      return;
+    } else {
+      flashWhenSettled(el);
     }
-    let fired = false;
-    const fire = () => {
-      if (fired) return;
-      fired = true;
-      clearTimeout(fallback);
-      document.removeEventListener("scrollend", fire);
-      flashHighlight(el);
-    };
-    const fallback = setTimeout(fire, 700);
-    document.addEventListener("scrollend", fire, { once: true });
   };
 
   useEffect(() => {

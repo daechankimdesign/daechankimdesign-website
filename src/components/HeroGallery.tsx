@@ -142,7 +142,7 @@ export function HeroGallery({
       <figure className="relative mx-14 flex w-full max-w-3xl flex-col items-center gap-5">
         {/* Image — enters after the backdrop. */}
         <motion.div
-          className="overflow-hidden rounded-lg border border-hairline bg-canvas shadow-md"
+          className="overflow-hidden bg-canvas shadow-md"
           initial={{ opacity: 0, y: 18, scale: 0.98 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ duration: 0.45, ease: EASE, delay: 0.28 }}
@@ -162,17 +162,32 @@ export function HeroGallery({
           )}
         </motion.div>
 
-        {/* Caption — enters last. */}
+        {/* Text box — enters last. Two columns spanning the image width: the
+            main line (h2) on the left, and the supplementary line beneath the
+            image counter on the right. The counter is the quietest element
+            (caption size, subtle ink) — the lowest tier of the hierarchy. */}
         <motion.figcaption
-          className="max-w-[60ch] text-center text-body text-fg"
+          className="grid w-full grid-cols-1 items-start gap-x-10 gap-y-4 sm:grid-cols-2"
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, ease: EASE, delay: 0.5 }}
         >
-          {item.caption}
-          <span className="mt-2 block text-caption text-fg-muted">
-            {index + 1} / {items.length}
-          </span>
+          {/* Left — main line, h2 style (system ink, not pure black). */}
+          {item.headline ? (
+            <p className="text-h2 text-fg text-balance">{item.headline}</p>
+          ) : (
+            <span aria-hidden />
+          )}
+
+          {/* Right — image counter (lowest tier), then supplementary text. */}
+          <div className="sm:text-right">
+            <p className="text-caption text-fg-subtle">
+              {index + 1}/{items.length}
+            </p>
+            {item.caption ? (
+              <p className="text-body text-fg-muted mt-2">{item.caption}</p>
+            ) : null}
+          </div>
         </motion.figcaption>
       </figure>
     </div>,

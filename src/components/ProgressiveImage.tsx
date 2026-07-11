@@ -18,6 +18,12 @@ type Props = {
  * then the full-resolution asset crossfades in on load. Both layers use
  * next/image so each is optimized at its own width. Once a src has loaded this
  * session, later mounts start already-loaded and skip the blur-up + crossfade.
+ *
+ * IMAGE-FRAME RULE (project-wide): content images are SQUARE and BORDERLESS by
+ * default. This component adds no `rounded-*` and no `border-*`, and callers must
+ * not pass them via `className`. Rounded corners / hairline borders are reserved
+ * for UI chrome (the SandboxEmbed device bezel, nav pill, modal cards, swatches),
+ * never for photo/thumbnail frames. Keep new image frames flat.
  */
 
 // Session cache of srcs whose full-res has finished loading (persists across

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import {
   motion,
@@ -54,8 +54,6 @@ export function ProfileStack({
 }: Props) {
   const reduce = useReducedMotion();
   const total = images.length;
-  // How many cards have been dealt so far (0..total), driven by scroll position.
-  const [revealed, setRevealed] = useState(0);
 
   // Whole-page scroll drives the deal. The portrait is sticky, so its own
   // position freezes while pinned — page progress is what actually advances.
@@ -70,22 +68,15 @@ export function ProfileStack({
     return Math.max(0, Math.min(total, Math.ceil(frac * total)));
   };
 
+  // How many cards scroll has dealt so far (0..total). Updated from the scroll
+  // handler — it starts at 0 (matching SSR) and the first scroll syncs it, so no
+  // mount effect is needed. Reduced motion shows the whole pile at once.
+  const [scrollCount, setScrollCount] = useState(0);
   useMotionValueEvent(scrollYProgress, "change", (p) => {
-    if (reduce) return;
     const c = countFor(p);
-    setRevealed((prev) => (prev === c ? prev : c));
+    setScrollCount((prev) => (prev === c ? prev : c));
   });
-
-  // Reduced motion → whole pile static. Otherwise seed from the current scroll
-  // position on mount (so a page loaded already-scrolled shows the right count).
-  useEffect(() => {
-    if (reduce) {
-      setRevealed(total);
-      return;
-    }
-    setRevealed(countFor(scrollYProgress.get()));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [reduce, total]);
+  const revealed = reduce ? total : scrollCount;
 
   return (
     <div className="relative">
@@ -96,7 +87,6 @@ export function ProfileStack({
         width={width}
         height={height}
         sizes={sizes}
-        className="rounded-md"
       />
 
       {/* Gallery cards — each flies up from below and settles into the pile as
@@ -106,7 +96,7 @@ export function ProfileStack({
         return (
           <motion.div
             key={`${src}-${i}`}
-            className="absolute inset-0 origin-bottom overflow-hidden rounded-md border border-hairline bg-surface-subtle shadow-sm"
+            className="absolute inset-0 origin-bottom overflow-hidden bg-surface-subtle shadow-sm"
             style={{ zIndex: i + 1 }}
             initial={false}
             animate={{

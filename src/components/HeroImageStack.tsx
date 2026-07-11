@@ -13,6 +13,10 @@ import { HeroGallery } from "./HeroGallery";
 export type HeroStackItem = {
   src: string;
   full: string;
+  // Lightbox text. `headline` is the large main line (h2) on the left; `caption`
+  // is the supplementary line on the right (and doubles as the image alt / aria
+  // label). `headline` may be "" — the left column then renders empty.
+  headline: string;
   caption: string;
   w?: number;
   h?: number;
@@ -56,7 +60,7 @@ export function HeroImageStack({
   return (
     <>
       <div
-        className="relative aspect-[3/4] w-[240px] shrink-0 self-center sm:w-[300px] lg:w-[340px]"
+        className="relative aspect-[3/4] w-[300px] shrink-0 self-center order-first sm:w-[320px] lg:order-none lg:w-[340px] lg:self-start"
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
       >
@@ -78,7 +82,7 @@ export function HeroImageStack({
                 aria-label={`Enlarge image ${i + 1}: ${item.caption}`}
                 onClick={() => setOpenIndex(i)}
                 inert={!shown}
-                className="pointer-events-auto relative w-full origin-bottom cursor-pointer overflow-hidden rounded-lg border border-hairline bg-surface-subtle shadow-sm"
+                className="pointer-events-auto relative w-full origin-bottom cursor-pointer overflow-hidden bg-surface-subtle shadow-sm"
                 style={{ aspectRatio: ratio }}
                 initial={false}
                 animate={{

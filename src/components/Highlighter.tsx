@@ -22,7 +22,9 @@ export interface HighlighterProps {
   strokeWidth?: number;
   animationDuration?: number;
   iterations?: number;
-  padding?: number;
+  // number, [vertical, horizontal], or [top, right, bottom, left]. Negative
+  // vertical values thin the highlight band (rough-notation fills box + padding).
+  padding?: number | [number, number] | [number, number, number, number];
   multiline?: boolean;
   /** Draw the annotation only once this is true (default: draw on mount). */
   active?: boolean;

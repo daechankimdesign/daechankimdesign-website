@@ -23,7 +23,6 @@ export function MDXImage({
         width={Number(width)}
         height={Number(height)}
         sizes="(max-width: 768px) 100vw, 800px"
-        className="rounded-md"
       />
       {caption ? (
         <figcaption className="text-caption mt-2 text-fg-muted">

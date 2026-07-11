@@ -88,7 +88,15 @@ export function RevealBlock({
   // matches the content model: a phrasing span for text headings/paragraphs, a
   // div for blockquote/media. Lists (ul/ol) and rules (hr) ride along undimmed.
   let content: ReactNode = inner;
-  if (as === "p" || isHeading) {
+  if (isHeading) {
+    // `hl-host` is position:relative so rough-notation's absolutely-positioned
+    // highlight SVG (inserted here, next to `.hl-mark`) anchors to THIS box —
+    // right at the title — instead of bubbling up to the document. That keeps
+    // the mark's coordinate space small and scroll-independent, so the flash's
+    // clip-path wipe (src/lib/highlight.ts) works for sections anywhere down the
+    // page, not just the first couple near the top.
+    content = <span className="edge-fade block hl-host">{inner}</span>;
+  } else if (as === "p") {
     content = <span className="edge-fade block">{inner}</span>;
   } else if (as === "blockquote" || as === "div") {
     content = <div className="edge-fade">{children}</div>;

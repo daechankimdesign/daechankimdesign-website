@@ -43,6 +43,14 @@
        past the footer elastic-lifts the page card off the fixed footer and
        re-exposes the rounded-corner gap at the seam. */
     overscroll-behavior-y: none;
+    /* Kill horizontal page scroll at the root. Fixed full-width chrome (top bar,
+       reveal-footer) uses `inset-x-0`, which resolves to the viewport width
+       INCLUDING the classic-scrollbar gutter — so with a non-overlay scrollbar
+       they sit `scrollbar-width` past the content box and expose a sliver of the
+       dark footer. `clip` contains it without creating a scroll container (so
+       vertical scroll, scroll-snap, sticky, and the footer-reveal are untouched);
+       body carries the same clip for its in-flow content. */
+    overflow-x: clip;
   }
 
   /* Index-page section snapping (desktop). PROXIMITY — never mandatory — so the
@@ -80,6 +88,14 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
+    /* Contain decorative wide content — chiefly the Sandbox cover-flow deck,
+       whose off-centre cards fan out past the viewport — so it can never push
+       the page wider and expose the fixed reveal-footer at the sides. `clip`
+       (not `hidden`) stops the horizontal bleed at the viewport edge without
+       creating a scroll container, so sticky headings and the footer-reveal
+       keep working; the position:fixed footer escapes body overflow and still
+       spans the full width. overflow-y stays visible (html owns page scroll). */
+    overflow-x: clip;
   }
 
   /* Links: underline only, inherit color, no color change on hover (rules §3).
@@ -128,7 +144,7 @@ footer.reveal-footer {
   font-size: round(clamp(18px, 13px + 1.23vw, 26px), 1px);
 }
 @utility text-h2 {
-  font-weight: 600;
+  font-weight: 500;
   font-family: var(--font-sans), system-ui, sans-serif;
   line-height: 1.3;
   letter-spacing: -0.03em;
@@ -301,6 +317,15 @@ body::before {
    no-op: the old per-object scroll-timeline dim is gone. framer-motion owns the
    entrance on the outer element, so those wrappers just render as plain blocks. */
 
+/* Highlight host — the heading wrapper that rough-notation drops its absolutely-
+   positioned highlight SVG into. `position: relative` makes it the SVG's
+   containing block, so the mark anchors AT the title (small, scroll-independent
+   coordinates) instead of the document root. Without this the section-flash
+   wipe (src/lib/highlight.ts) mis-clips headings far down the page. */
+.hl-host {
+  position: relative;
+}
+
 /* ── Width system ──────────────────────────────────────────────────────────
    One shell, one content column, two reading measures. Compose them; don't
    sprinkle ad-hoc max-w-[..] values.
@@ -420,7 +445,7 @@ body::before {
 }
 .hl-circle path {
   fill: none;
-  stroke-width: 7;
+  stroke-width: 5;
   stroke-linecap: round;
   stroke-linejoin: round;
   vector-effect: non-scaling-stroke;
@@ -435,6 +460,18 @@ body::before {
   .hl-circle path {
     transition: none;
   }
+}
+
+/* Marks sit BEHIND the text: `.hl-behind` is a stacking context (isolation) on
+   the mark's container, and rough-notation's highlight SVG drops to z-index -1
+   within it — below the letters, above the page — so the highlight never covers
+   the text. Scoped to `.hl-behind` so section-flash highlights elsewhere (which
+   read on top) are unaffected. The circle SVG already carries its own z-index. */
+.hl-behind {
+  isolation: isolate;
+}
+.hl-behind svg.rough-annotation {
+  z-index: -1;
 }
 
 /* Link button — a text link styled as a control: 8px block padding, an
@@ -457,6 +494,60 @@ body::before {
   width: 1em;
   height: 1em;
   flex-shrink: 0;
+}
+
+/* ============================================================================
+   Love letter modal. Editorial SERIF prose (a deliberate exception to the
+   sans-only rule, matching the letter mockup). The marker highlight is CSS — it
+   flows and scrolls WITH the text (rough-notation pins its SVG in document
+   coords and detaches inside the modal's own scroll). Each mark wipes in only
+   once its line has settled (LoveLetter.tsx gates `data-on`). HL_COLOR yellow.
+   ============================================================================ */
+.ll-prose {
+  font-family: Georgia, "Times New Roman", "Noto Serif", serif;
+  font-size: clamp(16px, 14px + 0.55vw, 20px);
+  line-height: 2;
+  color: var(--color-fg);
+}
+.ll-prose .ll-line + .ll-line {
+  margin-top: 1.5em;
+}
+.ll-mark {
+  color: inherit;
+  background-image: linear-gradient(
+    rgba(253, 231, 105, 0.55),
+    rgba(253, 231, 105, 0.55)
+  );
+  background-repeat: no-repeat;
+  background-position: 0 90%;
+  background-size: 0% 62%;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  padding: 0 0.06em;
+  transition: background-size 0.55s ease;
+}
+.ll-mark[data-on="1"] {
+  background-size: 100% 62%;
+}
+/* Hide the scrollbar inside the letter — it still scrolls. */
+.ll-scroll {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* old Edge */
+}
+.ll-scroll::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
+}
+
+.ll-email {
+  color: inherit;
+  text-decoration: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ll-mark {
+    transition: none;
+  }
 }
 
 /* Editorial list marker — a hanging en-dash instead of a disc, used site-wide

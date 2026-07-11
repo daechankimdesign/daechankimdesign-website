@@ -637,14 +637,13 @@ const CoverFlowItemCard = memo(function CoverFlowItemCard({
       onClick={() => onCardClick(item, index)}
       onMouseMove={() => onCardHover(index)}
     >
-      <div className="relative w-full h-full rounded-xl shadow-2xl bg-white">
-        <div className="absolute inset-0 rounded-xl border border-black/10 z-20 pointer-events-none" />
+      <div className="relative w-full h-full shadow-2xl bg-white">
         {/* #ffffff veil — fades off-centre cards toward the canvas, not to black. */}
         <motion.div
-          className="absolute inset-0 rounded-xl bg-white pointer-events-none z-30"
+          className="absolute inset-0 bg-white pointer-events-none z-30"
           style={{ opacity: veilOpacity }}
         />
-        <div className="relative w-full h-full overflow-hidden rounded-xl">
+        <div className="relative w-full h-full overflow-hidden">
           {imageRenderer({
             src: item.image,
             alt: item.title,
@@ -684,9 +683,8 @@ const CoverFlowItemCard = memo(function CoverFlowItemCard({
               opacity: reflectionFilterId ? 0.55 : 0.4,
             }}
           >
-            <div className={`relative w-full h-full rounded-xl bg-black ${reflectionFilterId ? 'shadow-2xl' : ''}`}>
-              <div className="absolute inset-0 rounded-xl border border-white/10 z-20 pointer-events-none" />
-              <div className="relative w-full h-full overflow-hidden rounded-xl">
+            <div className={`relative w-full h-full bg-black ${reflectionFilterId ? 'shadow-2xl' : ''}`}>
+              <div className="relative w-full h-full overflow-hidden">
                 {imageRenderer({
                   src: item.image,
                   alt: '',
