@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { WorkTile } from "./WorkTile";
-import { Reveal, RevealItem, RevealOnView } from "./Reveal";
+import { Reveal, RevealItem } from "./Reveal";
+import { RevealTile } from "./RevealTile";
 import { EASE_OUT, DURATION, DELAY } from "@/lib/motion";
 import type { BoardItem, Span, WorkType } from "@/lib/mdx";
 
@@ -115,13 +116,13 @@ export function WorkBoardClient({
                 key={`${item.type}-${item.slug}`}
                 className={SPAN_CLASS[item.span]}
               >
-                <RevealOnView>
+                <RevealTile index={i}>
                   <WorkTile
                     item={item}
                     typeLabel={labelFor(item.type)}
                     priority={i === 0}
                   />
-                </RevealOnView>
+                </RevealTile>
               </li>
             ))}
           </ul>

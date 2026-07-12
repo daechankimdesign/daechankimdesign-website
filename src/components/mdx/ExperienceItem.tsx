@@ -60,7 +60,10 @@ export function ExperienceItem({
           aria-expanded={open}
           className="flex w-full items-start justify-between gap-4 py-4 text-left"
         >
-          <span className="min-w-0">
+          {/* `hl-host` (position:relative) anchors rough-notation's SVG to this
+              box, not the transformed RevealBlock wrapper, so the marker can't
+              stray if the reveal transform changes. */}
+          <span className="hl-host min-w-0">
             <span ref={markRef} className="hl-mark">
               {title}
             </span>

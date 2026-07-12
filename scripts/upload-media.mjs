@@ -7,8 +7,11 @@
 //
 // TWO MODES:
 //   1) SYNC media-src/ (default — the source-of-truth folder, see media-src/README.md):
-//        node scripts/upload-media.mjs                 # upload every media-src file
-//        node scripts/upload-media.mjs --dry-run       # show mapping + Firebase orphans
+//        node scripts/upload-media.mjs                    # upload every media-src file
+//        node scripts/upload-media.mjs --dry-run          # show mapping + Firebase orphans
+//        node scripts/upload-media.mjs --prune            # upload, THEN delete Firebase orphans
+//                                                         #   (media-src becomes authoritative)
+//        node scripts/upload-media.mjs --dry-run --prune  # preview which orphans would be deleted
 //      media-src/<area>/<slug>/<NN>-<label>.<ext> → media/<area>/<slug>/<label>.<ext>
 //      (the NN- order prefix is stripped; the label is the object name).
 //   2) EXPLICIT files (one-off):
@@ -78,6 +81,13 @@ async function put(token, name, file) {
   return { ok: res.ok, status: res.status, err: res.ok ? "" : (await res.text()).slice(0, 160), kb: Math.round(body.length / 1024) };
 }
 
+// Delete one object (used by --prune). A 404 counts as success (already gone).
+async function del(token, name) {
+  const url = `https://storage.googleapis.com/storage/v1/b/${BUCKET}/o/${encodeURIComponent(name)}`;
+  const res = await fetch(url, { method: "DELETE", headers: { authorization: `Bearer ${token}` } });
+  return { ok: res.ok || res.status === 404, status: res.status };
+}
+
 // ── mode 1: sync media-src/ ──────────────────────────────────────────────────
 const SRC = path.join(process.cwd(), "media-src");
 function walk(dir) {
@@ -108,7 +118,7 @@ async function listRemote(token) {
   return objs;
 }
 
-async function sync(dryRun) {
+async function sync(dryRun, prune) {
   const files = walk(SRC);
   const wanted = new Map(files.map((f) => [toObject(f), f]));
   console.log(`${files.length} local files → ${wanted.size} objects\n`);
@@ -118,9 +128,13 @@ async function sync(dryRun) {
 
   if (dryRun) {
     for (const [obj, f] of wanted) console.log("  upload", path.relative(SRC, f), "→", obj);
-    console.log(`\n${orphans.length} Firebase object(s) NOT in media-src (orphans — delete manually if stale):`);
-    orphans.forEach((o) => console.log("   ⚠ ", o));
-    console.log("\n(dry run — nothing uploaded)");
+    console.log(
+      `\n${orphans.length} Firebase object(s) NOT in media-src (orphans${
+        prune ? " — would DELETE with --prune" : " — delete manually, or re-run with --prune"
+      }):`,
+    );
+    orphans.forEach((o) => console.log(prune ? "   🗑  " : "   ⚠  ", o));
+    console.log(`\n(dry run — nothing ${prune ? "uploaded or deleted" : "uploaded"})`);
     return;
   }
   let ok = 0, fail = 0;
@@ -130,8 +144,19 @@ async function sync(dryRun) {
   }
   console.log(`\n\n${ok} uploaded, ${fail} failed.`);
   if (orphans.length) {
-    console.log(`\n${orphans.length} orphan(s) on Firebase not produced by media-src:`);
-    orphans.forEach((o) => console.log("   ⚠ ", o));
+    if (prune) {
+      // media-src is authoritative: remove every media/** object it no longer produces.
+      console.log(`\nPruning ${orphans.length} orphan(s) from Firebase (not in media-src):`);
+      let dOk = 0, dFail = 0;
+      for (const o of orphans) {
+        const r = await del(token, o);
+        if (r.ok) { dOk++; console.log(`   🗑  ${o}`); } else { dFail++; console.log(`   ✗  ${o} -> ${r.status}`); }
+      }
+      console.log(`\n${dOk} deleted, ${dFail} failed.`);
+    } else {
+      console.log(`\n${orphans.length} orphan(s) on Firebase not produced by media-src (add --prune to delete):`);
+      orphans.forEach((o) => console.log("   ⚠ ", o));
+    }
   }
   console.log("\nVerify a few: curl the ?alt=media URL for 200 before committing content.");
 }
@@ -152,12 +177,12 @@ async function explicit(bucket, prefix, files) {
 
 // ── dispatch ─────────────────────────────────────────────────────────────────
 const args = process.argv.slice(2);
-if (args.length === 0 || args[0] === "--dry-run" || args[0] === "--sync") {
-  await sync(args.includes("--dry-run"));
+if (args.length === 0 || args[0].startsWith("--")) {
+  await sync(args.includes("--dry-run"), args.includes("--prune"));
 } else {
   const [bucket, prefix, ...files] = args;
   if (!bucket || !prefix || files.length === 0) {
-    console.error("usage:\n  node scripts/upload-media.mjs [--dry-run]           # sync media-src/\n  node scripts/upload-media.mjs <bucket> <prefix> <file...>  # explicit");
+    console.error("usage:\n  node scripts/upload-media.mjs [--dry-run] [--prune]        # sync media-src/ (--prune deletes Firebase orphans)\n  node scripts/upload-media.mjs <bucket> <prefix> <file...>  # explicit");
     process.exit(1);
   }
   await explicit(bucket, prefix, files);

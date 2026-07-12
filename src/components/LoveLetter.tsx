@@ -4,11 +4,10 @@ import {
   createContext,
   useContext,
   useEffect,
-  useMemo,
   useRef,
   useState,
+  useSyncExternalStore,
   type ReactNode,
-  type RefObject,
 } from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
@@ -19,6 +18,8 @@ import {
 } from "framer-motion";
 import { Xmark, ArrowRight, ArrowUpRight } from "iconoir-react";
 import { EASE_OUT } from "@/lib/motion";
+import { Highlighter } from "./Highlighter";
+import { HL_COLOR } from "@/lib/highlight";
 
 /* ============================================================================
    Love letter to design — a bottom-sheet modal that slides up over everything
@@ -29,9 +30,33 @@ import { EASE_OUT } from "@/lib/motion";
    ============================================================================ */
 
 // ---- open/close bridge (footer button + envelope call open()) --------------
-type LoveLetterAPI = { open: () => void; close: () => void };
+type LoveLetterAPI = {
+  open: () => void;
+  close: () => void;
+  // Envelope preview: hovering the footer button (or the envelope) flies the
+  // envelope in; leaving schedules it to fly out after a grace period.
+  previewShown: boolean;
+  previewTilt: number;
+  showPreview: () => void;
+  hidePreviewSoon: () => void;
+};
 const LoveLetterContext = createContext<LoveLetterAPI | null>(null);
 export const useLoveLetter = () => useContext(LoveLetterContext);
+
+// Client-only gate without a setState-in-effect: false during SSR + hydration,
+// true on the client afterward. Keeps portal / off-screen-initial content out of
+// SSR while staying lint-clean (vs the old useState + useEffect mount flag).
+const emptySubscribe = () => () => {};
+function useIsMounted() {
+  return useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false,
+  );
+}
+
+const TILT_MAX = 12; // envelope resting tilt: random in [-TILT_MAX, TILT_MAX] deg
+const PREVIEW_HIDE_MS = 3000; // grace after mouse-leave before the envelope flies out
 
 // Portrait from the About page (frontmatter `portrait`).
 export const PORTRAIT_SRC =
@@ -48,7 +73,8 @@ My mentor, Josh Owen, taught me that design is fundamentally a way of looking at
 
 I truly love being a designer because it is so much more than a profession; it is an attitude and a way of life.
 
-— Daechan Kim`;
+From,
+Daechan Kim`;
 
 // mailto with a blank composing area at the TOP (cursor lands there) and the
 // letter quoted below a rule. Reply -> to me; Forward -> empty recipient.
@@ -57,7 +83,7 @@ function mailtoHref(kind: "reply" | "forward") {
     kind === "reply"
       ? "Re: A love letter to design"
       : "Fwd: A love letter to design";
-  const body = `\n\n\n———\nDaechan's love letter to design:\n\n${LETTER_PLAIN}`;
+  const body = `\n\n\n-----\nDaechan's love letter to design:\n\n${LETTER_PLAIN}`;
   const to = kind === "reply" ? EMAIL : "";
   return `mailto:${to}?subject=${encodeURIComponent(
     subject,
@@ -69,48 +95,63 @@ function mailtoHref(kind: "reply" | "forward") {
 // never marks a still-moving line — the timing you asked for.
 const SettledContext = createContext(false);
 
-// The modal's own scroll container, used as the IntersectionObserver root so the
-// reveal fires per line as it scrolls INTO the letter. Without this, whileInView
-// watches the browser viewport and triggers every line at once (no animation).
-const ScrollRootContext =
-  createContext<RefObject<HTMLDivElement | null> | null>(null);
-
 function Mark({ children }: { children: ReactNode }) {
   const settled = useContext(SettledContext);
+  const reduce = useReducedMotion();
+  // The SAME hand-drawn rough-notation marker as the About page / hero (shared
+  // HL_COLOR + HL_MARK character), drawn once its paragraph has settled — replaces
+  // the old flat CSS-gradient wipe so the letter's highlights read identically to
+  // the rest of the site (texture, colour, and draw-in animation all aligned).
   return (
-    <mark className="ll-mark" data-on={settled ? "1" : undefined}>
+    <Highlighter
+      active={settled}
+      color={HL_COLOR}
+      animationDuration={reduce ? 0 : 700}
+    >
       {children}
-    </mark>
+    </Highlighter>
   );
 }
 
-// ---- one paragraph: reveals on scroll-into-view, then arms its marks --------
+// ---- one paragraph: cascades in after the sheet settles, then arms its marks -
+// Time-based, not scroll-based: the peek is fixed (no scroll to key off) and the
+// sheet rotates + slides on entrance, which masks / breaks an IntersectionObserver
+// reveal. So each paragraph fades + rises on a staggered delay measured from open,
+// and its highlighter wipes in once the line settles (SettledContext).
+const REVEAL_BASE = 0.4; // wait for the sheet to arrive before the first line
+const REVEAL_STEP = 0.5; // stagger between paragraphs
+
 function RevealP({
   children,
   className = "",
+  order = 0,
 }: {
   children: ReactNode;
   className?: string;
+  order?: number;
 }) {
   const reduce = useReducedMotion();
-  const root = useContext(ScrollRootContext);
-  const [settled, setSettled] = useState(!!reduce);
-  useEffect(() => {
-    if (reduce) setSettled(true);
-  }, [reduce]);
+  // `settled` gates the marker draw. Derived (not an effect): reduced motion has
+  // no entrance tween to complete, so it counts as settled at once; otherwise it
+  // flips true when the reveal tween finishes. Deriving stays reactive to a
+  // mid-session reduce-motion change with no setState-in-effect.
+  const [animDone, setAnimDone] = useState(false);
+  const settled = animDone || !!reduce;
   return (
     <SettledContext.Provider value={settled}>
       <motion.p
-        className={`ll-line ${className}`}
+        // `relative` makes the paragraph the containing block for rough-notation's
+        // absolute SVG, so each mark anchors AT its line (like the hero) and can't
+        // drift under the reveal transform.
+        className={`ll-line relative ${className}`}
         initial={reduce ? false : { opacity: 0, y: 18 }}
-        whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
-        viewport={{
-          once: true,
-          root: root ?? undefined,
-          margin: "0px 0px -12% 0px",
+        animate={reduce ? undefined : { opacity: 1, y: 0 }}
+        transition={{
+          duration: 0.6,
+          ease: EASE_OUT,
+          delay: reduce ? 0 : REVEAL_BASE + order * REVEAL_STEP,
         }}
-        transition={{ duration: 0.6, ease: EASE_OUT }}
-        onAnimationComplete={() => setSettled(true)}
+        onAnimationComplete={() => setAnimDone(true)}
       >
         {children}
       </motion.p>
@@ -120,10 +161,21 @@ function RevealP({
 
 // ---- the letter body -------------------------------------------------------
 function LetterBody() {
+  // The date the letter is read — top-right, per personal-letter form.
+  const [dateLabel] = useState(() =>
+    new Date().toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    }),
+  );
   return (
     <div className="ll-prose">
-      <RevealP>Dear fellow design lovers,</RevealP>
-      <RevealP>
+      <RevealP order={0} className="ll-date">
+        {dateLabel}
+      </RevealP>
+      <RevealP order={1}>Dear fellow design lovers,</RevealP>
+      <RevealP order={2}>
         While design constantly evolves alongside intelligent tools, I have
         always loved that its true beauty is rooted in an{" "}
         <Mark>understanding of people</Mark>. This core empathy guides me to
@@ -135,7 +187,7 @@ function LetterBody() {
         interact with their world, allowing me to find thoughtful solutions for
         any context.
       </RevealP>
-      <RevealP>
+      <RevealP order={3}>
         My mentor, Josh Owen, taught me that design is fundamentally a way of
         looking at the world. Once I opened my &ldquo;design eyes,&rdquo; I
         realized our everyday surroundings are filled with living design
@@ -143,7 +195,7 @@ function LetterBody() {
         inspiration for my own taste, or as a system waiting to be improved and
         shared with the world through my work.
       </RevealP>
-      <RevealP>
+      <RevealP order={4}>
         I truly love being a designer because it is so much more than a
         profession; it is an attitude and a way of life. As an early-career
         designer eager to grow, I welcome new conversations and shared insights.
@@ -154,6 +206,11 @@ function LetterBody() {
         </a>
         .
       </RevealP>
+      <RevealP order={5}>
+        From,
+        <br />
+        Daechan Kim
+      </RevealP>
     </div>
   );
 }
@@ -161,11 +218,13 @@ function LetterBody() {
 // ---- the modal -------------------------------------------------------------
 // A bottom sheet: slides up clipped at the screen bottom to PARTIAL_VH, then
 // grows to full screen once the reader scrolls past GROW_AT_PX. The letter's
-// lines reveal on scroll (ScrollRootContext). No dim overlay; text fills width.
-const PARTIAL_VW = 80; // partial-sheet width (answer: 80vw)
-const PARTIAL_VH = 40; // partial-sheet height (answer: up to 40vh)
+// lines cascade in on open (RevealP). No dim overlay; text fills width.
+const PARTIAL_VW = 60; // partial-sheet width on desktop (answer: 40vw x1.5)
+const MOBILE_VW = 90; // ...and 90vw on mobile (answer)
+const PARTIAL_VH = 32; // partial-sheet height (answer: 32vh)
 const GROW_AT_PX = 40; // scroll before it expands to full screen (answer: 40px)
 const CLOSE_AT_PX = 160; // generous over-scroll "pull down" past the top to close
+const PEEK_DROP_PX = 20; // the peek rests this far below the screen edge (bottom clips off)
 
 function LoveLetterModal({ onClose }: { onClose: () => void }) {
   const reduce = useReducedMotion();
@@ -178,13 +237,35 @@ function LoveLetterModal({ onClose }: { onClose: () => void }) {
   const [scrollerEl, setScrollerEl] = useState<HTMLDivElement | null>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const [full, setFull] = useState(false);
-
-  // Reveal root as a RefObject whose identity flips null -> element on mount, so
-  // framer re-creates the observer against the scroller (see ScrollRootContext).
-  const scrollRoot = useMemo<RefObject<HTMLDivElement | null>>(
-    () => ({ current: scrollerEl }),
-    [scrollerEl],
+  // Letter width: 90vw on mobile, 80vw on desktop. Lazy-init from matchMedia (the
+  // modal is client-only) so the sheet doesn't flash a width change on open.
+  const [peekVw, setPeekVw] = useState(() =>
+    typeof window !== "undefined" &&
+    window.matchMedia("(max-width: 640px)").matches
+      ? MOBILE_VW
+      : PARTIAL_VW,
   );
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 640px)");
+    const apply = () => setPeekVw(mq.matches ? MOBILE_VW : PARTIAL_VW);
+    apply();
+    mq.addEventListener("change", apply);
+    return () => mq.removeEventListener("change", apply);
+  }, []);
+  // Latest `full` in a ref so the gesture listeners can read it WITHOUT `full`
+  // in their deps — otherwise a grow/collapse mid-gesture would tear the
+  // listeners down and re-init their drag anchors to 0, firing a spurious close.
+  const fullRef = useRef(full);
+  useEffect(() => {
+    fullRef.current = full;
+  }, [full]);
+
+  // Full always opens at the very top of the letter. The peek uses overflow-clip
+  // (not a scroll container) so it can't be focus-scrolled, but reset on the
+  // rising edge too as belt-and-suspenders against any browser momentum re-latch.
+  useEffect(() => {
+    if (full && scrollerEl) scrollerEl.scrollTo({ top: 0 });
+  }, [full, scrollerEl]);
 
   // Collapse back to the peek when the reader scrolls the full letter all the way
   // back to its top. The prevTop guard means it only fires after actually
@@ -221,7 +302,7 @@ function LoveLetterModal({ onClose }: { onClose: () => void }) {
     let startY = 0;
     const atTop = () => el.scrollTop <= 0;
     const onWheel = (e: WheelEvent) => {
-      if (!full) {
+      if (!fullRef.current) {
         if (e.deltaY > 0) {
           setFull(true);
           pull = 0;
@@ -241,7 +322,7 @@ function LoveLetterModal({ onClose }: { onClose: () => void }) {
     };
     const onTouchMove = (e: TouchEvent) => {
       const y = e.touches[0]?.clientY ?? 0;
-      if (!full) {
+      if (!fullRef.current) {
         const dy = y - startY; // >0 finger down (pull), <0 finger up (read more)
         if (-dy > GROW_AT_PX) setFull(true);
         else if (dy > CLOSE_AT_PX) onClose();
@@ -259,7 +340,7 @@ function LoveLetterModal({ onClose }: { onClose: () => void }) {
       el.removeEventListener("touchstart", onTouchStart);
       el.removeEventListener("touchmove", onTouchMove);
     };
-  }, [scrollerEl, full, onClose]);
+  }, [scrollerEl, onClose]);
 
   // Lock body scroll while open; Escape closes; focus the panel.
   useEffect(() => {
@@ -299,15 +380,17 @@ function LoveLetterModal({ onClose }: { onClose: () => void }) {
         className="relative overflow-hidden bg-canvas shadow-[0_-20px_60px_-24px_rgba(0,0,0,0.5)] outline-none"
         initial={{
           y: "100%",
-          width: `${PARTIAL_VW}vw`,
+          rotate: 3,
+          width: `${peekVw}vw`,
           height: `${PARTIAL_VH}dvh`,
         }}
         animate={{
-          y: 0,
-          width: full ? "100vw" : `${PARTIAL_VW}vw`,
+          y: full ? 0 : PEEK_DROP_PX,
+          rotate: full ? 0 : 3,
+          width: full ? "100vw" : `${peekVw}vw`,
           height: full ? "100dvh" : `${PARTIAL_VH}dvh`,
         }}
-        exit={{ y: "100%" }}
+        exit={{ y: "100%", rotate: 3 }}
         transition={
           reduce
             ? { duration: 0 }
@@ -324,54 +407,150 @@ function LoveLetterModal({ onClose }: { onClose: () => void }) {
           <Xmark width={26} height={26} />
         </button>
 
-        {/* Scroll region — reveal root. Fixed (overflow hidden) at the peek so it
-            always shows the top of the letter; scrollable once full. */}
+        {/* Scroll region. Fixed at the peek (overflow-clip, so it is NOT a scroll
+            container and can't be focus-scrolled) and always shows the top of the
+            letter; scrollable once full. */}
         <div
           ref={setScrollerEl}
           className={`ll-scroll h-full overscroll-contain ${
-            full ? "overflow-y-auto" : "overflow-hidden"
+            full ? "overflow-y-auto" : "overflow-clip"
           }`}
         >
-          <ScrollRootContext.Provider value={scrollRoot}>
-            {/* Text column holds the peak width (PARTIAL_VW) and centers when the
-                sheet grows to full screen, so the copy never re-wraps. */}
-            <div
-              style={{ width: `${PARTIAL_VW}vw` }}
-              className="mx-auto max-w-full px-8 pb-24 pt-20 sm:px-16"
-            >
-              <LetterBody />
+          {/* Text column holds the peek width (peekVw: 60/90vw) and centers when
+              the sheet grows to full screen, so the copy never re-wraps. */}
+          <div
+            style={{ width: `${peekVw}vw` }}
+            className="mx-auto max-w-full px-8 pb-24 pt-20 sm:px-16"
+          >
+            <LetterBody />
 
-              {/* Reply / Forward */}
-              <div className="mt-14 flex flex-wrap items-center gap-8">
-                <a href={mailtoHref("reply")} className="link-button hairline-b">
-                  <span>Reply</span>
-                  <ArrowRight aria-hidden />
-                </a>
-                <a
-                  href={mailtoHref("forward")}
-                  className="link-button hairline-b"
-                >
-                  <span>Forward</span>
-                  <ArrowUpRight aria-hidden />
-                </a>
-              </div>
+            {/* Reply / Forward */}
+            <div className="mt-14 flex flex-wrap items-center gap-8">
+              <a href={mailtoHref("reply")} className="link-button hairline-b">
+                <span>Reply</span>
+                <ArrowRight aria-hidden />
+              </a>
+              <a href={mailtoHref("forward")} className="link-button hairline-b">
+                <span>Forward</span>
+                <ArrowUpRight aria-hidden />
+              </a>
             </div>
-          </ScrollRootContext.Provider>
+          </div>
         </div>
+
+        {/* Bottom fade — hints there's more letter to read below the peek.
+            Fades out once the sheet is full and scrolls natively. */}
+        <motion.div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-[var(--color-canvas)] to-transparent"
+          initial={{ opacity: 1 }}
+          animate={{ opacity: full ? 0 : 1 }}
+          transition={{ duration: reduce ? 0 : 0.3 }}
+        />
       </motion.div>
     </motion.div>
+  );
+}
+
+// ---- envelope intro + overlay ----------------------------------------------
+// Every open (from the footer button, the envelope, OR anywhere else) plays the
+// same intro: a large envelope — wider than the letter — slides up from the
+// bottom of the screen, pauses, then slides back out; only then does the letter
+// slide in. The sequence is attached to the letter's appearance (gated on
+// `open`), so it runs regardless of what triggered it. Reduced motion skips it.
+const INTRO_DURATION = 1.0; // total: slide-in 0.4s + pause 0.2s + slide-out 0.4s
+const PEEK_VH = 20; // how far the envelope's top peeks above the bottom edge
+
+function EnvelopeIntro({ onDone }: { onDone: () => void }) {
+  return (
+    <div
+      aria-hidden
+      className="pointer-events-none fixed inset-x-0 top-full z-50 flex justify-center"
+    >
+      {/* The envelope sits just BELOW the screen (top-full puts its top at the
+          bottom edge); only its top PEEK_VH slides up into view, the rest stays
+          clipped under the bottom. Significantly narrower than the letter. */}
+      <motion.div
+        className="w-[45vw] sm:w-[20vw]"
+        initial={{ y: "0vh" }}
+        animate={{ y: ["0vh", `-${PEEK_VH}vh`, `-${PEEK_VH}vh`, "0vh"] }}
+        transition={{
+          duration: INTRO_DURATION,
+          times: [0, 0.4, 0.6, 1],
+          // springy: overshoot on the way up, anticipate on the way out
+          ease: ["backOut", "linear", "backIn"],
+        }}
+        onAnimationComplete={onDone}
+      >
+        <EnvelopeGraphic className="h-auto w-full drop-shadow-2xl" />
+      </motion.div>
+    </div>
+  );
+}
+
+function LoveLetterOverlay({ onClose }: { onClose: () => void }) {
+  const reduce = useReducedMotion();
+  // Envelope intro first, then the letter. Reduced motion goes straight to it.
+  const [showLetter, setShowLetter] = useState(!!reduce);
+  return (
+    <>
+      {!reduce && !showLetter && (
+        <EnvelopeIntro onDone={() => setShowLetter(true)} />
+      )}
+      {showLetter && <LoveLetterModal onClose={onClose} />}
+    </>
   );
 }
 
 // ---- provider (hosts the portal) -------------------------------------------
 export function LoveLetterProvider({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
-  const value: LoveLetterAPI = {
-    open: () => setOpen(true),
-    close: () => setOpen(false),
+  // Bumped on every open so the overlay gets a fresh key/instance — otherwise a
+  // fast close-then-reopen (during the sheet's exit) reuses the same instance and
+  // the envelope intro is skipped (showLetter never resets to false).
+  const [openId, setOpenId] = useState(0);
+
+  // Envelope preview (footer). Hovering the "Love letter" button — or the
+  // envelope itself — flies the envelope in; leaving either schedules a fly-out
+  // after PREVIEW_HIDE_MS, the grace period to move the mouse over and click it.
+  const [previewShown, setPreviewShown] = useState(false);
+  const [previewTilt, setPreviewTilt] = useState(0);
+  const shownRef = useRef(false); // avoids re-rolling the tilt on re-hover while shown
+  const hideTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const showPreview = () => {
+    if (hideTimer.current) clearTimeout(hideTimer.current);
+    if (!shownRef.current) {
+      shownRef.current = true;
+      setPreviewTilt((Math.random() * 2 - 1) * TILT_MAX);
+      setPreviewShown(true);
+    }
   };
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  const hidePreviewSoon = () => {
+    if (hideTimer.current) clearTimeout(hideTimer.current);
+    hideTimer.current = setTimeout(() => {
+      shownRef.current = false;
+      setPreviewShown(false);
+    }, PREVIEW_HIDE_MS);
+  };
+  useEffect(
+    () => () => {
+      if (hideTimer.current) clearTimeout(hideTimer.current);
+    },
+    [],
+  );
+
+  const value: LoveLetterAPI = {
+    open: () => {
+      setOpenId((n) => n + 1);
+      setOpen(true);
+    },
+    close: () => setOpen(false),
+    previewShown,
+    previewTilt,
+    showPreview,
+    hidePreviewSoon,
+  };
+  const mounted = useIsMounted();
   return (
     <LoveLetterContext.Provider value={value}>
       {children}
@@ -379,7 +558,10 @@ export function LoveLetterProvider({ children }: { children: ReactNode }) {
         createPortal(
           <AnimatePresence>
             {open ? (
-              <LoveLetterModal key="ll" onClose={() => setOpen(false)} />
+              <LoveLetterOverlay
+                key={`ll-${openId}`}
+                onClose={() => setOpen(false)}
+              />
             ) : null}
           </AnimatePresence>,
           document.body,
@@ -450,25 +632,37 @@ function EnvelopeGraphic({ className }: { className?: string }) {
 }
 
 /**
- * Portrait + envelope. The portrait (from About) sits with the envelope tucked
- * at its bottom edge; on open the envelope "flies" down to the bottom of the
- * screen as the letter slides up. Clicking the envelope opens the letter.
+ * Portrait + envelope. The envelope flies in from the RIGHT edge of the screen
+ * with a random tilt ONLY while the "Love letter" button (or the envelope itself)
+ * is hovered; on mouse-leave it waits PREVIEW_HIDE_MS before flying back out, the
+ * grace period to slide the cursor over and click it. Clicking opens the letter.
+ * The hover state is shared via the provider (button + envelope are siblings).
+ * Rendered client-only (mounted gate) so framer's off-screen initial stays out of
+ * SSR.
  */
 export function LoveLetterPortrait({ className = "" }: { className?: string }) {
   const ll = useLoveLetter();
   const reduce = useReducedMotion();
-  const [flying, setFlying] = useState(false);
+  const mounted = useIsMounted();
+  const [offX, setOffX] = useState(1400); // start just past the right screen edge
 
-  const open = () => {
-    if (reduce) {
-      ll?.open();
-      return;
-    }
-    setFlying(true);
-    ll?.open();
-    // reset after the fly so a re-open animates again
-    window.setTimeout(() => setFlying(false), 650);
-  };
+  useEffect(() => {
+    if (reduce) return;
+    const measure = () =>
+      setOffX(Math.round((window.innerWidth || 1200) * 1.15));
+    // Refine the off-screen start distance in a rAF (not synchronously in the
+    // effect body) so it never setState-s directly in the effect. The envelope is
+    // hidden until hover, so the one-frame delay is invisible.
+    const raf = requestAnimationFrame(measure);
+    window.addEventListener("resize", measure);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("resize", measure);
+    };
+  }, [reduce]);
+
+  const shown = ll?.previewShown ?? false;
+  const tilt = ll?.previewTilt ?? 0;
 
   return (
     <div className={`relative ${className}`}>
@@ -477,38 +671,52 @@ export function LoveLetterPortrait({ className = "" }: { className?: string }) {
         alt="Daechan Kim"
         width={520}
         height={560}
-        className="w-full rounded-md object-cover"
-        sizes="(max-width: 768px) 60vw, 320px"
+        className="h-full w-full rounded-md object-cover"
+        sizes="240px"
       />
-      {/* Envelope — sends downward (toward the sheet that slides up) on open. */}
-      <motion.button
-        type="button"
-        onClick={open}
-        aria-label="Open the love letter to design"
-        className="absolute -bottom-6 right-6 cursor-pointer"
-        initial={false}
-        animate={
-          flying && !reduce
-            ? { y: 48, opacity: 0, scale: 0.9 }
-            : { y: 0, opacity: 1, scale: 1 }
-        }
-        transition={{ type: "spring", stiffness: 300, damping: 26 }}
-        whileHover={reduce ? undefined : { y: -4 }}
-        whileTap={reduce ? undefined : { scale: 0.94 }}
-      >
-        <EnvelopeGraphic className="drop-shadow-lg" />
-      </motion.button>
+      {/* Envelope — flies in from the right edge with a random tilt while the
+          footer button (or the envelope) is hovered; click opens the letter. */}
+      {mounted && (
+        <motion.button
+          type="button"
+          onClick={() => ll?.open()}
+          onMouseEnter={() => ll?.showPreview()}
+          onMouseLeave={() => ll?.hidePreviewSoon()}
+          aria-label="Open the love letter to design"
+          className="absolute -bottom-6 right-6 cursor-pointer"
+          initial={reduce ? false : { x: offX, rotate: 20, opacity: 0 }}
+          animate={
+            reduce
+              ? { opacity: shown ? 1 : 0 }
+              : shown
+                ? { x: 0, rotate: tilt, opacity: 1 }
+                : { x: offX, rotate: 20, opacity: 0 }
+          }
+          transition={
+            reduce
+              ? { duration: 0 }
+              : { type: "spring", stiffness: 80, damping: 18 }
+          }
+          whileHover={reduce ? undefined : { y: -4 }}
+          whileTap={reduce ? undefined : { scale: 0.94 }}
+        >
+          <EnvelopeGraphic className="drop-shadow-lg" />
+        </motion.button>
+      )}
     </div>
   );
 }
 
-/** The text "Love letter to design ↗" button (footer). Opens the modal. */
+/** The text "Love letter to design ↗" button (footer). Hovering flies the
+ *  envelope in (preview); clicking opens the modal. */
 export function LoveLetterButton({ className = "" }: { className?: string }) {
   const ll = useLoveLetter();
   return (
     <button
       type="button"
       onClick={() => ll?.open()}
+      onMouseEnter={() => ll?.showPreview()}
+      onMouseLeave={() => ll?.hidePreviewSoon()}
       className={`link-button hairline-b ${className}`}
     >
       <span>Love letter to design</span>

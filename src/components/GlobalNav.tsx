@@ -13,6 +13,10 @@ import { SettingsModal } from "./SettingsModal";
 const useIsoLayoutEffect =
   typeof window !== "undefined" ? useLayoutEffect : useEffect;
 
+// The settings wheel (language switcher) is hidden for now. Flip to true to
+// bring the gear — and its SettingsModal — back into the top bar's right group.
+const SHOW_SETTINGS: boolean = false;
+
 /**
  * Top bar. On the Home page it stays HIDDEN over the hero and slides DOWN from
  * the top (with a slight delay) once the hero's bottom edge (`#hero-sentinel`)
@@ -130,24 +134,26 @@ export function GlobalNav() {
             href="/resume.pdf"
             target="_blank"
             rel="noopener noreferrer"
-            className="hidden text-body no-underline transition-opacity hover:opacity-60 sm:inline text-[#e1e1e1]"
+            className="hidden text-body uppercase tracking-[0.04em] no-underline transition-opacity hover:opacity-60 sm:inline text-[#e1e1e1]"
           >
             {t("resume")}
           </a>
           <a
             href="mailto:daechankim.design@gmail.com"
-            className="hidden text-body no-underline transition-opacity hover:opacity-60 sm:inline text-[#e1e1e1]"
+            className="hidden text-body uppercase tracking-[0.04em] no-underline transition-opacity hover:opacity-60 sm:inline text-[#e1e1e1]"
           >
             {t("contact")}
           </a>
-          <button
-            type="button"
-            onClick={() => setSettingsOpen(true)}
-            aria-label={t("settings")}
-            className="text-[#8a8a8a] transition-colors hover:text-[#e1e1e1]"
-          >
-            <SettingsIcon width={20} height={20} />
-          </button>
+          {SHOW_SETTINGS ? (
+            <button
+              type="button"
+              onClick={() => setSettingsOpen(true)}
+              aria-label={t("settings")}
+              className="text-[#8a8a8a] transition-colors hover:text-[#e1e1e1]"
+            >
+              <SettingsIcon width={20} height={20} />
+            </button>
+          ) : null}
         </div>
       </nav>
 
