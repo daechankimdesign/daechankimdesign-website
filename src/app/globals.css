@@ -1,4 +1,10 @@
-@import "tailwindcss";
+/* Scope automatic content detection to `src/` only. The project sits under an
+   iCloud-synced folder that has evicted many non-source files (media-src/,
+   Portfolio Ideation/, .obsidian/, stray Finder aliases) to "dataless" stubs
+   that can't be re-downloaded (iCloud sync is disabled). Left unscoped, Tailwind
+   scans the whole project root, tries to read one of those unreadable files, and
+   Turbopack panics ("Operation timed out"). All class usage lives in src/. */
+@import "tailwindcss" source("../");
 
 /* ============================================================================
    Design tokens — "Figma Simple Design System" (monochrome neutral palette).
@@ -512,22 +518,11 @@ body::before {
 .ll-prose .ll-line + .ll-line {
   margin-top: 1.5em;
 }
-.ll-mark {
-  color: inherit;
-  background-image: linear-gradient(
-    rgba(253, 231, 105, 0.55),
-    rgba(253, 231, 105, 0.55)
-  );
-  background-repeat: no-repeat;
-  background-position: 0 90%;
-  background-size: 0% 62%;
-  -webkit-box-decoration-break: clone;
-  box-decoration-break: clone;
-  padding: 0 0.06em;
-  transition: background-size 0.55s ease;
-}
-.ll-mark[data-on="1"] {
-  background-size: 100% 62%;
+/* Date line — top-right, quieter than the body (personal-letter form). */
+.ll-date {
+  text-align: right;
+  color: var(--color-fg-muted);
+  font-size: 0.85em;
 }
 /* Hide the scrollbar inside the letter — it still scrolls. */
 .ll-scroll {
@@ -543,11 +538,6 @@ body::before {
 .ll-email {
   color: inherit;
   text-decoration: none;
-}
-@media (prefers-reduced-motion: reduce) {
-  .ll-mark {
-    transition: none;
-  }
 }
 
 /* Editorial list marker — a hanging en-dash instead of a disc, used site-wide

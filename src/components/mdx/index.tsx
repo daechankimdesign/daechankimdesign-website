@@ -4,6 +4,7 @@ import { MDXImage } from "./MDXImage";
 import { ProjectMeta } from "./ProjectMeta";
 import { Gallery } from "./Gallery";
 import { ExperienceItem } from "./ExperienceItem";
+import { AwardItem } from "./AwardItem";
 import { RevealBlock } from "./RevealBlock";
 
 // Passed explicitly on every RSC evaluate() call (MDXProvider is effectless in
@@ -36,6 +37,11 @@ export const mdxComponents: MDXComponents = {
   ExperienceItem: (props) => (
     <RevealBlock as="div">
       <ExperienceItem {...props} />
+    </RevealBlock>
+  ),
+  AwardItem: (props) => (
+    <RevealBlock as="div">
+      <AwardItem {...props} />
     </RevealBlock>
   ),
   img: (props) => (

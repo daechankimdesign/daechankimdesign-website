@@ -132,8 +132,12 @@ export function WorkTile({
           contrast (fg-subtle would fail WCAG on canvas). */}
       <p className="text-caption text-fg-muted">{typeLabel}</p>
 
-      {/* Title — hand-drawn highlighter on hover (see ExperienceItem), not a dim. */}
-      <h3 className="text-h3 mt-1 text-fg">
+      {/* Title — hand-drawn highlighter on hover (see ExperienceItem), not a dim.
+          `hl-host` (position:relative) anchors rough-notation's absolutely-
+          positioned SVG to THIS title, not the transformed RevealOnView wrapper —
+          otherwise the marker's origin shifts when the reveal transform changes
+          and it strays to the page's left edge. */}
+      <h3 className="text-h3 mt-1 text-fg hl-host">
         <span ref={markRef} className="hl-mark">
           {frontmatter.title}
         </span>

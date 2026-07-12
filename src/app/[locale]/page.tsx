@@ -23,14 +23,13 @@ const HERO_STACK = [
       "My design research starts with stakeholder interviews. It is a crucial part of the project to listen and understand people's pain beyond their surface language.",
   },
   {
-    // "creates comprehensive designs" — the "comprehensive deployment" photo (portrait).
-    src: "https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fhome%2Fhero%2Fdesign-480.jpg?alt=media",
-    full: "https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fhome%2Fhero%2Fdesign.webp?alt=media",
-    w: 360,
+    // Design exhibition — presenting the work to a visitor at the showcase (square).
+    src: "https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fhome%2Fhero%2Fstack-5-480.jpg?alt=media",
+    full: "https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fhome%2Fhero%2Fstack-5.jpg?alt=media",
+    w: 480,
     h: 480,
     headline: "",
-    caption:
-      "Comprehensive design (the system, flows, and screens it produces).",
+    caption: "At a design exhibition, walking a visitor through the work.",
   },
   {
     // The critique photo (landscape) — reviewing the work pinned to the wall.

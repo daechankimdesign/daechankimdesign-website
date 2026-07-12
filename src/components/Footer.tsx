@@ -1,11 +1,18 @@
-import { getTranslations } from "next-intl/server";
 import { SequenceReveal, SequenceItem } from "./SequenceReveal";
 import { LinkButton } from "./LinkButton";
 import { LoveLetterButton, LoveLetterPortrait } from "./LoveLetter";
+import { LiveClock } from "./LiveClock";
 
-export async function Footer() {
-  const t = await getTranslations("Nav");
-  const year = new Date().getFullYear();
+export function Footer() {
+  // "Last Updated" = the static build/deploy date, in Eastern time (these pages are
+  // statically rendered, so new Date() is the build moment). Redeploying after a
+  // code change refreshes it. Format: "July 12, 2026".
+  const lastUpdated = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/New_York",
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  }).format(new Date());
 
   return (
     <footer className="surface-invert hairline-t reveal-footer">
@@ -14,10 +21,10 @@ export async function Footer() {
           the footer's height (--footer-reveal-h, set by <FooterReveal>), so it
           slides up over exactly that scroll to uncover the footer. The headline +
           lede fade up one line at a time, but only once the footer is ~fully
-          uncovered (trigger="bottom"), replaying on each return. Contact / resume
-          + copyright are static (outside the sequence). */}
-      <div className="container-page relative flex flex-col-reverse gap-12 pt-48 pb-20 lg:flex-row lg:items-start lg:justify-between lg:gap-16">
-        <SequenceReveal total={6} trigger="bottom" className="flex-1">
+          uncovered (trigger="bottom"), replaying on each return. The last-updated
+          line is static (outside the sequence). */}
+      <div className="container-page relative flex flex-col-reverse gap-12 pt-20 pb-20 lg:flex-row lg:items-start lg:justify-between lg:gap-16 lg:pt-48">
+        <SequenceReveal total={5} trigger="bottom" className="flex-1">
         {/* Statement — footer copy (independent of the home hero, which has
             diverged to its own headline). */}
         <h2 className="text-display">
@@ -43,42 +50,29 @@ export async function Footer() {
           build, and ship products with the latest AI tools, bridging technology
           and people through design.
         </SequenceItem>
-        {/* CTA buttons — reveal as the final step of the sequence. */}
+        {/* CTA buttons — reveal in sync with the lede (same order) as the final
+            step of the sequence. */}
         <SequenceItem
-          order={5}
+          order={4}
           as="div"
-          className="mt-10 flex flex-wrap items-center gap-6"
+          className="mt-3 flex flex-wrap items-center gap-6"
         >
           <LinkButton href="/about" arrow="right">
             About
           </LinkButton>
           <LoveLetterButton />
         </SequenceItem>
-
-        {/* Contact / resume + copyright — STATIC (visible from first paint, not
-            part of the animated sequence). */}
-        <div className="mt-14 flex gap-4">
-          <a
-            href="mailto:daechankim.design@gmail.com"
-            className="text-body text-fg-muted no-underline transition-colors hover:text-fg"
-          >
-            {t("contact")}
-          </a>
-          <a
-            href="/resume.pdf"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-body text-fg-muted no-underline transition-colors hover:text-fg"
-          >
-            {t("resume")}
-          </a>
-        </div>
-        <p className="text-caption mt-4 text-fg-muted">
-          © {year} Daechan Kim. All rights reserved.
-        </p>
         </SequenceReveal>
-        <LoveLetterPortrait className="w-[58vw] max-w-[220px] shrink-0 self-start lg:w-[300px] lg:max-w-none lg:pt-4" />
+        <LoveLetterPortrait className="h-[240px] w-[240px] shrink-0 self-start" />
       </div>
+      {/* Bottom credit line, centered at the VERY bottom of the footer (below the
+          docked universal nav pill): the live "Today …" clock in the visitor's own
+          (auto-detected) timezone, a divider, then the static "Last Updated …"
+          build date (kept in Eastern — it marks when the site was deployed). */}
+      <p className="container-page pb-4 text-center text-caption text-fg-muted">
+        <LiveClock />
+        Last Updated {lastUpdated}
+      </p>
     </footer>
   );
 }
