@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import { Settings as SettingsIcon } from "iconoir-react";
 import { Link, usePathname } from "@/i18n/navigation";
 import { SettingsModal } from "./SettingsModal";
+import { navHoverEnter, navHoverLeave } from "@/lib/navHover";
 
 // Apply the corrected visibility BEFORE the browser paints on the client (so a
 // reload while scrolled past the hero doesn't flash the bar in), falling back to
@@ -103,6 +104,10 @@ export function GlobalNav() {
   return (
     <motion.header
       className="fixed inset-x-0 top-0 z-30 mix-blend-difference"
+      // Hovering the top bar lifts the UniversalNav pill to its top position
+      // (see @/lib/navHover) — reuses the pill's existing top/bottom swap.
+      onMouseEnter={navHoverEnter}
+      onMouseLeave={() => navHoverLeave()}
       // Start above the viewport so the first paint slides DOWN into place.
       initial={{ y: "-100%" }}
       animate={{ y: shown ? "0%" : "-100%" }}

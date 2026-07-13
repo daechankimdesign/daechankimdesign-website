@@ -94,9 +94,14 @@ function mailtoHref(kind: "reply" | "forward") {
 // Drawn only once its paragraph has revealed AND settled (SettledContext), so it
 // never marks a still-moving line — the timing you asked for.
 const SettledContext = createContext(false);
+// True only once the letter has fully EXPANDED (not during the peek). Highlights
+// gate on this so rough-notation neither draws in the preview nor redraws during
+// the expand animation — the timing you asked for, and much lighter on resources.
+const LetterFullContext = createContext(false);
 
 function Mark({ children }: { children: ReactNode }) {
   const settled = useContext(SettledContext);
+  const expanded = useContext(LetterFullContext);
   const reduce = useReducedMotion();
   // The SAME hand-drawn rough-notation marker as the About page / hero (shared
   // HL_COLOR + HL_MARK character), drawn once its paragraph has settled — replaces
@@ -104,7 +109,7 @@ function Mark({ children }: { children: ReactNode }) {
   // the rest of the site (texture, colour, and draw-in animation all aligned).
   return (
     <Highlighter
-      active={settled}
+      active={settled && expanded}
       color={HL_COLOR}
       animationDuration={reduce ? 0 : 700}
     >
@@ -223,7 +228,7 @@ const PARTIAL_VW = 60; // partial-sheet width on desktop (answer: 40vw x1.5)
 const MOBILE_VW = 90; // ...and 90vw on mobile (answer)
 const PARTIAL_VH = 32; // partial-sheet height (answer: 32vh)
 const GROW_AT_PX = 40; // scroll before it expands to full screen (answer: 40px)
-const CLOSE_AT_PX = 160; // generous over-scroll "pull down" past the top to close
+const CLOSE_AT_PX = 320; // over-scroll "pull down" past the top to close
 const PEEK_DROP_PX = 20; // the peek rests this far below the screen edge (bottom clips off)
 
 function LoveLetterModal({ onClose }: { onClose: () => void }) {
@@ -237,6 +242,10 @@ function LoveLetterModal({ onClose }: { onClose: () => void }) {
   const [scrollerEl, setScrollerEl] = useState<HTMLDivElement | null>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const [full, setFull] = useState(false);
+  // True only after the expand animation has SETTLED at full — gates the
+  // highlighter (see LetterFullContext) so it draws once, after the letter is
+  // fully open, instead of during the peek or the resize.
+  const [expanded, setExpanded] = useState(false);
   // Letter width: 90vw on mobile, 80vw on desktop. Lazy-init from matchMedia (the
   // modal is client-only) so the sheet doesn't flash a width change on open.
   const [peekVw, setPeekVw] = useState(() =>
@@ -342,22 +351,20 @@ function LoveLetterModal({ onClose }: { onClose: () => void }) {
     };
   }, [scrollerEl, onClose]);
 
-  // Lock body scroll while open; Escape closes; focus the panel.
+  // Escape closes; focus the panel. (Page scroll is locked by the provider.)
   useEffect(() => {
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
     };
     document.addEventListener("keydown", onKey);
     panelRef.current?.focus();
     return () => {
-      document.body.style.overflow = prev;
       document.removeEventListener("keydown", onKey);
     };
   }, [onClose]);
 
   return (
+    <LetterFullContext.Provider value={expanded}>
     <motion.div
       className="fixed inset-0 z-50 flex items-end justify-center"
       role="dialog"
@@ -377,7 +384,7 @@ function LoveLetterModal({ onClose }: { onClose: () => void }) {
       <motion.div
         ref={panelRef}
         tabIndex={-1}
-        className="relative overflow-hidden bg-canvas shadow-[0_-20px_60px_-24px_rgba(0,0,0,0.5)] outline-none"
+        className="relative overflow-hidden bg-canvas shadow-[0_-8px_24px_-12px_rgba(0,0,0,0.35)] outline-none"
         initial={{
           y: "100%",
           rotate: 3,
@@ -392,10 +399,11 @@ function LoveLetterModal({ onClose }: { onClose: () => void }) {
         }}
         exit={{ y: "100%", rotate: 3 }}
         transition={
-          reduce
-            ? { duration: 0 }
-            : { type: "spring", stiffness: 260, damping: 34 }
+          reduce ? { duration: 0 } : { duration: 0.4, ease: [0.22, 1, 0.36, 1] }
         }
+        // Highlights arm only once the letter has settled at full (see
+        // LetterFullContext); fullRef.current is the live full/peek state.
+        onAnimationComplete={() => setExpanded(fullRef.current)}
       >
         {/* Sticky close, top-right */}
         <button
@@ -409,11 +417,13 @@ function LoveLetterModal({ onClose }: { onClose: () => void }) {
 
         {/* Scroll region. Fixed at the peek (overflow-clip, so it is NOT a scroll
             container and can't be focus-scrolled) and always shows the top of the
-            letter; scrollable once full. */}
+            letter; scrollable once full. In the peek a click/tap expands it to
+            full (so smaller screens don't have to scroll to open it). */}
         <div
           ref={setScrollerEl}
+          onClick={full ? undefined : () => setFull(true)}
           className={`ll-scroll h-full overscroll-contain ${
-            full ? "overflow-y-auto" : "overflow-clip"
+            full ? "overflow-y-auto" : "cursor-pointer overflow-clip"
           }`}
         >
           {/* Text column holds the peek width (peekVw: 60/90vw) and centers when
@@ -449,6 +459,7 @@ function LoveLetterModal({ onClose }: { onClose: () => void }) {
         />
       </motion.div>
     </motion.div>
+    </LetterFullContext.Provider>
   );
 }
 
@@ -539,6 +550,24 @@ export function LoveLetterProvider({ children }: { children: ReactNode }) {
     [],
   );
 
+  // Lock the PAGE while the letter is open (intro + peek + full), so scrolling
+  // only moves the modal, never the content behind it. This site scrolls on
+  // <html> (see globals.css), so locking body overflow alone doesn't hold — lock
+  // the documentElement, padding the scrollbar gutter so the page doesn't shift.
+  useEffect(() => {
+    if (!open) return;
+    const doc = document.documentElement;
+    const gutter = window.innerWidth - doc.clientWidth;
+    const prevOverflow = doc.style.overflow;
+    const prevPad = doc.style.paddingRight;
+    doc.style.overflow = "hidden";
+    if (gutter > 0) doc.style.paddingRight = `${gutter}px`;
+    return () => {
+      doc.style.overflow = prevOverflow;
+      doc.style.paddingRight = prevPad;
+    };
+  }, [open]);
+
   const value: LoveLetterAPI = {
     open: () => {
       setOpenId((n) => n + 1);
@@ -591,39 +620,25 @@ function EnvelopeGraphic({ className }: { className?: string }) {
         />
       </g>
       <defs>
+        {/* Single feDropShadow (same dy/blur/opacity as the original Figma
+            export) instead of the feColorMatrix "hardAlpha x127" knockout chain,
+            which Safari clamps differently from Chrome and renders as a doubled /
+            darker flap shadow. This primitive is consistent across browsers. */}
         <filter
           id="ll_env_shadow"
-          x="0"
-          y="0"
-          width="84"
-          height="44"
+          x="-4"
+          y="-4"
+          width="92"
+          height="52"
           filterUnits="userSpaceOnUse"
           colorInterpolationFilters="sRGB"
         >
-          <feFlood floodOpacity="0" result="BackgroundImageFix" />
-          <feColorMatrix
-            in="SourceAlpha"
-            type="matrix"
-            values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
-            result="hardAlpha"
-          />
-          <feOffset dy="2" />
-          <feGaussianBlur stdDeviation="1" />
-          <feComposite in2="hardAlpha" operator="out" />
-          <feColorMatrix
-            type="matrix"
-            values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.12 0"
-          />
-          <feBlend
-            mode="normal"
-            in2="BackgroundImageFix"
-            result="effect1_dropShadow_68_2"
-          />
-          <feBlend
-            mode="normal"
-            in="SourceGraphic"
-            in2="effect1_dropShadow_68_2"
-            result="shape"
+          <feDropShadow
+            dx="0"
+            dy="2"
+            stdDeviation="1"
+            floodColor="#000000"
+            floodOpacity="0.12"
           />
         </filter>
       </defs>
@@ -671,7 +686,7 @@ export function LoveLetterPortrait({ className = "" }: { className?: string }) {
         alt="Daechan Kim"
         width={520}
         height={560}
-        className="h-full w-full rounded-md object-cover"
+        className="h-full w-full object-cover"
         sizes="240px"
       />
       {/* Envelope — flies in from the right edge with a random tilt while the

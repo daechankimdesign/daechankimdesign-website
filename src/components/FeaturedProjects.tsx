@@ -1,10 +1,14 @@
 import { ProjectCoverFlow } from "./ProjectCoverFlow";
 import type { ContentItem } from "@/lib/mdx";
 
+// Max preview images shown per case study in the home list (keeps each project's
+// stack short so the section stays scannable).
+const MAX_IMAGES_PER_PROJECT = 3;
+
 /**
  * Featured (Selected Work) list. Each project renders as a plain vertical stack
- * of its images (see ProjectCoverFlow): the page scrolls top-to-bottom through
- * one project's media, then on to the next.
+ * of its images (see ProjectCoverFlow), capped at MAX_IMAGES_PER_PROJECT: the page
+ * scrolls top-to-bottom through one project's media, then on to the next.
  */
 export function FeaturedProjects({
   items,
@@ -28,7 +32,7 @@ export function FeaturedProjects({
           key={slug}
           slug={slug}
           frontmatter={frontmatter}
-          images={images}
+          images={images.slice(0, MAX_IMAGES_PER_PROJECT)}
           detailsLabel={detailsLabel}
         />
       ))}
