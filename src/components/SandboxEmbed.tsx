@@ -61,33 +61,6 @@ export function SandboxEmbed({
 
   return (
     <div className="mt-0 mb-8">
-      {/* Device toggle — resizes the frame below to each viewport */}
-      <div className="mb-4 hidden justify-center sm:flex">
-        <div
-          role="group"
-          aria-label="Preview device size"
-          className="inline-flex items-center gap-1 rounded-full border border-hairline bg-surface-subtle p-1"
-        >
-          {DEVICES.map((d) => {
-            const active = d.key === device;
-            return (
-              <button
-                key={d.key}
-                type="button"
-                onClick={() => setDevice(d.key)}
-                aria-pressed={active}
-                className={`text-caption inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 transition-colors ${
-                  active ? "bg-fg text-canvas" : "text-fg-muted hover:text-fg"
-                }`}
-              >
-                <d.Icon />
-                {d.label}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
       {/* Device frame — thick, deep-dark, rounded bezel; width tracks the ratio */}
       <div
         className={`mx-auto box-border max-w-full bg-fg p-3 shadow-[0_20px_50px_-24px_rgba(0,0,0,0.45)] transition-[width,border-radius] duration-300 ease-out ${current.frame}`}
@@ -145,8 +118,40 @@ export function SandboxEmbed({
         </div>
       </div>
 
-      {/* Open in new tab — always available (framing can be blocked; demos want room) */}
-      <div className="mt-3 flex justify-center">
+      {/* Controls under the frame — a row the SAME centered width as the frame, so
+          the device-size toggle pins to the frame's bottom-LEFT corner and the
+          new-tab link to the bottom-right, both tracking as the frame resizes. The
+          toggle is icon-only; selected / hover / default read purely through opacity
+          (no pill, no background). Hidden on mobile (you're already on a phone). */}
+      <div
+        className="mx-auto mt-3 flex max-w-full items-center justify-center transition-[width] duration-300 ease-out sm:justify-between"
+        style={{ width: screenW ? screenW + BEZEL * 2 : "100%" }}
+      >
+        <div
+          role="group"
+          aria-label="Preview device size"
+          className="hidden items-center gap-3 sm:flex"
+        >
+          {DEVICES.map((d) => {
+            const active = d.key === device;
+            return (
+              <button
+                key={d.key}
+                type="button"
+                onClick={() => setDevice(d.key)}
+                aria-pressed={active}
+                aria-label={d.label}
+                title={d.label}
+                className={`p-1 text-fg transition-opacity ${
+                  active ? "opacity-100" : "opacity-40 hover:opacity-70"
+                }`}
+              >
+                <d.Icon />
+              </button>
+            );
+          })}
+        </div>
+
         <a
           href={src}
           target="_blank"

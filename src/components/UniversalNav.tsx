@@ -1,9 +1,15 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useTranslations } from "next-intl";
 import { AnimatePresence, motion } from "framer-motion";
 import { Link, usePathname } from "@/i18n/navigation";
+import {
+  getNavHovered,
+  navHoverEnter,
+  navHoverLeave,
+  subscribeNavHover,
+} from "@/lib/navHover";
 
 const NAV = [
   { href: "/", key: "home" },
@@ -164,6 +170,13 @@ export function UniversalNav() {
   const [isMobile, setIsMobile] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const [hovered, setHovered] = useState(false);
+  // Set by hovering the top bar (GlobalNav) or this risen pill; while true the
+  // pill is forced to the top (see the `docked` computation below).
+  const topBarHovered = useSyncExternalStore(
+    subscribeNavHover,
+    getNavHovered,
+    () => false,
+  );
   const lastY = useRef(0);
   const hoverTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -202,7 +215,9 @@ export function UniversalNav() {
     hoverTimer.current = setTimeout(() => setHovered(next), delay);
   };
 
-  const docked = isMobile || scrolled;
+  // Hovering the top bar (or the risen pill) forces the pill up: it just
+  // suppresses `docked`, so the existing top/bottom AnimatePresence swap moves it.
+  const docked = isMobile || (scrolled && !topBarHovered);
   // Dots only while collapsed AND not hovered; hovering expands the whole pill.
   const showDots = collapsed && !hovered;
   const lifted = !showDots; // expanded labels ride higher
@@ -244,6 +259,10 @@ export function UniversalNav() {
         <motion.div
           key="top"
           className="fixed inset-x-0 top-3 z-40 mx-auto w-max"
+          // Keep the top-bar-hover signal alive while the cursor is on the risen
+          // pill, so moving from the bar onto it doesn't drop it back down.
+          onMouseEnter={navHoverEnter}
+          onMouseLeave={() => navHoverLeave()}
           initial={{ y: -56, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: -56, opacity: 0 }}

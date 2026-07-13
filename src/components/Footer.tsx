@@ -24,7 +24,7 @@ export function Footer() {
           uncovered (trigger="bottom"), replaying on each return. The last-updated
           line is static (outside the sequence). */}
       <div className="container-page relative flex flex-col-reverse gap-12 pt-20 pb-20 lg:flex-row lg:items-start lg:justify-between lg:gap-16 lg:pt-48">
-        <SequenceReveal total={5} trigger="bottom" className="flex-1">
+        <SequenceReveal total={5} step={300} trigger="bottom" className="flex-1 mb-5">
         {/* Statement — footer copy (independent of the home hero, which has
             diverged to its own headline). */}
         <h2 className="text-display">
@@ -32,13 +32,13 @@ export function Footer() {
             Daechan Kim is a designer capable of
           </SequenceItem>
           <SequenceItem order={1} as="span" className="block">
-            conducting research to find insights,
+            conducting user research,
           </SequenceItem>
           <SequenceItem order={2} as="span" className="block">
-            creating comprehensive designs,
+            creating impactful visuals, and
           </SequenceItem>
           <SequenceItem order={3} as="span" className="block">
-            testing prototypes and deploys products.
+            creating AI-powered products.
           </SequenceItem>
         </h2>
         <SequenceItem
@@ -55,7 +55,7 @@ export function Footer() {
         <SequenceItem
           order={4}
           as="div"
-          className="mt-3 flex flex-wrap items-center gap-6"
+          className="mt-5 flex flex-wrap items-center gap-6"
         >
           <LinkButton href="/about" arrow="right">
             About
@@ -63,7 +63,7 @@ export function Footer() {
           <LoveLetterButton />
         </SequenceItem>
         </SequenceReveal>
-        <LoveLetterPortrait className="h-[240px] w-[240px] shrink-0 self-start" />
+        <LoveLetterPortrait className="size-[clamp(120px,_60px_+_15vw,_240px)] shrink-0 self-start" />
       </div>
       {/* Bottom credit line, centered at the VERY bottom of the footer (below the
           docked universal nav pill): the live "Today …" clock in the visitor's own
