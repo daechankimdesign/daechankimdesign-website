@@ -43,9 +43,19 @@ export function SandboxEmbed({
 }: SandboxEmbedProps) {
   const [live, setLive] = useState(false);
   const [device, setDevice] = useState<DeviceKey>("desktop");
+  // Cache-buster stamped when the demo is launched. Hosts (e.g. GitHub Pages)
+  // cache index.html, so without this the iframe would reload the browser's
+  // STALE copy of a just-redeployed demo. A unique query param bypasses that
+  // HTTP cache (and any exact-URL service-worker precache) → always the latest.
+  const [launchCb, setLaunchCb] = useState(0);
 
   // No live demo to run → render nothing at all.
   if (!src) return null;
+
+  // Live URL with the launch cache-buster appended (once launched).
+  const liveSrc = launchCb
+    ? `${src}${src.includes("?") ? "&" : "?"}cb=${launchCb}`
+    : src;
 
   // Same height for all; width = height × device aspect ratio (desktop fills).
   const DEVICES = [
@@ -73,7 +83,7 @@ export function SandboxEmbed({
         >
           {live ? (
             <iframe
-              src={src}
+              src={liveSrc}
               title={title}
               loading="lazy"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
@@ -86,7 +96,10 @@ export function SandboxEmbed({
           ) : (
             <button
               type="button"
-              onClick={() => setLive(true)}
+              onClick={() => {
+                setLaunchCb(Date.now());
+                setLive(true);
+              }}
               aria-label={`Launch ${title}`}
               className="group absolute inset-0 block overflow-hidden focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-fg"
             >
