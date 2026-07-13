@@ -298,32 +298,55 @@ function LoveLetterModal({ onClose }: { onClose: () => void }) {
     return () => el.removeEventListener("scroll", onScroll);
   }, [scrollerEl]);
 
-  // Gestures. The peek is FIXED (overflow hidden — see the scroller class) so it
-  // always shows the top of the letter; a downward "read more" gesture grows it
-  // to full, which therefore opens at the top (the peek never scrolled). An
-  // upward "pull down" past CLOSE_AT_PX dismisses it. In the full letter, native
-  // scroll does the reading; only an over-scroll pull at the very top is
-  // intercepted to close. Thresholds are deliberately generous.
+  // Gestures. The peek is FIXED (overflow-clip — see the scroller class) and its
+  // scroll is swallowed: opening is a DISCRETE action — a downward scroll
+  // accumulates to GROW_AT_PX (40px), grows to full, and the rest of that same
+  // gesture is absorbed (the letter holds at the top — "scale up only") until the
+  // scroll goes idle, so a flick to open never scrolls the letter. Reading then
+  // uses native scroll. An upward "pull down" past CLOSE_AT_PX at the top
+  // dismisses. Wheel is non-passive so the peek/opening scroll can be prevented.
   useEffect(() => {
     const el = scrollerEl;
     if (!el) return;
-    let pull = 0;
+    let grow = 0; // downward scroll accumulated in the peek → toward opening
+    let pull = 0; // scroll accumulated toward closing
     let startY = 0;
+    let pinned = false; // absorbing the opening gesture's leftover scroll
+    let pinTimer = 0;
     const atTop = () => el.scrollTop <= 0;
+    // Hold the just-opened letter at the top until the opening scroll goes idle.
+    const armPin = () => {
+      pinned = true;
+      clearTimeout(pinTimer);
+      pinTimer = window.setTimeout(() => {
+        pinned = false;
+      }, 200);
+    };
     const onWheel = (e: WheelEvent) => {
       if (!fullRef.current) {
+        e.preventDefault(); // peek: scroll only scales up, never scrolls the letter
         if (e.deltaY > 0) {
-          setFull(true);
           pull = 0;
+          grow += e.deltaY;
+          if (grow > GROW_AT_PX) {
+            grow = 0;
+            setFull(true);
+            armPin(); // ignore scroll beyond the 40px that opened it
+          }
         } else {
+          grow = 0;
           pull += -e.deltaY;
           if (pull > CLOSE_AT_PX) onClose();
         }
+      } else if (pinned) {
+        e.preventDefault(); // just opened: hold at top, absorb leftover momentum
+        el.scrollTo({ top: 0 });
+        armPin();
       } else if (atTop() && e.deltaY < 0) {
         pull += -e.deltaY;
         if (pull > CLOSE_AT_PX) onClose();
       } else {
-        pull = 0;
+        pull = 0; // reading — native scroll
       }
     };
     const onTouchStart = (e: TouchEvent) => {
@@ -333,21 +356,27 @@ function LoveLetterModal({ onClose }: { onClose: () => void }) {
       const y = e.touches[0]?.clientY ?? 0;
       if (!fullRef.current) {
         const dy = y - startY; // >0 finger down (pull), <0 finger up (read more)
-        if (-dy > GROW_AT_PX) setFull(true);
-        else if (dy > CLOSE_AT_PX) onClose();
+        if (-dy > GROW_AT_PX) {
+          setFull(true);
+          armPin();
+        } else if (dy > CLOSE_AT_PX) onClose();
+      } else if (pinned) {
+        el.scrollTo({ top: 0 }); // hold at top through the opening drag
+        armPin();
       } else if (!atTop()) {
         startY = y; // reading: keep the anchor pinned to the top of the content
       } else if (y - startY > CLOSE_AT_PX) {
         onClose();
       }
     };
-    el.addEventListener("wheel", onWheel, { passive: true });
+    el.addEventListener("wheel", onWheel, { passive: false });
     el.addEventListener("touchstart", onTouchStart, { passive: true });
     el.addEventListener("touchmove", onTouchMove, { passive: true });
     return () => {
       el.removeEventListener("wheel", onWheel);
       el.removeEventListener("touchstart", onTouchStart);
       el.removeEventListener("touchmove", onTouchMove);
+      clearTimeout(pinTimer);
     };
   }, [scrollerEl, onClose]);
 

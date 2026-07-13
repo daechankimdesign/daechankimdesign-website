@@ -1,7 +1,7 @@
 ---
 title: "Academic jargon translator helps to synthesize complex concepts for my girlfriend."
 summary: "Sucholary, a Chrome extension that reworks dense academic passages into plainer language, right on the page you are reading."
-thumbnail: "https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fsandbox%2Facademic-jargon-translator-helps-to-synthesize-complex-concepts-for-my-girlfriend%2Fhighlight-pill.jpeg?alt=media"
+thumbnail: "https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fsandbox%2Facademic-jargon-translator-helps-to-synthesize-complex-concepts-for-my-girlfriend%2Finterpret-flow.gif?alt=media"
 date: "2026-04-01"
 tags: ["Chrome Extension", "Claude Code", "AI"]
 embed: "" # live demo URL (e.g. https://your-app.vercel.app) — leave empty to hide the frame
@@ -10,10 +10,10 @@ embed: "" # live demo URL (e.g. https://your-app.vercel.app) — leave empty to 
 Sucholary is a Chrome extension that helps you read hard academic papers. Highlight a passage you are stuck on and it reworks the text into plainer language, right there on the page, without hopping to another tab. I built it for Suyeon, my girlfriend, whose hobby is reading research papers.
 
 <MDXImage
-  src="https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fsandbox%2Facademic-jargon-translator-helps-to-synthesize-complex-concepts-for-my-girlfriend%2Fhighlight-pill.jpeg?alt=media"
+  src="https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fsandbox%2Facademic-jargon-translator-helps-to-synthesize-complex-concepts-for-my-girlfriend%2Fhighlight-pill.jpg?alt=media"
   alt="Sucholar's inline pill beside a highlighted passage in a research paper, offering Interpret and Outline actions"
-  width={3584}
-  height={2240}
+  width={1546}
+  height={1384}
 />
 
 ## Inspiration
@@ -28,20 +28,32 @@ Suyeon reads research papers for fun, in her field and well beyond it, and takes
 
 The trigger is drag and highlight. It is what people already do when they hit a passage they cannot parse, and it tells the tool exactly which text to work on. Highlight a line and a small pill appears next to it with two options, translate and explore. Pick one and a bottom sheet slides up over the page, showing the original passage and a reworded version of it. It also reads the text just before and after the highlight, so the rewrite stays anchored to the paper's actual subject rather than guessing at the concept in isolation. You can copy the result straight out of the sheet.
 
+<VideoPlayer
+  type="video"
+  src="https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fsandbox%2Facademic-jargon-translator-helps-to-synthesize-complex-concepts-for-my-girlfriend%2Finterpret-flow.mp4?alt=media"
+  poster="https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fsandbox%2Facademic-jargon-translator-helps-to-synthesize-complex-concepts-for-my-girlfriend%2Finterpret-flow-poster.jpg?alt=media"
+  width={1600}
+  height={1086}
+  caption="Highlight a passage and a plain-language rewrite slides up in place, without leaving the paper."
+/>
+
+<VideoPlayer
+  type="video"
+  src="https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fsandbox%2Facademic-jargon-translator-helps-to-synthesize-complex-concepts-for-my-girlfriend%2Foutline-flow.mp4?alt=media"
+  poster="https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fsandbox%2Facademic-jargon-translator-helps-to-synthesize-complex-concepts-for-my-girlfriend%2Foutline-flow-poster.jpg?alt=media"
+  width={1600}
+  height={1086}
+  caption="Explore turns a dense passage into a structured, skimmable outline."
+/>
+
 To match the reader instead of a generic reading level, you can upload your own writing, a doc, pdf, or txt, and Gemini uses it to gauge your language and perspective and personalize how it explains things.
 
 <MDXImage
-  src="https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fsandbox%2Facademic-jargon-translator-helps-to-synthesize-complex-concepts-for-my-girlfriend%2Fstyle-panel.jpeg?alt=media"
-  alt="The Sucholar side panel for setting an explanation style and toggling surrounding-context reading"
-  width={3584}
-  height={2240}
-/>
-
-<MDXImage
-  src="https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fsandbox%2Facademic-jargon-translator-helps-to-synthesize-complex-concepts-for-my-girlfriend%2Finterpretation-sheet.jpeg?alt=media"
-  alt="Sucholar's bottom sheet showing the original snippet above its interpretation"
-  width={3584}
-  height={2192}
+  src="https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fsandbox%2Facademic-jargon-translator-helps-to-synthesize-complex-concepts-for-my-girlfriend%2Fstyle-panel.jpg?alt=media"
+  alt="The Sucholar settings panel: describe an explanation style and toggle surrounding-context reading"
+  width={664}
+  height={964}
+  caption="Set an explanation style and toggle surrounding-context reading to tune each rewrite."
 />
 
 ## The build
