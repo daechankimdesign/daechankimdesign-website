@@ -56,6 +56,34 @@ build; roadmap Phase 5 is the runtime translation (`4348eec`).
 
 ## Log
 
+### 2026-07-13: Custom domain live + PostHog analytics shipped to production
+
+**Domain.** Connected `daechan.kim` (registered at Squarespace) to App Hosting.
+Removed the Squarespace default A/CNAME/HTTPS records; added the App Hosting apex
+A record (`35.219.200.201`), the `fah-claim` TXT, and the `_acme-challenge` CNAME
+for cert issuance. Apex verified and serving over HTTPS with a valid cert. The
+`www` redirect is not set up yet.
+
+**PostHog.** The automated installer (PR #19) merged analytics into `main` only,
+so it never deployed (`live` was 7 commits behind). Merged it into `live` and
+released. Integration: `posthog-js`, `instrumentation-client.ts`, `/ingest`
+reverse-proxy rewrites in `next.config.ts`, project token in `apphosting.yaml`
+(public), and `capture()` calls in GlobalNav/LoveLetter/WorkTile/etc.
+
+**Critical fix.** next-intl's `proxy.ts` matcher did not exclude `ingest`, so it
+rewrote `/ingest/*` to `/en/ingest/*` and 404'd every analytics request (silent
+zero-capture). Added `ingest` to the matcher negative-lookahead. Verified on live:
+`/ingest/static/array.js` returns 200, `/ingest/flags` returns real PostHog JSON,
+config.js loads with the token on every page, no console errors.
+
+**Also shipped** (pending local work committed in the same release): résumé link
+now points to the Firebase Storage PDF, nav "Contact" is an internal
+`/about#contact` link, about-page gallery uses the `render/` stack variants,
+`upload-media.mjs` handles PDFs.
+
+Cleanup deferred: the installer committed ~1,600 lines of its own wizard docs
+under `.claude/skills/integration-nextjs-app-router/`.
+
 ### 2026-07-08 — Reveal footer: switch to fixed, add hysteresis
 
 Two fixes to the reveal footer:
