@@ -42,6 +42,8 @@ export default async function CaseStudyDetailPage({
     ? (await getTranslations("Content"))("untranslated")
     : null;
 
+  const typeLabel = (await getTranslations("Nav"))("caseStudy");
+
   return (
     <main className="container-page pt-32 pb-16">
       {untranslatedNotice ? (
@@ -62,6 +64,11 @@ export default async function CaseStudyDetailPage({
         <div className="flex-1 min-w-0 content-column">
           <header className="mb-8 measure">
             <Reveal>
+              <RevealItem as="p" className="mb-4">
+                <span className="text-caption inline-flex items-center bg-fg px-2.5 py-1 text-canvas">
+                  {typeLabel}
+                </span>
+              </RevealItem>
               <RevealItem as="h1" className="text-display">
                 {frontmatter.title}
               </RevealItem>
@@ -71,7 +78,7 @@ export default async function CaseStudyDetailPage({
                 </RevealItem>
               ) : null}
               {frontmatter.tags && frontmatter.tags.length > 0 ? (
-                <RevealItem as="p" className="text-caption mt-3 text-fg-muted">
+                <RevealItem as="p" className="text-caption mt-3 text-fg-muted uppercase">
                   {frontmatter.tags.join("  ·  ")}
                 </RevealItem>
               ) : null}

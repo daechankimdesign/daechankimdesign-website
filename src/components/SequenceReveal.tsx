@@ -87,9 +87,9 @@ export function SequenceReveal({
       let playing = false;
       let raf = 0;
       // Fractions of the footer height, measured from the page's true bottom:
-      // PLAY when within 10% of the bottom (footer ~90% uncovered); RESET only
+      // PLAY when within 40% of the bottom (footer ~60% uncovered); RESET only
       // past 85% away (footer ~15% uncovered).
-      const PLAY_AT = 0.1;
+      const PLAY_AT = 0.4;
       const RESET_AT = 0.85;
       const check = () => {
         raf = 0;

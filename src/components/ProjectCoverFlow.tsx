@@ -24,9 +24,13 @@ function ProjectMeta({
     <div className="flex flex-col items-start">
       <h3 className="text-h2">{frontmatter.title}</h3>
       {frontmatter.tags && frontmatter.tags.length > 0 ? (
-        <p className="text-caption mt-2 text-fg-muted">
-          {frontmatter.tags.join("   ")}
-        </p>
+        <div className="mt-2 flex flex-col gap-1">
+          {frontmatter.tags.map((tag) => (
+            <span key={tag} className="text-caption text-fg-muted uppercase">
+              {tag}
+            </span>
+          ))}
+        </div>
       ) : null}
       <div className="mt-3">
         <LinkButton

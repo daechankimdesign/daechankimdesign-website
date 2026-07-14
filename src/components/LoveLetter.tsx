@@ -227,10 +227,11 @@ function LetterBody() {
 // lines cascade in on open (RevealP). No dim overlay; text fills width.
 const PARTIAL_VW = 60; // partial-sheet width on desktop (answer: 40vw x1.5)
 const MOBILE_VW = 90; // ...and 90vw on mobile (answer)
-const PARTIAL_VH = 32; // partial-sheet height (answer: 32vh)
+const PARTIAL_VH = 36; // partial-sheet height
 const GROW_AT_PX = 40; // scroll before it expands to full screen (answer: 40px)
 const CLOSE_AT_PX = 320; // over-scroll "pull down" past the top to close
-const PEEK_DROP_PX = 20; // the peek rests this far below the screen edge (bottom clips off)
+const PEEK_DROP_PX = 44; // the peek rests this far below the screen edge, so the
+// 3° tilt's lifted bottom corner tucks under the edge (no dark gap) — bottom clips off
 
 function LoveLetterModal({ onClose }: { onClose: () => void }) {
   const reduce = useReducedMotion();

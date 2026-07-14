@@ -41,9 +41,6 @@ export function SandboxCarousel({
       // extracted image so every cover has something to show.
       image: frontmatter.thumbnail || images[0] || "",
       title: frontmatter.title,
-      subtitle: frontmatter.tags?.length
-        ? frontmatter.tags.join("   ")
-        : undefined,
     }),
   );
 
@@ -51,6 +48,9 @@ export function SandboxCarousel({
   const mid = Math.floor(covers.length / 2);
   const [active, setActive] = useState(mid);
   const current = covers[active];
+  // Tags live on the source frontmatter, not on the generic CoverFlowItem — read
+  // them from `items` by the same active index for the left-column meta.
+  const currentTags = items[active]?.frontmatter.tags ?? [];
 
   // Empty state — mirrors the grid's fallback so a labeled section never renders
   // an orphaned heading over blank space (e.g. if every entry is media-filtered).
@@ -80,10 +80,17 @@ export function SandboxCarousel({
               className="flex flex-col items-start"
             >
               <h3 className="text-h2">{current?.title}</h3>
-              {current?.subtitle ? (
-                <p className="text-caption mt-2 text-fg-muted">
-                  {current.subtitle}
-                </p>
+              {currentTags.length > 0 ? (
+                <div className="mt-2 flex flex-col gap-1">
+                  {currentTags.map((tag) => (
+                    <span
+                      key={tag}
+                      className="text-caption text-fg-muted uppercase"
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
               ) : null}
               {current ? (
                 <div className="mt-3">
