@@ -67,6 +67,7 @@ const mimeFor = (f) => {
   if (e.endsWith(".avif")) return "image/avif";
   if (e.endsWith(".mp4")) return "video/mp4";
   if (e.endsWith(".gif")) return "image/gif";
+  if (e.endsWith(".pdf")) return "application/pdf";
   return "application/octet-stream";
 };
 

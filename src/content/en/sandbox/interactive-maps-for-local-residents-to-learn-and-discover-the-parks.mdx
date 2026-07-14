@@ -1,6 +1,6 @@
 ---
 title: "Interactive maps for local residents to learn and discover the parks."
-summary: "A custom interactive map for the Emerald Necklace Conservancy — so anyone in Boston can explore the whole chain of parks, and every point of interest along it, from their phone."
+summary: "Built for the Emerald Necklace Conservancy so eight parks read as one connected system. One React component dropped into their rebranded Framer site, rendering Mapbox GL over a custom tileset, with Airtable content pulled through a Cloudflare Worker so no keys reach the browser."
 thumbnail: "https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fsandbox%2Finteractive-maps-for-local-residents-to-learn-and-discover-the-parks%2Femerald-necklace.png?alt=media"
 date: "2025-02-15"
 tags: ["React", "Mapbox", "Airtable", "Framer", "Claude Code"]
@@ -33,11 +33,13 @@ A custom interactive map I built at Other Tomorrows for the **Emerald Necklace C
 
 I came onto the project after the first round of design and took the map over — the part I own here is the interaction. I reworked it around one question: how do you let someone roam the whole system freely, follow their curiosity from one park to the next, and open up the story of any place, without ever feeling lost or handled? Most of what I did lives in that layer — the movement, the states, the moment-to-moment feel of exploring.
 
-<MDXImage
-  src="https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fsandbox%2Finteractive-maps-for-local-residents-to-learn-and-discover-the-parks%2Fmap-live.jpg?alt=media"
-  alt="The live map — the full Emerald Necklace with points of interest and the photo carousel"
-  width={1800}
-  height={1125}
+<VideoPlayer
+  type="video"
+  src="https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fsandbox%2Finteractive-maps-for-local-residents-to-learn-and-discover-the-parks%2Fcome-alive.mp4?alt=media"
+  poster="https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fsandbox%2Finteractive-maps-for-local-residents-to-learn-and-discover-the-parks%2Fcome-alive-poster.jpg?alt=media"
+  width={1440}
+  height={1002}
+  caption="It opens as a still image of the necklace; the first touch loads the live map and settles you into the parks."
 />
 
 ## How it works
@@ -46,18 +48,20 @@ I came onto the project after the first round of design and took the map over �
 
 It opens on the full necklace so the through-line reads at a glance, then invites you in. Pan and zoom the system, tap a park to focus it, or tap a point of interest to open its details — photo, hours, accessibility, the story of the place — with a filter panel to narrow by park, facility, or activity. Everything is tuned to feel like exploring rather than searching: the parks ease into their green, overlapping pins fan apart so none get buried, and even the loading moment keeps you company — _finding a sun-basking painted turtle_, drawn from the critters that actually live along the Necklace.
 
-<MDXImage
-  src="https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fsandbox%2Finteractive-maps-for-local-residents-to-learn-and-discover-the-parks%2Fpoi-detail.jpg?alt=media"
-  alt="Opening a point of interest — the Hunnewell Visitor Center, with its photo, park, and details"
-  width={1800}
-  height={1125}
+<VideoPlayer
+  type="video"
+  src="https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fsandbox%2Finteractive-maps-for-local-residents-to-learn-and-discover-the-parks%2Ffocus-park.mp4?alt=media"
+  poster="https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fsandbox%2Finteractive-maps-for-local-residents-to-learn-and-discover-the-parks%2Ffocus-park-poster.jpg?alt=media"
+  width={1440}
+  height={1002}
+  caption="Tap a park to focus it: it fills with green and its points of interest gather into the carousel, then tap a place to open its details."
 />
 
 <MDXImage
-  src="https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fsandbox%2Finteractive-maps-for-local-residents-to-learn-and-discover-the-parks%2Fpark-focus.jpg?alt=media"
-  alt="Focusing a single park — Franklin Park filled in, with its points of interest filtered to the carousel"
+  src="https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fsandbox%2Finteractive-maps-for-local-residents-to-learn-and-discover-the-parks%2Fmap-live.jpg?alt=media"
+  alt="The whole Emerald Necklace on the live map, points of interest across every park, with the photo carousel along the bottom"
   width={1800}
-  height={1125}
+  height={1252}
 />
 
 ## The build

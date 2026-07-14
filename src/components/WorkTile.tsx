@@ -73,8 +73,13 @@ export function WorkTile({
   // observers leak.
   useEffect(() => () => removeRef.current?.(), []);
 
-  const { frontmatter, slug, images, basePath, span } = item;
+  const { frontmatter, slug, images, basePath, span, type } = item;
   const tier = TIER[span];
+  // Type badge — a filled pill keyed to the type. Comparable neutrals from the
+  // monochrome palette (no new hues): case study reads stronger (inverted dark),
+  // play softer (light surface), so the two feel like one set.
+  const typeBadge =
+    type === "projects" ? "bg-fg text-canvas" : "bg-surface text-fg";
   const ratio = `${tier.w} / ${tier.h}`;
 
   // Resolve media: the first still is the poster/image; the first .mp4 (if any,
@@ -128,29 +133,26 @@ export function WorkTile({
         />
       </div>
 
-      {/* Type eyebrow — the sole Case Study vs Play signal; fg-muted for legible
-          contrast (fg-subtle would fail WCAG on canvas). */}
-      <p className="text-caption text-fg-muted">{typeLabel}</p>
+      {/* Type badge — filled pill, colour keyed to the type (case study vs play). */}
+      <span
+        className={`text-caption inline-flex items-center px-2.5 py-1 ${typeBadge}`}
+      >
+        {typeLabel}
+      </span>
 
       {/* Title — hand-drawn highlighter on hover (see ExperienceItem), not a dim.
           `hl-host` (position:relative) anchors rough-notation's absolutely-
           positioned SVG to THIS title, not the transformed RevealOnView wrapper —
           otherwise the marker's origin shifts when the reveal transform changes
           and it strays to the page's left edge. */}
-      <h3 className="text-h3 mt-1 text-fg hl-host">
+      <h3 className="text-h3 mt-2 text-fg hl-host">
         <span ref={markRef} className="hl-mark">
           {frontmatter.title}
         </span>
       </h3>
 
-      {frontmatter.summary ? (
-        <p className="text-body mt-1 text-fg-muted line-clamp-2">
-          {frontmatter.summary}
-        </p>
-      ) : null}
-
       {frontmatter.tags && frontmatter.tags.length > 0 ? (
-        <p className="text-caption mt-2 text-fg-muted">
+        <p className="text-caption mt-3 text-fg-muted uppercase">
           {frontmatter.tags.join("  ·  ")}
         </p>
       ) : null}

@@ -136,19 +136,19 @@ export function GlobalNav() {
         {/* Right — resume, contact, settings. Primary nav lives in UniversalNav. */}
         <div className="flex shrink-0 items-center gap-4">
           <a
-            href="/resume.pdf"
+            href="https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fabout%2Fresume.pdf?alt=media"
             target="_blank"
             rel="noopener noreferrer"
             className="hidden text-body uppercase tracking-[0.04em] no-underline transition-opacity hover:opacity-60 sm:inline text-[#e1e1e1]"
           >
             {t("resume")}
           </a>
-          <a
-            href="mailto:daechankim.design@gmail.com"
+          <Link
+            href="/about#contact"
             className="hidden text-body uppercase tracking-[0.04em] no-underline transition-opacity hover:opacity-60 sm:inline text-[#e1e1e1]"
           >
             {t("contact")}
-          </a>
+          </Link>
           {SHOW_SETTINGS ? (
             <button
               type="button"
