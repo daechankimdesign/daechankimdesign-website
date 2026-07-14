@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import posthog from "posthog-js";
 import { motion, useReducedMotion } from "framer-motion";
 import { useTranslations } from "next-intl";
 import { Settings as SettingsIcon } from "iconoir-react";
@@ -140,12 +141,14 @@ export function GlobalNav() {
             target="_blank"
             rel="noopener noreferrer"
             className="hidden text-body uppercase tracking-[0.04em] no-underline transition-opacity hover:opacity-60 sm:inline text-[#e1e1e1]"
+            onClick={() => posthog.capture("resume_downloaded")}
           >
             {t("resume")}
           </a>
           <a
             href="mailto:daechankim.design@gmail.com"
             className="hidden text-body uppercase tracking-[0.04em] no-underline transition-opacity hover:opacity-60 sm:inline text-[#e1e1e1]"
+            onClick={() => posthog.capture("contact_clicked", { location: "nav" })}
           >
             {t("contact")}
           </a>

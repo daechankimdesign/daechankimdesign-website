@@ -10,6 +10,7 @@ type LinkButtonProps = {
   /** Arrow glyph: "up-right" (external/nav feel, default) or "right" (in-app forward). */
   arrow?: "up-right" | "right";
   className?: string;
+  onClick?: () => void;
 };
 
 /**
@@ -23,6 +24,7 @@ export function LinkButton({
   external = false,
   arrow = "up-right",
   className = "",
+  onClick,
 }: LinkButtonProps) {
   const cls = `link-button hairline-b ${className}`.trim();
   const Arrow = arrow === "right" ? ArrowRight : ArrowUpRight;
@@ -35,14 +37,14 @@ export function LinkButton({
 
   if (external) {
     return (
-      <a href={href} target="_blank" rel="noopener noreferrer" className={cls}>
+      <a href={href} target="_blank" rel="noopener noreferrer" className={cls} onClick={onClick}>
         {inner}
       </a>
     );
   }
 
   return (
-    <Link href={href} className={cls}>
+    <Link href={href} className={cls} onClick={onClick}>
       {inner}
     </Link>
   );
