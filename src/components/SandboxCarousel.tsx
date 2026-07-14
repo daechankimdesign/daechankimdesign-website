@@ -7,6 +7,7 @@ import { useRouter } from "@/i18n/navigation";
 import { LinkButton } from "./LinkButton";
 import { CoverFlow, type CoverFlowItem } from "./CoverFlow";
 import type { ContentItem } from "@/lib/mdx";
+import posthog from "posthog-js";
 
 /**
  * Sandbox section — laid out like the Projects section: a section label, then a
@@ -109,7 +110,13 @@ export function SandboxCarousel({
               showCaption={false}
               enableHoverSlide
               onIndexChange={setActive}
-              onItemClick={(item) => router.push(`/project/play/${item.id}`)}
+              onItemClick={(item) => {
+                posthog.capture("sandbox_item_clicked", {
+                  item_slug: item.id,
+                  item_title: item.title,
+                });
+                router.push(`/project/play/${item.id}`);
+              }}
               renderImage={(p) =>
                 // Force eager loading: 3D-transformed covers can stop lazy
                 // loading from ever firing, leaving side covers blank.

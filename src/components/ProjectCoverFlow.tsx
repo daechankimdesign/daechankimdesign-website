@@ -4,6 +4,7 @@ import { Link } from "@/i18n/navigation";
 import { LinkButton } from "./LinkButton";
 import { ProgressiveImage } from "./ProgressiveImage";
 import type { ContentItem } from "@/lib/mdx";
+import posthog from "posthog-js";
 
 interface Props {
   slug: string;
@@ -28,7 +29,16 @@ function ProjectMeta({
         </p>
       ) : null}
       <div className="mt-3">
-        <LinkButton href={`/project/case-study/${slug}`} arrow="right">
+        <LinkButton
+          href={`/project/case-study/${slug}`}
+          arrow="right"
+          onClick={() =>
+            posthog.capture("project_details_clicked", {
+              project_slug: slug,
+              project_title: frontmatter.title,
+            })
+          }
+        >
           {detailsLabel}
         </LinkButton>
       </div>
