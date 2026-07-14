@@ -43,6 +43,8 @@ export default async function PlayDetailPage({
     ? (await getTranslations("Content"))("untranslated")
     : null;
 
+  const typeLabel = (await getTranslations("Nav"))("play");
+
   return (
     <main className="container-page pt-32 pb-16">
       {untranslatedNotice ? (
@@ -92,6 +94,11 @@ export default async function PlayDetailPage({
 
           <header className="mb-8 measure">
             <Reveal>
+              <RevealItem as="p" className="mb-4">
+                <span className="text-caption inline-flex items-center bg-surface px-2.5 py-1 text-fg">
+                  {typeLabel}
+                </span>
+              </RevealItem>
               <RevealItem as="h1" className="text-display">
                 {frontmatter.title}
               </RevealItem>
@@ -101,7 +108,7 @@ export default async function PlayDetailPage({
                 </RevealItem>
               ) : null}
               {frontmatter.tags && frontmatter.tags.length > 0 ? (
-                <RevealItem as="p" className="text-caption mt-3 text-fg-muted">
+                <RevealItem as="p" className="text-caption mt-3 text-fg-muted uppercase">
                   {frontmatter.tags.join("  ·  ")}
                 </RevealItem>
               ) : null}

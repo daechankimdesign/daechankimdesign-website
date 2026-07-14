@@ -11,6 +11,10 @@ type Props = {
   className?: string;
   sizes?: string;
   priority?: boolean;
+  /** Static first-frame facade for an ANIMATED src (gif/webp): a lightweight
+      still shown immediately while the heavy animation downloads, then the
+      animation crossfades in over it. Ignored for non-animated srcs. */
+  poster?: string;
 };
 
 /**
@@ -38,9 +42,12 @@ export function ProgressiveImage({
   className,
   sizes = "100vw",
   priority,
+  poster,
 }: Props) {
   // Start already loaded if this src rendered earlier this session — no blur-up.
   const [loaded, setLoaded] = useState(() => loadedSrcs.has(src));
+  // Hide the facade poster if it fails to load (e.g. no poster exists for a gif).
+  const [posterOk, setPosterOk] = useState(true);
   const imgRef = useRef<HTMLImageElement>(null);
 
   const markLoaded = () => {
@@ -59,19 +66,39 @@ export function ProgressiveImage({
   // downloading a multi-frame asset twice). All project WebPs are animated.
   const isAnimated = /\.(gif|webp)($|\?)/i.test(src);
   if (isAnimated) {
+    const hasFacade = !!poster && posterOk;
     return (
       <div
         className={`relative overflow-hidden bg-surface-subtle ${className ?? ""}`}
         style={{ aspectRatio: `${width} / ${height}` }}
       >
+        {/* Facade: a lightweight static first-frame poster shown immediately,
+            bridging the gap while the heavy animation downloads. The animation
+            crossfades in over it on load — the poster IS frame 1, so seamless. */}
+        {hasFacade ? (
+          // eslint-disable-next-line @next/next/no-img-element -- static facade; next/image adds no value and its optimizer is off on deploy
+          <img
+            src={poster}
+            alt=""
+            aria-hidden
+            loading={priority ? "eager" : "lazy"}
+            decoding="async"
+            onError={() => setPosterOk(false)}
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+        ) : null}
         <Image
+          ref={imgRef}
           src={src}
           alt={alt}
           fill
           sizes={sizes}
           priority={priority}
           unoptimized
-          className="object-cover"
+          onLoad={markLoaded}
+          className={`object-cover transition-opacity duration-500 ${
+            hasFacade ? (loaded ? "opacity-100" : "opacity-0") : "opacity-100"
+          }`}
         />
       </div>
     );

@@ -88,6 +88,12 @@ export function WorkTile({
   // upstream, so scanning images[] finds both.
   const still = images.find((s) => !isVideo(s)) ?? frontmatter.thumbnail;
   const video = images.find(isVideo);
+  // A gif thumbnail gets a lightweight static facade (same path, `-poster.jpg`)
+  // so the tile shows a still instantly while the heavy gif downloads.
+  const stillPoster =
+    still && /\.gif(\?|$)/i.test(still)
+      ? still.replace(/\.gif(\?|$)/i, "-poster.jpg$1")
+      : undefined;
 
   return (
     <Link
@@ -122,6 +128,7 @@ export function WorkTile({
         ) : still ? (
           <ProgressiveImage
             src={still}
+            poster={stillPoster}
             alt={frontmatter.title}
             width={tier.w}
             height={tier.h}

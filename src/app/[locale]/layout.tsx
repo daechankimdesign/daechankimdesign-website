@@ -14,10 +14,21 @@ import { Footer } from "@/components/Footer";
 import { FooterReveal } from "@/components/FooterReveal";
 import "../globals.css";
 
+const SHARE_TITLE = "Daechan Kim, Product Designer";
+const SHARE_DESCRIPTION =
+  "Hi, I'm Daechan, an AI-ready designer and builder. I research, design, and ship end-to-end with the latest AI tools.";
+
 export const metadata: Metadata = {
-  title: "Daechan Kim — Product Designer",
-  description:
-    "Portfolio of Daechan Kim, a product designer who plans and conducts qualitative research.",
+  title: SHARE_TITLE,
+  description: SHARE_DESCRIPTION,
+  // Social share (OpenGraph) carries the same first-person message, so link
+  // previews on Slack / iMessage / X / LinkedIn show it rather than falling back
+  // to the bare <title>.
+  openGraph: {
+    title: SHARE_TITLE,
+    description: SHARE_DESCRIPTION,
+    type: "website",
+  },
 };
 
 export function generateStaticParams() {
