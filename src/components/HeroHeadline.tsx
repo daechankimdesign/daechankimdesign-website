@@ -9,6 +9,7 @@ import { LoveLetterButton } from "./LoveLetter";
 import { Link } from "@/i18n/navigation";
 import { EASE_OUT } from "@/lib/motion";
 import { HL_COLOR } from "@/lib/highlight";
+import posthog from "posthog-js";
 
 // Reveal cadence: one header line every STEP ms, then the sub text and the CTA
 // buttons each follow after LEDE_DELAY. Plays ONCE per viewport visit (no loop);
@@ -265,7 +266,11 @@ export function HeroHeadline({ stack }: { stack: HeroStackItem[] }) {
           transition={{ duration: 0.7, ease: EASE_OUT }}
           inert={!buttonsShown}
         >
-          <Link href="/project" className="link-button hairline-b">
+          <Link
+            href="/project"
+            className="link-button hairline-b"
+            onClick={() => posthog.capture("hero_work_cta_clicked")}
+          >
             <span>Work</span>
             <ArrowRight aria-hidden />
           </Link>

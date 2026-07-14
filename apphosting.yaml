@@ -40,6 +40,12 @@ env:
     value: "1:949466608811:web:95b534a06cc254c62ff3ee"
     availability: [BUILD, RUNTIME]
 
+  # PostHog analytics project token (public; inlined into the browser bundle).
+  # Read by instrumentation-client.ts; ingestion is reverse-proxied via /ingest.
+  - variable: NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN
+    value: phc_C5KUCL7wAidiFLKEbCmKBMbqDG3hCVDUKY5W4ktLdRx2
+    availability: [BUILD, RUNTIME]
+
   # Phase 5 (runtime translation) — UNCOMMENT once provisioned. Until then the
   # translate trigger stays disabled (no App Check key) and deploys don't break
   # on a missing secret reference.

@@ -6,6 +6,7 @@ import { Link } from "@/i18n/navigation";
 import { ProgressiveImage } from "./ProgressiveImage";
 import { drawHighlight } from "@/lib/highlight";
 import type { BoardItem, Span } from "@/lib/mdx";
+import posthog from "posthog-js";
 
 const isVideo = (src: string) => /\.mp4($|\?)/i.test(src);
 
@@ -94,6 +95,13 @@ export function WorkTile({
       className="group block no-underline"
       onMouseEnter={drawOnHover}
       onMouseLeave={wipeOnLeave}
+      onClick={() =>
+        posthog.capture("work_tile_clicked", {
+          item_slug: slug,
+          item_title: frontmatter.title,
+          item_type: item.type,
+        })
+      }
     >
       {/* Media — flat, borderless. A 2% black veil rests over it and lifts on
           hover (the whole tile is the hover group). */}

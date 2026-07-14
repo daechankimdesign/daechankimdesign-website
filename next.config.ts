@@ -29,6 +29,27 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "placehold.co" },
     ],
   },
+  // PostHog reverse proxy — routes /ingest/* through Next.js to avoid ad blockers.
+  // /ingest/static/* and /ingest/array/* serve the JS bundle from us-assets;
+  // all other /ingest/* calls go to the ingestion endpoint.
+  async rewrites() {
+    return [
+      {
+        source: "/ingest/static/:path*",
+        destination: "https://us-assets.i.posthog.com/static/:path*",
+      },
+      {
+        source: "/ingest/array/:path*",
+        destination: "https://us-assets.i.posthog.com/array/:path*",
+      },
+      {
+        source: "/ingest/:path*",
+        destination: "https://us.i.posthog.com/:path*",
+      },
+    ];
+  },
+  // This is required to support PostHog trailing slash API requests
+  skipTrailingSlashRedirect: true,
   // Old /sandbox and flat /project/[slug] URLs → the merged /project structure.
   // Config redirects run BEFORE the next-intl proxy on the RAW path (Next 16
   // order: headers → redirects → proxy), so each rule needs a bare (en, no

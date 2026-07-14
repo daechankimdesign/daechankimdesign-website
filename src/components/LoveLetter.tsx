@@ -9,6 +9,7 @@ import {
   useSyncExternalStore,
   type ReactNode,
 } from "react";
+import posthog from "posthog-js";
 import { createPortal } from "react-dom";
 import Image from "next/image";
 import {
@@ -466,11 +467,19 @@ function LoveLetterModal({ onClose }: { onClose: () => void }) {
 
             {/* Reply / Forward */}
             <div className="mt-14 flex flex-wrap items-center gap-8">
-              <a href={mailtoHref("reply")} className="link-button hairline-b">
+              <a
+                href={mailtoHref("reply")}
+                className="link-button hairline-b"
+                onClick={() => posthog.capture("love_letter_replied")}
+              >
                 <span>Reply</span>
                 <ArrowRight aria-hidden />
               </a>
-              <a href={mailtoHref("forward")} className="link-button hairline-b">
+              <a
+                href={mailtoHref("forward")}
+                className="link-button hairline-b"
+                onClick={() => posthog.capture("love_letter_forwarded")}
+              >
                 <span>Forward</span>
                 <ArrowUpRight aria-hidden />
               </a>
@@ -602,6 +611,7 @@ export function LoveLetterProvider({ children }: { children: ReactNode }) {
     open: () => {
       setOpenId((n) => n + 1);
       setOpen(true);
+      posthog.capture("love_letter_opened");
     },
     close: () => setOpen(false),
     previewShown,

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
+import posthog from "posthog-js";
 import { WorkTile } from "./WorkTile";
 import { Reveal, RevealItem } from "./Reveal";
 import { RevealTile } from "./RevealTile";
@@ -79,9 +80,13 @@ export function WorkBoardClient({
                   key={f.key}
                   type="button"
                   aria-pressed={isActive}
-                  onClick={() =>
-                    setActive(f.key === "all" ? null : (f.key as WorkType))
-                  }
+                  onClick={() => {
+                    const next = f.key === "all" ? null : (f.key as WorkType);
+                    setActive(next);
+                    posthog.capture("work_filter_applied", {
+                      filter: f.key,
+                    });
+                  }}
                   className={`text-body text-left no-underline transition-colors ${
                     isActive
                       ? "font-medium text-fg"
