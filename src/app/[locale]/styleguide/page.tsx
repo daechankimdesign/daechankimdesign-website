@@ -8,13 +8,14 @@ export const metadata: Metadata = {
 /* --- Token data (class names are static strings so Tailwind detects them) --- */
 
 const TYPE_LEVELS = [
-  { cls: "text-display", name: "Display", spec: "40px / Bold · fluid 28→40 · tracking -0.02em" },
-  { cls: "text-h1", name: "H1", spec: "28px / Bold · fluid 22→28" },
-  { cls: "text-h2", name: "H2", spec: "20px / Bold · fluid 18→20" },
-  { cls: "text-sub-display", name: "Sub-display", spec: "20px / Regular · fluid 18→20 (H2 size, lighter)" },
-  { cls: "text-h3", name: "H3", spec: "16px / Medium · fluid 15→16" },
-  { cls: "text-body", name: "Body", spec: "14px / Regular · line-height 1.6" },
-  { cls: "text-caption", name: "Caption", spec: "12px / Regular · PROPOSED token (meta labels, small tags)" },
+  { cls: "text-display", name: "Display", spec: "fluid 24→32 · Medium · tracking -0.04em" },
+  { cls: "text-h1", name: "H1", spec: "fluid 20→26 · Semibold · tracking -0.03em" },
+  { cls: "text-h2", name: "H2", spec: "fluid 18→20 · Medium · tracking -0.03em" },
+  { cls: "text-sub-display", name: "Sub-display", spec: "fluid 18→20 · Regular (H2 size, lighter)" },
+  { cls: "text-h3", name: "H3", spec: "fluid 17→18 · Medium · tracking -0.03em" },
+  { cls: "text-body", name: "Body", spec: "16px / Regular · line-height 1.6" },
+  { cls: "text-caption", name: "Caption", spec: "12px / Regular · ALL CAPS · meta labels, small tags" },
+  { cls: "text-note", name: "Note", spec: "12px / Regular · sentence case · figcaptions, notices, dates" },
 ] as const;
 
 const COLORS = [
@@ -75,14 +76,14 @@ export default function Styleguide() {
               <div className={`${t.cls} text-fg`}>
                 Daechan Kim — product designer
               </div>
-              <p className="text-caption text-fg-muted mt-3">
+              <p className="text-note text-fg-muted mt-3">
                 <span className="text-fg">{t.name}</span> · {t.spec} ·{" "}
                 <code>.{t.cls}</code>
               </p>
             </div>
           ))}
         </div>
-        <p className="text-caption text-fg-muted mt-6">
+        <p className="text-note text-fg-muted mt-6">
           Links are underline-only and inherit color, with no hover color change:{" "}
           <a href="/styleguide" className="link">
             this is a link
@@ -101,7 +102,7 @@ export default function Styleguide() {
                 className={`${c.swatch} h-20 w-full rounded-sm border border-hairline`}
               />
               <p className="text-body text-fg mt-3">{c.name}</p>
-              <p className="text-caption text-fg-muted">
+              <p className="text-note text-fg-muted">
                 {c.hex} · {c.use}
               </p>
             </div>
@@ -118,7 +119,7 @@ export default function Styleguide() {
               <div className={`${s.w} h-6 bg-fg shrink-0`} />
               <p className="text-body text-fg">
                 {s.px}{" "}
-                <span className="text-fg-muted text-caption">· {s.token}</span>
+                <span className="text-fg-muted text-note">· {s.token}</span>
               </p>
             </div>
           ))}
@@ -132,15 +133,15 @@ export default function Styleguide() {
           {HAIRLINES.map((h) => (
             <div key={h.name} className={`${h.cls} p-6`}>
               <p className="text-body text-fg">Aa</p>
-              <p className="text-caption text-fg-muted mt-2">.{h.name}</p>
+              <p className="text-note text-fg-muted mt-2">.{h.name}</p>
             </div>
           ))}
           <div className="border border-hairline p-6">
             <p className="text-body text-fg">Aa</p>
-            <p className="text-caption text-fg-muted mt-2">border-hairline</p>
+            <p className="text-note text-fg-muted mt-2">border-hairline</p>
           </div>
         </div>
-        <p className="text-caption text-fg-muted mt-6 measure-lede">
+        <p className="text-note text-fg-muted mt-6 measure-lede">
           Single-side variants use a scaled pseudo-element (1 device pixel at 1×
           / 2× / 3×). For full boxes use Tailwind <code>border border-hairline</code>.
           Never a literal 0.6px border.
@@ -157,7 +158,7 @@ export default function Styleguide() {
             External link
           </LinkButton>
         </div>
-        <p className="text-caption text-fg-muted mt-6 measure-lede">
+        <p className="text-note text-fg-muted mt-6 measure-lede">
           Text link styled as a control: <strong>8px</strong> block padding, an
           up-right arrow scaled to the text (<code>1em</code>), and a hairline
           bottom rule. Use the <code>LinkButton</code> component — locale-aware by

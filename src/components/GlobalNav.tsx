@@ -6,6 +6,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import { useTranslations } from "next-intl";
 import { Settings as SettingsIcon } from "iconoir-react";
 import { Link, usePathname } from "@/i18n/navigation";
+import { RESUME_URL } from "@/lib/links";
 import { SettingsModal } from "./SettingsModal";
 import { navHoverEnter, navHoverLeave } from "@/lib/navHover";
 
@@ -137,7 +138,7 @@ export function GlobalNav() {
         {/* Right — resume, contact, settings. Primary nav lives in UniversalNav. */}
         <div className="flex shrink-0 items-center gap-4">
           <a
-            href="https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fabout%2Fresume.pdf?alt=media"
+            href={RESUME_URL}
             target="_blank"
             rel="noopener noreferrer"
             className="hidden text-body uppercase tracking-[0.04em] no-underline transition-opacity hover:opacity-60 sm:inline text-[#e1e1e1]"

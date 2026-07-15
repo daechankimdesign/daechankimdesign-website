@@ -52,7 +52,7 @@ export function AwardItem({
           </span>
         </h3>
         {meta ? (
-          <span className="text-caption mt-2 block font-normal text-fg-muted">
+          <span className="text-note mt-2 block font-normal text-fg-muted">
             {meta}
           </span>
         ) : null}

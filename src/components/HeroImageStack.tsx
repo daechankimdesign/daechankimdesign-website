@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { EASE_OUT } from "@/lib/motion";
@@ -41,16 +41,20 @@ const FAN_Y = [3, -2, -2, 3];
  * in, hovering fans the pile out; clicking any card opens the gallery lightbox
  * (with its supplementary caption). Only opacity/transform animate, and the
  * frame is a fixed size, so it never shifts the hero layout. Reduced-motion →
- * the full pile renders static.
+ * the full pile renders static. `overlay` renders inside the stack's own
+ * `relative` root (e.g. the footer-style envelope, anchored to ITS bottom-right
+ * corner) so it's positioned against the pile's real box, not an approximation.
  */
 export function HeroImageStack({
   items,
   revealed,
   reduce,
+  overlay,
 }: {
   items: HeroStackItem[];
   revealed: number;
   reduce: boolean;
+  overlay?: ReactNode;
 }) {
   const [hovered, setHovered] = useState(false);
   const [openIndex, setOpenIndex] = useState<number | null>(null);
@@ -107,7 +111,7 @@ export function HeroImageStack({
                     className="object-cover"
                   />
                 ) : (
-                  <span className="flex h-full w-full items-center justify-center bg-surface-subtle text-caption text-fg-subtle">
+                  <span className="flex h-full w-full items-center justify-center bg-surface-subtle text-note text-fg-subtle">
                     Image {i + 1}
                   </span>
                 )}
@@ -115,6 +119,7 @@ export function HeroImageStack({
             </div>
           );
         })}
+        {overlay}
       </div>
 
       <HeroGallery

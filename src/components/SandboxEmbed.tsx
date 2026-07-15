@@ -122,7 +122,7 @@ export function SandboxEmbed({
                     Launch interactive demo
                   </span>
                 </span>
-                <span className="text-caption rounded-full bg-canvas/80 px-2.5 py-1 text-fg-muted backdrop-blur-sm">
+                <span className="text-note rounded-full bg-canvas/80 px-2.5 py-1 text-fg-muted backdrop-blur-sm">
                   Click to run it live
                 </span>
               </span>
@@ -169,7 +169,7 @@ export function SandboxEmbed({
           href={src}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-caption inline-flex items-center gap-1 text-fg-muted transition-colors hover:text-fg"
+          className="text-note inline-flex items-center gap-1 text-fg-muted transition-colors hover:text-fg"
         >
           Open in new tab
           <ArrowUpRight />

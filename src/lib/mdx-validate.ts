@@ -5,8 +5,20 @@ import { getFrontmatter } from "next-mdx-remote-client/utils";
  * Gemini translation untouched; `title`/`summary` values are translated.
  * Kept here — dependency-light (gray-matter only, no React) — so the
  * preservation check can be unit-tested without the Next/RSC runtime.
+ *
+ * KEEP IN SYNC with the literal key list in the gemini.ts system instruction:
+ * that prompt spells the keys out rather than interpolating this array, so a key
+ * added here but not there gets translated, fails this check, and silently drops
+ * the whole document back to English.
  */
-export const PRESERVED_KEYS = ["slug", "thumbnail", "date", "tags"] as const;
+export const PRESERVED_KEYS = [
+  "slug",
+  "thumbnail",
+  "date",
+  "updated",
+  "org",
+  "tags",
+] as const;
 export const TRANSLATED_KEYS = ["title", "summary"] as const;
 
 export type PreservationResult =

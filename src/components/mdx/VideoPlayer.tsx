@@ -57,7 +57,7 @@ export function VideoPlayer({
     <figure className="my-8">
       {media}
       {caption ? (
-        <figcaption className="text-caption mt-2 text-fg-muted">
+        <figcaption className="text-note mt-2 text-fg-muted">
           {caption}
         </figcaption>
       ) : null}

@@ -60,7 +60,7 @@ export function Footer() {
           <LinkButton href="/about" arrow="right">
             About
           </LinkButton>
-          <LoveLetterButton />
+          <LoveLetterButton arrow="right" />
         </SequenceItem>
         </SequenceReveal>
         <LoveLetterPortrait className="size-[clamp(120px,_60px_+_15vw,_240px)] shrink-0 self-start" />
@@ -69,7 +69,7 @@ export function Footer() {
           docked universal nav pill): the live "Today …" clock in the visitor's own
           (auto-detected) timezone, a divider, then the static "Last Updated …"
           build date (kept in Eastern — it marks when the site was deployed). */}
-      <p className="container-page pb-4 text-center text-caption text-fg-muted">
+      <p className="container-page pb-4 text-center text-note text-fg-muted">
         <LiveClock />
         Last Updated {lastUpdated}
       </p>

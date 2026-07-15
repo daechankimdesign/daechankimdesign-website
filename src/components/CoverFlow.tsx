@@ -527,10 +527,12 @@ export function CoverFlow({
                 className="text-center"
               >
                 {/* Match the site's original sandbox hierarchy: text-h3 title over
-                    a text-caption / fg-muted subtitle (not the registry's 2xl). */}
+                    a text-note / fg-muted subtitle (not the registry's 2xl).
+                    text-note, not text-caption: the subtitle is prose, and
+                    text-caption is the ALL-CAPS label token. */}
                 <h3 className="text-h3 text-fg">{items[activeIndex]?.title}</h3>
                 {items[activeIndex]?.subtitle && (
-                  <p className="text-caption mt-1 text-fg-muted">
+                  <p className="text-note mt-1 text-fg-muted">
                     {items[activeIndex]?.subtitle}
                   </p>
                 )}

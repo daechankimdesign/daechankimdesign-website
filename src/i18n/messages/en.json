@@ -2,6 +2,8 @@
   "Nav": {
     "home": "Home",
     "work": "Work",
+    "moreWork": "More work",
+    "viewAll": "View all",
     "all": "All",
     "caseStudy": "Case Study",
     "play": "Play",
@@ -21,7 +23,8 @@
     "error": "Translation failed. Please try again."
   },
   "Content": {
-    "untranslated": "This page hasn't been translated to your language yet. Open Settings and choose your language to translate it."
+    "untranslated": "This page hasn't been translated to your language yet. Open Settings and choose your language to translate it.",
+    "updated": "Updated"
   },
   "Common": {
     "comingSoon": "Coming soon"

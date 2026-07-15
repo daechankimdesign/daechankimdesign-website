@@ -25,7 +25,7 @@ export function MDXImage({
         sizes="(max-width: 768px) 100vw, 800px"
       />
       {caption ? (
-        <figcaption className="text-caption mt-2 text-fg-muted">
+        <figcaption className="text-note mt-2 text-fg-muted">
           {caption}
         </figcaption>
       ) : null}

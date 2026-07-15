@@ -2,13 +2,13 @@
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import { ArrowRight } from "iconoir-react";
 import { HeroImageStack, type HeroStackItem } from "./HeroImageStack";
 import { Highlighter } from "./Highlighter";
-import { LoveLetterButton } from "./LoveLetter";
-import { Link } from "@/i18n/navigation";
+import { LinkButton } from "./LinkButton";
+import { EnvelopePreview, LoveLetterButton } from "./LoveLetter";
 import { EASE_OUT } from "@/lib/motion";
 import { HL_COLOR } from "@/lib/highlight";
+import { RESUME_URL } from "@/lib/links";
 import posthog from "posthog-js";
 
 // Reveal cadence: one header line every STEP ms, then the sub text and the CTA
@@ -253,8 +253,9 @@ export function HeroHeadline({ stack }: { stack: HeroStackItem[] }) {
             .
           </p>
           <p className="text-sub-display mt-4 text-fg-muted">
-            I&apos;d love to talk about opportunities where I get to research,
-            design, make to expand my horizon.
+            I&apos;d love to talk about opportunities where I can grow and
+            contribute to connecting humanity with AI to improve our daily
+            experiences.
           </p>
         </motion.div>
 
@@ -266,20 +267,28 @@ export function HeroHeadline({ stack }: { stack: HeroStackItem[] }) {
           transition={{ duration: 0.7, ease: EASE_OUT }}
           inert={!buttonsShown}
         >
-          <Link
-            href="/project"
-            className="link-button hairline-b"
-            onClick={() => posthog.capture("hero_work_cta_clicked")}
+          <LoveLetterButton arrow="right" />
+          {/* Resume lives on Firebase Storage (media/about/), not public/ —
+              App Hosting serves no public/ paths. See docs/MEDIA-PIPELINE.md. */}
+          <LinkButton
+            href={RESUME_URL}
+            external
+            onClick={() => posthog.capture("hero_resume_cta_clicked")}
           >
-            <span>Work</span>
-            <ArrowRight aria-hidden />
-          </Link>
-          <LoveLetterButton />
+            Resume
+          </LinkButton>
         </motion.div>
       </div>
 
-      {/* Right — image stack; a card flies in on each text reveal. */}
-      <HeroImageStack items={stack} revealed={cardsRevealed} reduce={!!reduce} />
+      {/* Right — image stack; a card flies in on each text reveal. The envelope
+          preview anchors to ITS bottom-right corner (same corner-of-the-image
+          pattern as the footer's portrait), not the CTA button. */}
+      <HeroImageStack
+        items={stack}
+        revealed={cardsRevealed}
+        reduce={!!reduce}
+        overlay={<EnvelopePreview className="absolute bottom-5 right-6 z-10" />}
+      />
     </div>
   );
 }

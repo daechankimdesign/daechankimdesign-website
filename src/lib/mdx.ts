@@ -11,12 +11,19 @@ import { routing } from "@/i18n/routing";
 
 export type ContentType = "projects" | "sandbox" | "blog";
 
-/** Frontmatter shape. Translate: title, summary. Preserve: slug, thumbnail, date, tags. */
+/** Frontmatter shape. Translate: title, summary. Preserve: slug, thumbnail, date, updated, org, tags. */
 export type Frontmatter = {
   title: string;
   summary?: string;
   thumbnail?: string;
   date?: string;
+  /** ISO date the DOCUMENT was last revised (distinct from `date`, which is when
+      the WORK happened). Shown in the end-of-story colophon; falls back to
+      `date`. A date is language-agnostic, so it's preserved, never translated. */
+  updated?: string;
+  /** Organization the work was done UNDER — the employer/school/self, not the
+      client. Rendered as "@Oria" in the colophon. A proper noun, so preserved. */
+  org?: string;
   tags?: string[];
   /** Sandbox live-demo URL — rendered as an interactive frame atop the body. */
   embed?: string;
@@ -187,7 +194,7 @@ const WORK_BASE_PATH: Record<WorkType, string> = {
 // YAML coerces an UNQUOTED `date: 2026-03-01` to a Date but leaves a QUOTED
 // "2025-05-04" a string. String(Date) is "Fri Mar 01 2026 …", which sorts wrong
 // against ISO strings — so normalize everything to `YYYY-MM-DD` before merging.
-function normalizeDate(d: unknown): string {
+export function normalizeDate(d: unknown): string {
   if (d instanceof Date) return d.toISOString().slice(0, 10);
   return typeof d === "string" ? d : "";
 }
@@ -198,6 +205,22 @@ function normalizeDate(d: unknown): string {
 function resolveSpan(s: unknown, type: WorkType): Span {
   if (s === "standard" || s === "feature" || s === "wide") return s;
   return type === "projects" ? "wide" : "standard";
+}
+
+/**
+ * Always lead a board with a case study (project), never a play piece: hoist the
+ * most recent project to the front; everything else stays reverse-chronological.
+ *
+ * PURE, and it must stay that way. `getWorkBoardItems` is `cache()`d, so its
+ * result is one array shared by every consumer in a request. `MoreWork` filters
+ * that array and re-leads the copy — doing it with splice/unshift in place would
+ * reorder the board for everyone else on the page.
+ */
+export function leadWithCaseStudy(items: BoardItem[]): BoardItem[] {
+  const out = items.slice();
+  const lead = out.findIndex((it) => it.type === "projects");
+  if (lead > 0) out.unshift(...out.splice(lead, 1));
+  return out;
 }
 
 /**
@@ -235,14 +258,7 @@ export const getWorkBoardItems = cache(async (
   const sorted = perType
     .flat()
     .sort((a, b) => b.sortKey.localeCompare(a.sortKey));
-  // Always open the board on a case study (project), never a play piece: hoist
-  // the most recent project to the front; everything else stays reverse-chron.
-  const lead = sorted.findIndex((it) => it.type === "projects");
-  if (lead > 0) {
-    const [project] = sorted.splice(lead, 1);
-    sorted.unshift(project);
-  }
-  return sorted;
+  return leadWithCaseStudy(sorted);
 });
 
 /** Full compile for a detail page. Returns null if the source is missing. */

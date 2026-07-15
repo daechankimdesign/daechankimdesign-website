@@ -68,7 +68,7 @@ export function ExperienceItem({
               {title}
             </span>
             {meta ? (
-              <span className="text-caption mt-1 block font-normal text-fg-muted">
+              <span className="text-note mt-1 block font-normal text-fg-muted">
                 {meta}
               </span>
             ) : null}
