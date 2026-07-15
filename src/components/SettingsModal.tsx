@@ -145,7 +145,7 @@ export function SettingsModal({
               >
                 <span>{localeNames[l]}</span>
                 {busy === l ? (
-                  <span className="text-caption text-fg-muted">
+                  <span className="text-note text-fg-muted">
                     {t("translating")}
                   </span>
                 ) : null}
@@ -155,7 +155,7 @@ export function SettingsModal({
         </ul>
 
         {notice ? (
-          <p className="text-caption mt-3 text-fg-muted">{notice}</p>
+          <p className="text-note mt-3 text-fg-muted">{notice}</p>
         ) : null}
       </div>
     </div>,

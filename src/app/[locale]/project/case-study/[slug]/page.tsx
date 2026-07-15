@@ -4,6 +4,8 @@ import { getCompiled, getSlugs } from "@/lib/mdx";
 import { routing } from "@/i18n/routing";
 import { Reveal, RevealItem } from "@/components/Reveal";
 import { SideDocumentTab } from "@/components/SideDocumentTab";
+import { MoreWork } from "@/components/MoreWork";
+import { Colophon } from "@/components/Colophon";
 
 // Pre-render only the canonical English combos; ko/es render on first request
 // (dynamicParams defaults to true) so a freshly-translated locale appears
@@ -47,7 +49,7 @@ export default async function CaseStudyDetailPage({
   return (
     <main className="container-page pt-32 pb-16">
       {untranslatedNotice ? (
-        <p className="text-caption mb-6 rounded-md border border-hairline bg-surface-subtle px-4 py-3 text-fg-muted">
+        <p className="text-note mb-6 rounded-md border border-hairline bg-surface-subtle px-4 py-3 text-fg-muted">
           {untranslatedNotice}
         </p>
       ) : null}
@@ -61,7 +63,7 @@ export default async function CaseStudyDetailPage({
         </aside>
 
         {/* Right Side: Main Case Study Content */}
-        <div className="flex-1 min-w-0 content-column">
+        <div className="flex-1 min-w-0 content-column-narrow">
           <header className="mb-8 measure">
             <Reveal>
               <RevealItem as="p" className="mb-4">
@@ -85,6 +87,24 @@ export default async function CaseStudyDetailPage({
             </Reveal>
           </header>
           <article>{content}</article>
+
+          {/* Closes the story out — updated date + @org over the rule. Renders
+              the rule even when MoreWork below has nothing to show. */}
+          <Colophon
+            updated={frontmatter.updated}
+            date={frontmatter.date}
+            org={frontmatter.org}
+            locale={locale}
+          />
+
+          {/* Sibling of <article>, inside the content column: inherits the
+              article's edge + 768px cap, and stays out of SideDocumentTab's
+              `article :is(h1,h2,h3)` scroll-spy. See MoreWork. */}
+          <MoreWork
+            currentType="projects"
+            currentSlug={slug}
+            locale={locale}
+          />
         </div>
       </div>
     </main>

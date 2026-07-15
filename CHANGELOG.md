@@ -56,6 +56,50 @@ build; roadmap Phase 5 is the runtime translation (`4348eec`).
 
 ## Log
 
+### 2026-07-14: "More work" section on project detail pages
+
+Every case-study / play detail page now ends with a **More work** grid: three
+tiles from the board, minus the piece being read, plus a "View all" link back to
+`/project`.
+
+**Where it lives, and why it matters.** `<MoreWork>` renders INSIDE
+`.content-column-narrow` as a sibling of `<article>`. That one placement earns
+three things for free: it inherits the article's left edge (no spacer or offset
+math), it inherits the 768px cap (the grid can never bleed past the column), and
+it stays outside `<article>` — which is load-bearing, because `SideDocumentTab`
+scroll-spies `article :is(h1, h2, h3)` with an id, so a heading with an id inside
+`<article>` would leak into the reader's table of contents. Verified at runtime:
+the spy selects only the article's own sections.
+
+**Geometry.** 2 columns at the content width, NOT the board's 12 (a 12-col grid
+squeezed into 768px renders ~232px tiles). A case study spans both columns
+(768px), a play piece takes one (368px) — so tiles are slightly *larger* than on
+`/project` (339px) despite the narrower column. Measured live: 768 / 368 / 368,
+left-aligned with the article, zero overflow.
+
+**Why exactly 3.** A case study needs both columns, so a run of plays between two
+case studies must be even or CSS leaves a half-column hole. `leadWithCaseStudy`
+guarantees index 0 is a project, so 3 always renders as one clean
+`[case study] / [play, play]` row. 4 works only by luck of the current mix; all 5
+holes on a play page.
+
+**`leadWithCaseStudy` is now exported and PURE** (`src/lib/mdx.ts`). It used to
+hoist in place inside `getWorkBoardItems`, which is `cache()`d — `MoreWork`
+filters that shared per-request array and re-leads the copy, so mutating it would
+have reordered the board for every other consumer on the page. `/project`'s order
+is unchanged (verified).
+
+Motion: `RevealOnView` wraps the heading only (wrapping the grid would nest its
+transform above each `RevealTile`'s, doubling the motion and skewing the
+measurement that drops the stagger for below-fold tiles). No `priority` on tiles —
+they lazy-load, confirmed, so they never compete with the article's LCP.
+
+i18n: added `Nav.moreWork` + `Nav.viewAll` to en/ko/es (next-intl throws on a
+missing key, so all three are mandatory). `WorkBoardClient` was deliberately NOT
+refactored — the two grids have different geometry, so there was nothing to share
+beyond `WorkTile`/`RevealTile`, and leaving it alone keeps `/project` at zero
+regression risk.
+
 ### 2026-07-13: Custom domain live + PostHog analytics shipped to production
 
 **Domain.** Connected `daechan.kim` (registered at Squarespace) to App Hosting.

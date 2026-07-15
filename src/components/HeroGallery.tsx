@@ -163,9 +163,11 @@ export function HeroGallery({
         </motion.div>
 
         {/* Text box — enters last. Two columns spanning the image width: the
-            main line (h2) on the left, and the supplementary line beneath the
-            image counter on the right. The counter is the quietest element
-            (caption size, subtle ink) — the lowest tier of the hierarchy. */}
+            main line (h2) on the left, and the image description beneath the
+            counter on the right. The description is `text-note` (12px, sentence
+            case) like every other image caption — NOT `text-caption`, which is
+            the ALL-CAPS label token. Counter and description are both 12px; the
+            counter stays the quietest tier via subtle ink. */}
         <motion.figcaption
           className="grid w-full grid-cols-1 items-start gap-x-10 gap-y-4 sm:grid-cols-2"
           initial={{ opacity: 0, y: 8 }}
@@ -185,7 +187,7 @@ export function HeroGallery({
               {index + 1}/{items.length}
             </p>
             {item.caption ? (
-              <p className="text-body text-fg-muted mt-2">{item.caption}</p>
+              <p className="text-note text-fg-muted mt-2">{item.caption}</p>
             ) : null}
           </div>
         </motion.figcaption>

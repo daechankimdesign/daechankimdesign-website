@@ -1,10 +1,12 @@
 import type { MDXComponents } from "next-mdx-remote-client/rsc";
 import { VideoPlayer } from "./VideoPlayer";
 import { MDXImage } from "./MDXImage";
+import { ImageFrame } from "./ImageFrame";
 import { ProjectMeta } from "./ProjectMeta";
 import { Gallery } from "./Gallery";
 import { ExperienceItem } from "./ExperienceItem";
 import { AwardItem } from "./AwardItem";
+import { ContactGrid, ContactItem } from "./Contact";
 import { RevealBlock } from "./RevealBlock";
 
 // Passed explicitly on every RSC evaluate() call (MDXProvider is effectless in
@@ -24,6 +26,11 @@ export const mdxComponents: MDXComponents = {
       <MDXImage {...props} />
     </RevealBlock>
   ),
+  // NOT wrapped in RevealBlock: ImageFrame runs its own scroll-triggered
+  // choreography, and RevealBlock's y-rise would compound with each card's
+  // entrance direction — turning a "slide right" into a diagonal. The panel is
+  // the stage and stays put; the cards animate into it.
+  ImageFrame: (props) => <ImageFrame {...props} />,
   ProjectMeta: (props) => (
     <RevealBlock as="div">
       <ProjectMeta {...props} />
@@ -44,6 +51,13 @@ export const mdxComponents: MDXComponents = {
       <AwardItem {...props} />
     </RevealBlock>
   ),
+  // The grid reveals as one block; the items inside are plain flex children.
+  ContactGrid: (props) => (
+    <RevealBlock as="div">
+      <ContactGrid {...props} />
+    </RevealBlock>
+  ),
+  ContactItem: (props) => <ContactItem {...props} />,
   img: (props) => (
     <RevealBlock as="div">
       <MDXImage src={String(props.src ?? "")} alt={props.alt ?? ""} />

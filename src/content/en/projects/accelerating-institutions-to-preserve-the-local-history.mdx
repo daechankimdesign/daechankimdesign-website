@@ -8,10 +8,11 @@ tags:
   - Service Design
   - Development with AI
 cover:
-  - "https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fprojects%2Faccelerating-institutions-to-preserve-the-local-history%2Flanding.jpg?alt=media"
-  - "https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fprojects%2Faccelerating-institutions-to-preserve-the-local-history%2Foria-answer.mp4?alt=media"
+  - "https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fprojects%2Faccelerating-institutions-to-preserve-the-local-history%2Foria-home.mp4?alt=media"
+  - "https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fprojects%2Faccelerating-institutions-to-preserve-the-local-history%2Foria-admin.mp4?alt=media"
   - "https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fprojects%2Faccelerating-institutions-to-preserve-the-local-history%2Fsubmission.jpg?alt=media"
   - "https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fprojects%2Faccelerating-institutions-to-preserve-the-local-history%2Foria-explore.mp4?alt=media"
+org: "Oria"
 ---
 <ProjectMeta
   items={[
@@ -30,7 +31,7 @@ A web platform that lets a library, a parks department, or a cultural initiative
 <VideoPlayer
   type="video"
   src="https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fprojects%2Faccelerating-institutions-to-preserve-the-local-history%2Foria-admin.mp4?alt=media"
-  caption="missionoria.com in one pass — an institution launches a campaign from its dashboard, shares the link, and a neighbor answers back in text, audio, or video."
+  caption="The institution side in one pass. An organization opens a campaign from its dashboard, shares it as a link or QR code, then reviews a neighbor's submitted story, audio and all, and publishes it."
 />
 
 Oria's institution platform, missionoria.com, turns story collection from a staffing problem into a link. An organization signs up, opens a campaign, and shares a URL or QR code; community members answer in text, audio, or video on a phone, tablet, or desktop, and every story comes back transcribed, indexed, and owned by the organization. Built from October 2025 and released publicly in January 2026, it now runs in twelve partner institutions and initiatives, from local libraries to Maryland's parks and recreation services, and reached $12K ARR in its first three months.
@@ -51,31 +52,35 @@ Two findings reset the plan. First, they welcomed AI, and they cared deeply abou
 
 **A campaign anyone can stand up.** An organization signs up, creates its space, and opens a campaign: the overarching theme of a collection. Under it, it adds topics, each with its own questions. To cut the blank-page work, the questions can be generated; enter the campaign, the topic, and the direction you want, and the platform drafts them with the Gemini API. Each campaign and topic publishes to missionoria.com, ready to share as a link or QR code, and participants can also browse public campaigns to find a local institution collecting stories near them.
 
-<MDXImage
-  src="https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fprojects%2Faccelerating-institutions-to-preserve-the-local-history%2Fnetwork.jpg?alt=media"
-  alt="Answering a campaign question on Oria"
-  width={1800}
-  height={1012}
-  caption="A neighbor answers a prompt in their own words, with one-tap options to record audio or video or add photos."
+<VideoPlayer
+  type="video"
+  src="https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fprojects%2Faccelerating-institutions-to-preserve-the-local-history%2Foria-home.mp4?alt=media"
+  caption="The public side of missionoria.com. A neighbor starts a submission with an organization lookup or a join code, no account needed, then browses the campaigns institutions are running now and opens one to see the topics curated for it."
 />
 
 **Telling a story in any medium.** A participant opens the link and answers however they want, in text, audio, video, or photo, on a phone, tablet, or desktop, so it works on-site at the library as well as at the kitchen table. Every contribution is stored in its original format and transcribed, so the collection is searchable and indexable from the first story.
 
-<VideoPlayer
-  type="video"
-  src="https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fprojects%2Faccelerating-institutions-to-preserve-the-local-history%2Foria-answer.mp4?alt=media"
-  caption="Picking a campaign on missionoria.com, then answering its prompts — text here, with audio, video, or a photo a tap away."
+<ImageFrame
+  items={[
+    {
+      src: "https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fprojects%2Faccelerating-institutions-to-preserve-the-local-history%2Fstories.jpg?alt=media",
+      alt: "Choosing a campaign topic from a list, each with a Submit a story link",
+      width: 723,
+      height: 463,
+      from: "bottom",
+    },
+    {
+      src: "https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fprojects%2Faccelerating-institutions-to-preserve-the-local-history%2Fnetwork.jpg?alt=media",
+      alt: "Answering a topic's prompt in a text field, with record video and record audio beside it",
+      width: 816,
+      height: 510,
+      from: "left",
+    },
+  ]}
+  caption="Two steps for the teller. A neighbor picks one of the campaign's topics, then answers its prompt in their own words, with record audio, record video, and photo upload a tap away."
 />
 
 **The stories stay theirs.** Collected stories belong to the organization, not to Oria. They can download and use them however they like, to archive, publish, research, or build new content, with no interpretation layered on by us. Alongside the archive, the platform gives organizations the analytics their old process never could: participation, completion, and retention rates, the number of stories collected, and more, so a small team can see what is working without hand-counting anything.
-
-<MDXImage
-  src="https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fprojects%2Faccelerating-institutions-to-preserve-the-local-history%2Fstories.jpg?alt=media"
-  alt="A published story collection on missionoria.com"
-  width={1800}
-  height={1095}
-  caption="A published collection on missionoria.com — a community's stories gathered in one place, open for neighbors to read and add their own."
-/>
 
 ## Designing for Two Users at Once
 
@@ -89,6 +94,12 @@ The hard part was that this is two products sharing one platform. The institutio
   caption="Submission and consent made explicit — a teller decides how their story is shared, and ownership stays with the community."
 />
 
+<VideoPlayer
+  type="video"
+  src="https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fprojects%2Faccelerating-institutions-to-preserve-the-local-history%2Foria-explore.mp4?alt=media"
+  caption="One story from start to finish — a neighbor answers a prompt, sets how it's shared, and reaches a thank-you, with more prompts waiting."
+/>
+
 ## Role
 
 Founding product lead. I led the product end to end: ideation, the full user flow, user research, design, interface development, and user testing. A data engineer was a great partner in making it real, structuring the database and standing up the initial build and deploy pipelines. I designed in Figma and developed mostly in Claude Code and Codex, on a stack of React and AWS (after an initial Vercel build), with Gemini powering the AI question generation.
@@ -96,9 +107,3 @@ Founding product lead. I led the product end to end: ideation, the full user flo
 ## Learnings
 
 **Speed has a tax, and the tax is consistency.** The hardest part was moving this fast across many design phases and a shifting set of tools. The technology let me build quickly, but it also let the work sprawl, and visual alignment is still catching up; I am still going screen by screen to bring everything back to one design system. It is the honest cost of an AI-accelerated build: you can outrun your own conventions, and then you have to circle back and re-earn them.
-
-<VideoPlayer
-  type="video"
-  src="https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fprojects%2Faccelerating-institutions-to-preserve-the-local-history%2Foria-explore.mp4?alt=media"
-  caption="One story from start to finish — a neighbor answers a prompt, sets how it's shared, and reaches a thank-you, with more prompts waiting."
-/>

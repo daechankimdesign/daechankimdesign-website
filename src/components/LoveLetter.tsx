@@ -687,15 +687,17 @@ function EnvelopeGraphic({ className }: { className?: string }) {
 }
 
 /**
- * Portrait + envelope. The envelope flies in from the RIGHT edge of the screen
- * with a random tilt ONLY while the "Love letter" button (or the envelope itself)
- * is hovered; on mouse-leave it waits PREVIEW_HIDE_MS before flying back out, the
- * grace period to slide the cursor over and click it. Clicking opens the letter.
- * The hover state is shared via the provider (button + envelope are siblings).
- * Rendered client-only (mounted gate) so framer's off-screen initial stays out of
- * SSR.
+ * The envelope preview. Flies in from the RIGHT edge of the screen with a random
+ * tilt ONLY while the "Love letter" button (or the envelope itself) is hovered;
+ * on mouse-leave it waits PREVIEW_HIDE_MS before flying back out, the grace
+ * period to slide the cursor over and click it. Clicking opens the letter. The
+ * hover state is shared via the provider, so ANY "Love letter to design" trigger
+ * on the page (hero, footer, ...) lights up whichever envelope is mounted near
+ * it — position it with `className` (absolute, relative to a positioned
+ * ancestor). Rendered client-only (mounted gate) so framer's off-screen initial
+ * stays out of SSR.
  */
-export function LoveLetterPortrait({ className = "" }: { className?: string }) {
+export function EnvelopePreview({ className = "" }: { className?: string }) {
   const ll = useLoveLetter();
   const reduce = useReducedMotion();
   const mounted = useIsMounted();
@@ -719,6 +721,40 @@ export function LoveLetterPortrait({ className = "" }: { className?: string }) {
   const shown = ll?.previewShown ?? false;
   const tilt = ll?.previewTilt ?? 0;
 
+  if (!mounted) return null;
+
+  return (
+    <motion.button
+      type="button"
+      onClick={() => ll?.open()}
+      onMouseEnter={() => ll?.showPreview()}
+      onMouseLeave={() => ll?.hidePreviewSoon()}
+      aria-label="Open the love letter to design"
+      className={`cursor-pointer ${className}`}
+      initial={reduce ? false : { x: offX, rotate: 20, opacity: 0 }}
+      animate={
+        reduce
+          ? { opacity: shown ? 1 : 0 }
+          : shown
+            ? { x: 0, rotate: tilt, opacity: 1 }
+            : { x: offX, rotate: 20, opacity: 0 }
+      }
+      transition={
+        reduce ? { duration: 0 } : { type: "spring", stiffness: 80, damping: 18 }
+      }
+      whileHover={reduce ? undefined : { y: -4 }}
+      whileTap={reduce ? undefined : { scale: 0.94 }}
+    >
+      <EnvelopeGraphic className="drop-shadow-lg" />
+    </motion.button>
+  );
+}
+
+/**
+ * Portrait + envelope preview (footer). The envelope is tucked at the portrait's
+ * bottom-right corner — see EnvelopePreview for the fly-in behavior itself.
+ */
+export function LoveLetterPortrait({ className = "" }: { className?: string }) {
   return (
     <div className={`relative ${className}`}>
       <Image
@@ -729,43 +765,24 @@ export function LoveLetterPortrait({ className = "" }: { className?: string }) {
         className="h-full w-full object-cover"
         sizes="240px"
       />
-      {/* Envelope — flies in from the right edge with a random tilt while the
-          footer button (or the envelope) is hovered; click opens the letter. */}
-      {mounted && (
-        <motion.button
-          type="button"
-          onClick={() => ll?.open()}
-          onMouseEnter={() => ll?.showPreview()}
-          onMouseLeave={() => ll?.hidePreviewSoon()}
-          aria-label="Open the love letter to design"
-          className="absolute -bottom-6 right-6 cursor-pointer"
-          initial={reduce ? false : { x: offX, rotate: 20, opacity: 0 }}
-          animate={
-            reduce
-              ? { opacity: shown ? 1 : 0 }
-              : shown
-                ? { x: 0, rotate: tilt, opacity: 1 }
-                : { x: offX, rotate: 20, opacity: 0 }
-          }
-          transition={
-            reduce
-              ? { duration: 0 }
-              : { type: "spring", stiffness: 80, damping: 18 }
-          }
-          whileHover={reduce ? undefined : { y: -4 }}
-          whileTap={reduce ? undefined : { scale: 0.94 }}
-        >
-          <EnvelopeGraphic className="drop-shadow-lg" />
-        </motion.button>
-      )}
+      <EnvelopePreview className="absolute -bottom-6 right-6" />
     </div>
   );
 }
 
-/** The text "Love letter to design ↗" button (footer). Hovering flies the
- *  envelope in (preview); clicking opens the modal. */
-export function LoveLetterButton({ className = "" }: { className?: string }) {
+/** The text "Love letter to design" button (hero + footer). Hovering flies the
+ *  envelope in (preview); clicking opens the modal. `arrow` follows the
+ *  LinkButton convention: "up-right" (default, as in the footer) or "right"
+ *  (the hero's forward-reading CTA). */
+export function LoveLetterButton({
+  className = "",
+  arrow = "up-right",
+}: {
+  className?: string;
+  arrow?: "up-right" | "right";
+}) {
   const ll = useLoveLetter();
+  const Arrow = arrow === "right" ? ArrowRight : ArrowUpRight;
   return (
     <button
       type="button"
@@ -775,7 +792,7 @@ export function LoveLetterButton({ className = "" }: { className?: string }) {
       className={`link-button hairline-b ${className}`}
     >
       <span>Love letter to design</span>
-      <ArrowUpRight aria-hidden />
+      <Arrow aria-hidden />
     </button>
   );
 }

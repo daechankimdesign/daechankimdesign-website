@@ -89,7 +89,7 @@
     background-color: var(--color-canvas);
     color: var(--color-fg);
     font-family: var(--font-sans), system-ui, sans-serif;
-    font-size: 14px; /* Body */
+    font-size: 16px; /* Body */
     line-height: 1.6;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -139,23 +139,23 @@ footer.reveal-footer {
   font-weight: 500;
   line-height: 1.2;
   letter-spacing: -0.04em;
-  font-size: clamp(20px, 13px + 1.85vw, 32px);
-  font-size: round(clamp(20px, 13px + 1.85vw, 32px), 1px);
+  font-size: clamp(24px, 19.38px + 1.23vw, 32px);
+  font-size: round(clamp(24px, 19.38px + 1.23vw, 32px), 1px);
 }
 @utility text-h1 {
   font-weight: 600;
   line-height: 1.2;
   letter-spacing: -0.03em;
-  font-size: clamp(18px, 13px + 1.23vw, 26px);
-  font-size: round(clamp(18px, 13px + 1.23vw, 26px), 1px);
+  font-size: clamp(20px, 16.53px + 0.92vw, 26px);
+  font-size: round(clamp(20px, 16.53px + 0.92vw, 26px), 1px);
 }
 @utility text-h2 {
   font-weight: 500;
   font-family: var(--font-sans), system-ui, sans-serif;
   line-height: 1.3;
   letter-spacing: -0.03em;
-  font-size: clamp(17px, 15px + 0.47vw, 20px);
-  font-size: round(clamp(17px, 15px + 0.47vw, 20px), 1px);
+  font-size: clamp(18px, 16.84px + 0.31vw, 20px);
+  font-size: round(clamp(18px, 16.84px + 0.31vw, 20px), 1px);
 }
 /* Sub-display: h2's size, lighter weight — for hero sub-copy that should read
    large but quiet. */
@@ -164,39 +164,51 @@ footer.reveal-footer {
   font-family: var(--font-sans), system-ui, sans-serif;
   line-height: 1.3;
   letter-spacing: -0.03em;
-  font-size: clamp(17px, 15px + 0.47vw, 20px);
-  font-size: round(clamp(17px, 15px + 0.47vw, 20px), 1px);
+  font-size: clamp(18px, 16.84px + 0.31vw, 20px);
+  font-size: round(clamp(18px, 16.84px + 0.31vw, 20px), 1px);
 }
 @utility text-h3 {
   font-weight: 500;
   font-family: var(--font-sans), system-ui, sans-serif;
   line-height: 1.4;
   letter-spacing: -0.03em;
-  font-size: clamp(15px, 13px + 0.5vw, 16px);
-  font-size: round(clamp(15px, 13px + 0.5vw, 16px), 1px);
+  font-size: clamp(17px, 16.42px + 0.15vw, 18px);
+  font-size: round(clamp(17px, 16.42px + 0.15vw, 18px), 1px);
 }
 @utility text-body {
   font-weight: 400;
   line-height: 1.6;
   letter-spacing: -0.02em;
-  font-size: 14px;
+  font-size: 16px;
 }
-/* PROPOSED token addition (Phase 1 flag): caption/label for meta rows + small
-   tags seen in the About mockup (~12px). Kept >= 11px floor. */
+/* The ALL-CAPS label token: meta rows + small tags (~12px), per the About
+   mockup. Kept >= 11px floor. Labels/tags only — for small SENTENCE-case prose
+   (figcaptions, notices, dates) use `text-note` below, NOT this. */
 @utility text-caption {
   font-weight: 400;
   line-height: 1.4;
   font-size: 12px;
+  text-transform: uppercase;
 }
-/* Logo wordmark — Noto Sans, extrabold, tight kerning. Same size as H3 so nav
-   layout is unchanged. */
+/* Small supporting prose — image/video figcaptions, notices, the footer's
+   last-updated line, MDX sub-text. Same size + rhythm as text-caption but
+   sentence-case, since text-caption is now the ALL-CAPS label token. Kept as a
+   separate token rather than a `normal-case` override: both would sit in
+   Tailwind's utilities layer, so which wins depends on generated order. */
+@utility text-note {
+  font-weight: 400;
+  line-height: 1.4;
+  font-size: 12px;
+}
+/* Logo wordmark — Noto Sans, extrabold, tight kerning. Tracks H3's size so the
+   wordmark and section headings stay in step. */
 @utility text-logo {
   font-family: var(--font-sans), system-ui, sans-serif;
   font-weight: 800;
   line-height: 1.2;
   letter-spacing: -0.04em;
-  font-size: clamp(15px, 13px + 0.5vw, 16px);
-  font-size: round(clamp(15px, 13px + 0.5vw, 16px), 1px);
+  font-size: clamp(17px, 16.42px + 0.15vw, 18px);
+  font-size: round(clamp(17px, 16.42px + 0.15vw, 18px), 1px);
 }
 
 /* ============================================================================
@@ -339,7 +351,10 @@ body::before {
      .container-page  structural shell — full width, max 1440px, page gutters.
                       Use for every <main>, the nav, the footer, and grids.
      .content-column  document text/media column (56rem). The reading column on
-                      About and case-study/play detail pages, inside the shell.
+                      About, inside the shell.
+     .content-column-narrow
+                      tighter document column (48rem = 768px, the md breakpoint
+                      the shell already uses). Case-study / play detail pages.
      .measure         body-prose line length (70ch). Paragraphs and article copy.
      .measure-lede    lede / summary / caption line length (60ch). Shorter copy.
    ────────────────────────────────────────────────────────────────────────── */
@@ -373,6 +388,14 @@ body::before {
 
 .content-column {
   max-width: 56rem;
+}
+/* Tighter document column for the case-study / play detail pages. 48rem resolves
+   to 768px, which is exactly the md breakpoint .container-page already keys its
+   gutters to, so this sits on a number the system already uses instead of
+   introducing a new one. Note this governs MEDIA width only: prose inside is
+   still capped by .measure (70ch ≈ 561px), so line length is unaffected. */
+.content-column-narrow {
+  max-width: 48rem;
 }
 .measure {
   max-width: 70ch;

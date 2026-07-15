@@ -2,6 +2,8 @@
   "Nav": {
     "home": "Inicio",
     "work": "Trabajo",
+    "moreWork": "Otros trabajos",
+    "viewAll": "Ver todo",
     "all": "Todos",
     "caseStudy": "Caso de estudio",
     "play": "Play",
@@ -21,7 +23,8 @@
     "error": "La traducción falló. Inténtalo de nuevo."
   },
   "Content": {
-    "untranslated": "Esta página aún no se ha traducido a tu idioma. Abre Ajustes y elige tu idioma para traducirla."
+    "untranslated": "Esta página aún no se ha traducido a tu idioma. Abre Ajustes y elige tu idioma para traducirla.",
+    "updated": "Actualizado"
   },
   "Common": {
     "comingSoon": "Próximamente"
