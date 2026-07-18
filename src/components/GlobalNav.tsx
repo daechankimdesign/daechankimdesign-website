@@ -141,14 +141,14 @@ export function GlobalNav() {
             href={RESUME_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="hidden text-body uppercase tracking-[0.04em] no-underline transition-opacity hover:opacity-60 sm:inline text-[#e1e1e1]"
+            className="text-body uppercase tracking-[0.04em] no-underline transition-opacity hover:opacity-60 text-[#e1e1e1]"
             onClick={() => posthog.capture("resume_downloaded")}
           >
             {t("resume")}
           </a>
           <Link
             href="/about#contact"
-            className="hidden text-body uppercase tracking-[0.04em] no-underline transition-opacity hover:opacity-60 sm:inline text-[#e1e1e1]"
+            className="text-body uppercase tracking-[0.04em] no-underline transition-opacity hover:opacity-60 text-[#e1e1e1]"
             onClick={() => posthog.capture("contact_clicked", { location: "nav" })}
           >
             {t("contact")}

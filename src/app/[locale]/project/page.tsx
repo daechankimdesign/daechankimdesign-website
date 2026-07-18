@@ -17,7 +17,7 @@ export default async function WorkIndexPage({
   const items = await getWorkBoardItems(locale);
 
   return (
-    <main className="container-page pt-40 pb-24">
+    <main className="container-page pt-16 pb-24 lg:pt-40">
       <WorkBoard items={items} />
     </main>
   );

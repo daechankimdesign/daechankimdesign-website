@@ -23,8 +23,10 @@ function ProjectMeta({
   return (
     <div className="flex flex-col items-start">
       <h3 className="text-h2">{frontmatter.title}</h3>
+      {/* Tags are desktop-only metadata: below lg the meta stacks inline above
+          the images, where three tag lines cost more than they inform. */}
       {frontmatter.tags && frontmatter.tags.length > 0 ? (
-        <div className="mt-2 flex flex-col gap-1">
+        <div className="mt-2 hidden flex-col gap-1 lg:flex">
           {frontmatter.tags.map((tag) => (
             <span key={tag} className="text-caption text-fg-muted uppercase">
               {tag}

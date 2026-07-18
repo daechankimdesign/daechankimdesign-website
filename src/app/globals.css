@@ -224,6 +224,17 @@ footer.reveal-footer {
 .hairline-r {
   position: relative;
 }
+/* <hr> is the one host that silently renders NOTHING without this. The UA
+   stylesheet gives it `overflow: hidden`, and Tailwind's preflight resets its
+   height to 0 without touching overflow — so the ::after below, positioned just
+   outside a zero-height content box, gets clipped away entirely. Every other
+   host (a, div, blockquote) is `overflow: visible` and works as-is. */
+hr.hairline-t,
+hr.hairline-b,
+hr.hairline-l,
+hr.hairline-r {
+  overflow: visible;
+}
 .hairline-t::after,
 .hairline-b::after,
 .hairline-l::after,
@@ -324,6 +335,14 @@ body::before {
     rgba(255, 255, 255, 0.043) 65%,
     rgba(255, 255, 255, 0) 100%
   );
+}
+/* Mobile: no top fade. Below 768px the UniversalNav docks to the BOTTOM (see
+   UniversalNav's `isMobile`, same breakpoint), so there's no top pill for the
+   band to soften — it only hazes the top of the content. */
+@media (max-width: 767px) {
+  body::before {
+    display: none;
+  }
 }
 /* A fixed overlay would otherwise tint printed pages. */
 @media print {

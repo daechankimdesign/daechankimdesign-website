@@ -11,7 +11,7 @@ embedPosterMobile: "https://firebasestorage.googleapis.com/v0/b/daechankimdesign
 org: "Other Tomorrows"
 ---
 
-A custom interactive map I built at Other Tomorrows for the **Emerald Necklace Conservancy** — the historic chain of parks that threads through Boston, from Charlesgate down through the Back Bay Fens, the Riverway, and Jamaica Pond to the Arnold Arboretum and Franklin Park. The Conservancy wanted visitors to be able to hold the whole necklace in their hand: to feel that these aren't eight separate parks but one connected system, and to freely explore any part of it — down to a single overlook, fountain, or trailhead — right from their phone.
+This project is a custom interactive map I built at Other Tomorrows for the **Emerald Necklace Conservancy**, the historic chain of parks that threads through Boston, from Charlesgate down through the Back Bay Fens, the Riverway, and Jamaica Pond to the Arnold Arboretum and Franklin Park. The client wanted visitors to be able to hold the whole necklace in their hand: to feel that these are one connected system, instead of the eight separate parks, and to freely explore any part of the parks right from their phone.
 
 <div style={{ display: "flex", gap: "12px", maxWidth: "600px", margin: "2rem auto" }}>
   <div style={{ flex: 1, minWidth: 0 }}>
@@ -32,7 +32,7 @@ A custom interactive map I built at Other Tomorrows for the **Emerald Necklace C
   </div>
 </div>
 
-I came onto the project after the first round of design and took the map over — the part I own here is the interaction. I reworked it around one question: how do you let someone roam the whole system freely, follow their curiosity from one park to the next, and open up the story of any place, without ever feeling lost or handled? Most of what I did lives in that layer — the movement, the states, the moment-to-moment feel of exploring.
+I came onto the project after the first round of design and took the map over. the part I own here is the interaction.(revise the two previous sentences) I reworked it around one question: how do you let someone roam the whole system freely, follow their curiosity from one park to the next, and open up the story of any place, without ever feeling lost or handled?(i dont like the sentence structure around here) Most of what I did lives in that layer — the movement, the states, the moment-to-moment feel of exploring. (no em-dash)
 
 <VideoPlayer
   type="video"
@@ -47,7 +47,7 @@ I came onto the project after the first round of design and took the map over �
 
 <Dek>See it all at once, and looking for a place becomes wandering, not searching.</Dek>
 
-It opens on the full necklace so the through-line reads at a glance, then invites you in. Pan and zoom the system, tap a park to focus it, or tap a point of interest to open its details — photo, hours, accessibility, the story of the place — with a filter panel to narrow by park, facility, or activity. Everything is tuned to feel like exploring rather than searching: the parks ease into their green, overlapping pins fan apart so none get buried, and even the loading moment keeps you company — _finding a sun-basking painted turtle_, drawn from the critters that actually live along the Necklace.
+The map opens on the full necklace at a glance to invites you to explore. (this sentences is too poetic yet not my writing style ->) Pan and zoom the system, tap a park to focus it, or tap a point of interest to open its details — photo, hours, accessibility, the story of the place — (no emdash) with a filter panel to narrow by park, facility, or activity. Everything is tuned to feel like exploring rather than searching: the parks ease into their green, overlapping pins fan apart so none get buried, and even the loading moment keeps you company — _finding a sun-basking painted turtle_, drawn from the critters that actually live along the Necklace. (no em-dash)
 
 <VideoPlayer
   type="video"
@@ -67,9 +67,9 @@ It opens on the full necklace so the through-line reads at a glance, then invite
 
 ## The build
 
-<Dek>One React component drops into Framer: Mapbox, a custom tileset, Airtable content, and a Worker hiding the keys.</Dek>
+<Dek>A React code snippet for Framer connecting Mapbox, Airtable, and the team's visual vision.</Dek>
 
-One custom React component that drops straight into the Conservancy's Framer site. Mapbox GL renders a bespoke style over a custom Emerald Necklace tileset; all the content lives in Airtable and is pulled through a small Cloudflare Worker, so no keys ever reach the browser. It's data-driven by convention — add a field named `Filter--Activities` in Airtable and an "Activities" filter just appears, no code change needed. And to keep it fast and cheap, the billable Mapbox map doesn't even load until your first interaction; before that it's a static image of the necklace. Built with Claude Code, matched to the design screen by screen.
+It is a custom React component that drops straight into the Conservancy's Framer site. Mapbox GL renders a style over a custom Emerald Necklace tileset; all the content lives in Airtable and is pulled through a small Cloudflare Worker, so no keys ever reach the browser. It's data-driven by convention — add a field named `Filter--Activities` in Airtable and an "Activities" filter just appears, no code change needed. And to keep it fast and cheap, the billable Mapbox map doesn't even load until your first interaction; before that it's a static image of the necklace. Built with Claude Code, matched to the design screen by screen.
 
 <MDXImage
   src="https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fsandbox%2Finteractive-maps-for-local-residents-to-learn-and-discover-the-parks%2Ffilters.jpg?alt=media"

@@ -24,10 +24,10 @@ export function Footer() {
           uncovered (trigger="bottom"), replaying on each return. The last-updated
           line is static (outside the sequence). */}
       <div className="container-page relative flex flex-col-reverse gap-12 pt-20 pb-20 lg:flex-row lg:items-start lg:justify-between lg:gap-16 lg:pt-48">
-        <SequenceReveal total={5} step={300} trigger="bottom" className="flex-1 mb-5">
+        <SequenceReveal total={5} step={300} trigger="bottom" className="flex-1 mb-3">
         {/* Statement — footer copy (independent of the home hero, which has
             diverged to its own headline). */}
-        <h2 className="text-display">
+        <h2 className="text-h1">
           <SequenceItem order={0} as="span" className="block">
             Daechan Kim is a designer capable of
           </SequenceItem>
@@ -44,7 +44,7 @@ export function Footer() {
         <SequenceItem
           order={4}
           as="p"
-          className="text-sub-display measure-lede mt-10 text-fg-muted"
+          className="text-h4 measure-lede mt-5 text-fg-muted"
         >
           3+ years across a B2B2C startup and global client work, I design,
           build, and ship products with the latest AI tools, bridging technology
