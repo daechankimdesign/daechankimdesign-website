@@ -12,8 +12,8 @@ import posthog from "posthog-js";
 /**
  * Sandbox section — laid out like the Projects section: a section label, then a
  * 12-column grid with the ACTIVE entry's meta (title / tags / Details) in the
- * left column (col-span-3) and the Cover Flow filling the media column
- * (col-span-9, col-start-4), so the covers align to the same guides as the
+ * left column (col-span-4) and the Cover Flow filling the media column
+ * (col-span-8, col-start-5), so the covers align to the same guides as the
  * project images above. The covers are large squares; drag / horizontal wheel /
  * arrow keys flip through them and the left meta cross-fades to the centred one.
  */
@@ -69,7 +69,7 @@ export function SandboxCarousel({
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-x-8 gap-y-8 lg:gap-x-16">
         {/* Left: the centred entry's meta — same hierarchy as a project. */}
-        <div className="lg:col-span-3">
+        <div className="lg:col-span-4">
           <AnimatePresence mode="wait">
             <motion.div
               key={active}
@@ -106,7 +106,7 @@ export function SandboxCarousel({
 
         {/* Right: the Cover Flow, filling the same media column as the project
             images. Height tracks the square cover so nothing is clipped. */}
-        <div className="lg:col-span-9 lg:col-start-4">
+        <div className="lg:col-span-8 lg:col-start-5">
           <div className="h-[min(560px,86vw)] w-full">
             <CoverFlow
               items={covers}

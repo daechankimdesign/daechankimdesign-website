@@ -5,7 +5,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import { HeroImageStack, type HeroStackItem } from "./HeroImageStack";
 import { Highlighter } from "./Highlighter";
 import { LinkButton } from "./LinkButton";
-import { EnvelopePreview, LoveLetterButton } from "./LoveLetter";
+import { EnvelopePreview, LoveLetterButton, useLoveLetter } from "./LoveLetter";
 import { EASE_OUT } from "@/lib/motion";
 import { HL_COLOR } from "@/lib/highlight";
 import { RESUME_URL } from "@/lib/links";
@@ -17,6 +17,12 @@ import posthog from "posthog-js";
 // (0.55s, below) STRICTLY < STEP so each line settles before the next steps in.
 const STEP = 600;
 const LEDE_DELAY = 600;
+
+// Mobile has no hover, so the envelope preview can't wait for one: it flies in on
+// its own, this long after the CTA row appears. Same mobile threshold as
+// UniversalNav (max-width: 767px).
+const MOBILE_AUTO_DELAY = 1000;
+const MOBILE_QUERY = "(max-width: 767px)";
 
 // The headline, revealed one line at a time (step by step). Line index 1 is
 // rendered specially below (it carries the "end-to-end" circle + "product
@@ -78,6 +84,14 @@ function MarkCircle({
  */
 export function HeroHeadline({ stack }: { stack: HeroStackItem[] }) {
   const reduce = useReducedMotion();
+  const ll = useLoveLetter();
+  // `ll` is a fresh object every LoveLetterProvider render, so the mobile-preview
+  // effect below reads it through a ref (kept current here) rather than putting
+  // it in a dependency array, which would re-arm the timer on every such render.
+  const llRef = useRef(ll);
+  useEffect(() => {
+    llRef.current = ll;
+  }, [ll]);
   const containerRef = useRef<HTMLDivElement>(null);
   // Reveal steps: one per header line, then the sub text, then the buttons.
   const total = HEADLINE.length + 2;
@@ -153,6 +167,16 @@ export function HeroHeadline({ stack }: { stack: HeroStackItem[] }) {
   // One image reveals per header line + one for the sub text (== stack.length).
   const cardsRevealed = Math.min(count, stack.length);
 
+  // Mobile has no hover to reveal the envelope preview, so once the CTA row
+  // appears, fly it in on its own after MOBILE_AUTO_DELAY — no interaction
+  // needed. Desktop is untouched (still hover-only, via LoveLetterButton).
+  useEffect(() => {
+    if (!buttonsShown) return;
+    if (!window.matchMedia(MOBILE_QUERY).matches) return;
+    const t = setTimeout(() => llRef.current?.showPreview(), MOBILE_AUTO_DELAY);
+    return () => clearTimeout(t);
+  }, [buttonsShown]);
+
   // Draw the four marks only after the sub text has settled (rough-notation
   // measures the final box). Staggered in reading order; reduced motion draws
   // all at once. Cleared when the hero resets / leaves view.
@@ -222,7 +246,7 @@ export function HeroHeadline({ stack }: { stack: HeroStackItem[] }) {
             the highlighter (rough-notation) measures each phrase's box and anchors
             its SVG here, so the phrases must never move under it. */}
         <motion.div
-          className="relative mt-8 hl-behind max-w-[38rem]"
+          className="relative mt-8 hl-behind max-w-[40rem]"
           initial={false}
           animate={{ opacity: ledeShown ? 1 : 0 }}
           transition={{ duration: 0.7, ease: EASE_OUT }}
@@ -267,7 +291,20 @@ export function HeroHeadline({ stack }: { stack: HeroStackItem[] }) {
           transition={{ duration: 0.7, ease: EASE_OUT }}
           inert={!buttonsShown}
         >
-          <LoveLetterButton arrow="right" />
+          <div className="relative">
+            {/* Envelope preview — rendered BEFORE the button in DOM order (no
+                z-index needed) so it paints BEHIND it; centered on the button's
+                own box via inset-0 + m-auto (a transform-free centering trick,
+                since framer-motion owns EnvelopePreview's own `transform` for the
+                fly-in/tilt — a translate utility here would just get overwritten).
+                from="left": this anchor sits in the LEFT column, so it flies in
+                from the left edge (the footer's stays "right", its default, since
+                its anchor is on the right). Untouched: EnvelopePreview's own
+                randomness/tilt/timing — see MOBILE_AUTO_DELAY above for the
+                mobile (no-hover) auto-trigger. */}
+            <EnvelopePreview className="absolute inset-0 m-auto" from="left" />
+            <LoveLetterButton arrow="right" />
+          </div>
           {/* Resume lives on Firebase Storage (media/about/), not public/ —
               App Hosting serves no public/ paths. See docs/MEDIA-PIPELINE.md. */}
           <LinkButton
@@ -280,15 +317,8 @@ export function HeroHeadline({ stack }: { stack: HeroStackItem[] }) {
         </motion.div>
       </div>
 
-      {/* Right — image stack; a card flies in on each text reveal. The envelope
-          preview anchors to ITS bottom-right corner (same corner-of-the-image
-          pattern as the footer's portrait), not the CTA button. */}
-      <HeroImageStack
-        items={stack}
-        revealed={cardsRevealed}
-        reduce={!!reduce}
-        overlay={<EnvelopePreview className="absolute bottom-5 right-6 z-10" />}
-      />
+      {/* Right — image stack; a card flies in on each text reveal. */}
+      <HeroImageStack items={stack} revealed={cardsRevealed} reduce={!!reduce} />
     </div>
   );
 }

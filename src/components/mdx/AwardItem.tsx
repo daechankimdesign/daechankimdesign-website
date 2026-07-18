@@ -69,7 +69,7 @@ export function AwardItem({
   );
 
   return (
-    <div className="mt-8">
+    <div className="mt-5">
       {href ? (
         <a
           href={href}

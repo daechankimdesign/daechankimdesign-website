@@ -77,7 +77,7 @@ function NavPill({
     <nav
       aria-label="Primary"
       onMouseLeave={() => setHoveredItem(null)}
-      className="isolate flex items-center gap-1 rounded-full border-[0.6px] border-[#ececec] bg-canvas px-1.5 py-1"
+      className="isolate flex items-center gap-1 rounded-full border-[0.6px] border-[#ececec] bg-canvas px-1.5 py-1 drop-shadow-xl"
     >
       {NAV.map((item) => {
         const active = isActive(item.href);

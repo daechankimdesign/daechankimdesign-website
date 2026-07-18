@@ -8,11 +8,11 @@ export const metadata: Metadata = {
 /* --- Token data (class names are static strings so Tailwind detects them) --- */
 
 const TYPE_LEVELS = [
-  { cls: "text-display", name: "Display", spec: "fluid 24→32 · Medium · tracking -0.04em" },
-  { cls: "text-h1", name: "H1", spec: "fluid 20→26 · Semibold · tracking -0.03em" },
-  { cls: "text-h2", name: "H2", spec: "fluid 18→20 · Medium · tracking -0.03em" },
-  { cls: "text-sub-display", name: "Sub-display", spec: "fluid 18→20 · Regular (H2 size, lighter)" },
-  { cls: "text-h3", name: "H3", spec: "fluid 17→18 · Medium · tracking -0.03em" },
+  { cls: "text-display", name: "Display", spec: "fluid 26→36 · Medium · tracking -0.04em" },
+  { cls: "text-h1", name: "H1", spec: "fluid 22→28 · Semibold · tracking -0.03em" },
+  { cls: "text-h2", name: "H2", spec: "fluid 20→24 · Semibold · tracking -0.03em" },
+  { cls: "text-sub-display", name: "Sub-display", spec: "fluid 20→24 · Regular (H2 size, lighter)" },
+  { cls: "text-h3", name: "H3", spec: "fluid 18→20 · Medium · tracking -0.03em" },
   { cls: "text-body", name: "Body", spec: "16px / Regular · line-height 1.6" },
   { cls: "text-caption", name: "Caption", spec: "12px / Regular · ALL CAPS · meta labels, small tags" },
   { cls: "text-note", name: "Note", spec: "12px / Regular · sentence case · figcaptions, notices, dates" },

@@ -26,7 +26,7 @@ export function ContactItem({
   return (
     <div className="min-w-0">
       <h3 className="text-h3 m-0">{label}</h3>
-      <span className="text-note mt-2 block text-fg-muted">
+      <span className="text-body mt-2 block text-fg-muted">
         {href ? (
           <a
             href={href}
