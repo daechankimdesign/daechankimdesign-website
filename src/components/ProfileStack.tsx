@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import Image from "next/image";
 import {
   motion,
@@ -25,6 +25,22 @@ const REST_X = [0, 8, -7, 6, -5, 7];
 const RANGE_START = 0.06;
 const RANGE_END = 0.9;
 
+// The scroll-driven deal only makes sense while the portrait is PINNED, which
+// happens at `lg`+ (the About aside is `lg:sticky`). Below that the portrait
+// scrolls away with the page, so the cards would fly in off-screen — there we
+// render the settled pile instead, exactly like reduced motion.
+// Module-scope store fns keep useSyncExternalStore's args stable, and this stays
+// lint-clean (no setState-in-effect). SSR reports desktop; the client corrects
+// on hydration.
+const COMPACT_Q = "(max-width: 1023px)";
+const subscribeCompact = (onChange: () => void) => {
+  const mql = window.matchMedia(COMPACT_Q);
+  mql.addEventListener("change", onChange);
+  return () => mql.removeEventListener("change", onChange);
+};
+const getCompact = () => window.matchMedia(COMPACT_Q).matches;
+const getCompactServer = () => false;
+
 type Props = {
   portrait: string;
   alt: string;
@@ -41,8 +57,12 @@ type Props = {
  * exactly like the hero image stack. The scroll only triggers each card; the
  * fly-in itself is a state-driven tween that plays through cleanly (NOT
  * scroll-scrubbed), so photos never freeze mid-fade or ghost over each other.
- * Scrolling back up sends them away again. Reduced motion → the full pile
- * renders static.
+ * Scrolling back up sends them away again.
+ *
+ * The deal is DESKTOP-ONLY: it needs the portrait pinned (`lg:sticky` on the
+ * About aside). Below `lg` — and for reduced motion — the settled pile renders
+ * static with no animation, since the stack would otherwise scroll out of view
+ * mid-deal.
  */
 export function ProfileStack({
   portrait,
@@ -53,6 +73,14 @@ export function ProfileStack({
   sizes = "(max-width: 1024px) 20rem, 14rem",
 }: Props) {
   const reduce = useReducedMotion();
+  const compact = useSyncExternalStore(
+    subscribeCompact,
+    getCompact,
+    getCompactServer,
+  );
+  // No deal animation when the portrait isn't pinned (below `lg`) or the reader
+  // asked for reduced motion — both render the settled pile.
+  const staticPile = !!reduce || compact;
   const total = images.length;
 
   // Whole-page scroll drives the deal. The portrait is sticky, so its own
@@ -73,10 +101,11 @@ export function ProfileStack({
   // mount effect is needed. Reduced motion shows the whole pile at once.
   const [scrollCount, setScrollCount] = useState(0);
   useMotionValueEvent(scrollYProgress, "change", (p) => {
+    if (staticPile) return; // no deal to drive — skip the scroll re-renders
     const c = countFor(p);
     setScrollCount((prev) => (prev === c ? prev : c));
   });
-  const revealed = reduce ? total : scrollCount;
+  const revealed = staticPile ? total : scrollCount;
 
   return (
     <div className="relative">
@@ -92,7 +121,7 @@ export function ProfileStack({
       {/* Gallery cards — each flies up from below and settles into the pile as
           scroll deals it in. */}
       {images.map((src, i) => {
-        const shown = reduce ? true : i < revealed;
+        const shown = staticPile ? true : i < revealed;
         return (
           <motion.div
             key={`${src}-${i}`}
@@ -107,7 +136,9 @@ export function ProfileStack({
                 ? REST_TILT[i % REST_TILT.length]
                 : FLY_TILT[i % FLY_TILT.length],
             }}
-            transition={reduce ? { duration: 0 } : { duration: 0.6, ease: EASE_OUT }}
+            transition={
+              staticPile ? { duration: 0 } : { duration: 0.6, ease: EASE_OUT }
+            }
           >
             <Image src={src} alt="" fill sizes={sizes} className="object-cover" />
           </motion.div>

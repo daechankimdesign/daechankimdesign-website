@@ -229,7 +229,10 @@ export function UniversalNav() {
       {docked ? (
         <motion.div
           key="bottom"
-          className="fixed inset-x-0 bottom-10 z-40 mx-auto w-max"
+          // Rides above the iOS home indicator: the 2.5rem base keeps the
+          // desktop docked position unchanged (inset resolves to 0 there) and
+          // adds real clearance on devices that report a bottom inset.
+          className="fixed inset-x-0 bottom-[calc(env(safe-area-inset-bottom,0px)+2.5rem)] z-40 mx-auto w-max"
           initial={{ y: 96, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 96, opacity: 0, transition: spring }}

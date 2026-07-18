@@ -1,31 +1,35 @@
 ---
-title: "Vendor marketplace for property managers to find verified contractors in seconds."
-summary: "The hard part is not finding a contractor, it is trusting that the paperwork behind them is real and current. Google Document AI parses each license and insurance certificate into an admin-gated, three-tier trust status, built in 54 hours at Techstars Startup Weekend with React and Firebase."
-thumbnail: "https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fsandbox%2Fvendorpass%2Fthumbnail.jpg?alt=media"
-date: "2026-05-03"
-tags: ["Techstars Startup Weekend", "React", "Firebase", "Document AI"]
-embed: "https://daechankimdesign.github.io/Vendor-Pass/"
-embedPosterDesktop: "https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fsandbox%2Fvendorpass%2Fapp-shot-desktop.jpg?alt=media"
-embedPosterTablet: "https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fsandbox%2Fvendorpass%2Fapp-shot-tablet.jpg?alt=media"
-embedPosterMobile: "https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fsandbox%2Fvendorpass%2Fapp-shot-mobile.jpg?alt=media"
-org: "Boston Business Weekend"
+title: Vendor marketplace for property managers to find verified contractors in seconds.
+summary: The hard part is not finding a contractor, it is trusting that the paperwork behind them is real and current. Google Document AI parses each license and insurance certificate into an admin-gated, three-tier trust status, built in 54 hours at Techstars Startup Weekend with React and Firebase.
+thumbnail: https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fsandbox%2Fvendorpass%2Fthumbnail.jpg?alt=media
+date: 2026-05-03
+tags:
+  - React
+  - Firebase
+  - AI
+  - Startup
+embed: https://daechankimdesign.github.io/Vendor-Pass/
+embedPosterDesktop: https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fsandbox%2Fvendorpass%2Fapp-shot-desktop.jpg?alt=media
+embedPosterTablet: https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fsandbox%2Fvendorpass%2Fapp-shot-tablet.jpg?alt=media
+embedPosterMobile: https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fsandbox%2Fvendorpass%2Fapp-shot-mobile.jpg?alt=media
+org: Techstars Startup Weekend
 ---
 
-VendorPass came out of a weekend. At Techstars Startup Weekend, part of Boston Startup Week, a small group of us formed around one problem and built a working product against the clock. I led design and product, shaping the flows and the interface, while teammates ran user research and business planning. What we shipped by Sunday is the app embedded above.
+VendorPass came out of two days at the [Boston Tech Week 2026](https://www.tech-week.com/). As a part of the Techstars Startup Weekend, I teamed up with [Chaitanya](https://www.linkedin.com/in/chaitanya-g-316633244/), [Douglas](https://www.linkedin.com/in/douglas-m-438990190/), and [Mekhal](https://www.linkedin.com/in/mekhalrajr/) to tackle one problem and built a working product against the clock. I led design and product, shaping the flows and the interface, while teammates ran user research and business planning. What we shipped by Sunday is the app embedded above.
 
-The idea: help property managers find local vendors, plumbers, electricians, landscapers and the rest, and see whether each one is actually insured and licensed before they ever pick up the phone. The hard part in that world is not finding a contractor. It is trusting that the paperwork behind them is real and still current.
+The idea was building two sided market place; help property managers find local contractors (vendors), such as plumbers, electricians, and landscapers, who are licensed and qualified for the jobs, and create a new promotional channel for the contractors. For the property managers, the hard part is not finding a contractor. It is trusting that the paperwork behind them is real and still current.
 
 ## The problem
 
 <Dek>Managers never lack contractors. They lack a fast way to trust them.</Dek>
 
-A property manager juggles vendors across many buildings, and compliance is a liability minefield. An expired certificate of insurance or a lapsed business license can turn a routine repair into a lawsuit. Today that verification lives in email threads, loose PDFs, and spreadsheets that go stale the moment they are saved. Our research over the weekend kept surfacing the same thing: managers do not lack contractors, they lack a fast way to trust them. VendorPass turns that scatter into a single source of truth, where a vendor's standing is a status you can read at a glance instead of a folder you have to audit.
+The idea sprung out of one of team member's observation. A property manager juggles vendors across many buildings, and compliance is a liability minefield. An expired certificate of insurance or a lapsed business license can turn a routine repair into a lawsuit. Today that verification lives in email threads, loose PDFs, and spreadsheets that go stale the moment they are saved. Our research over the weekend kept surfacing the same thing: managers do not lack contractors, they lack a fast way to trust them. **VendorPass turns that scatter into a single source of truth**, where a vendor's standing is a status you can read at a glance instead of a folder you have to audit.
 
 ## How it works
 
 <Dek>Anyone can browse the supply, but a vendor's contact stays private until they're invited.</Dek>
 
-Search comes first. A property manager can browse the marketplace by trade and zip code before creating an account, so they can size up the local supply before committing to anything. Discovery is the product; the account waits until they actually want to invite a vendor to a project. Public search only ever reads a vendor's public-safe fields, so nobody's contact details leak into a browse.
+Search comes first. A property manager can browse the marketplace through natural language (parking lot snow plow in watertown, or hotel restroom plumbing in back bay, etc.) for specific trade and zip code before creating an account, so they can size up the local supply before committing to anything. Discovery is the product; the account waits until they actually want to invite a vendor to a project. Public search only ever reads a vendor's public-safe fields, so nobody's contact details leak into a browse.
 
 <VideoPlayer
   type="gif"
@@ -41,13 +45,11 @@ Inviting a vendor is what unlocks their private contact info and creates the wor
 
 This is the core idea, and the part I designed the whole interface around. Every vendor document, a business license, a W-9, a certificate of insurance, moves through three tiers of trust, and the whole interface is colored by that status.
 
-- **Tier 1, Unverified:** nothing on file yet. A quiet dashed outline, neutral text.
-- **Tier 2, Self-Verified:** the vendor uploaded the document and confirmed the fields pulled from it. A solid gray fill, no border.
-- **Tier 3, Verified:** a human admin reviewed and promoted it, rendered in the platform's one saturated blue.
+- **Tier 1, Unverified:** nothing on file yet.
+- **Tier 2, Self-Verified:** the vendor uploaded the document and confirmed the fields pulled from it. 
+- **Tier 3, Verified:** the platform reviewed using Google Document AI and promoted it.
 
-The design language behind it, which I called Architectural Utility, makes the visual weight of an element track its compliance status directly. A roster reads like a blueprint where the trustworthy things are literally bolder, so a manager scanning a list feels the risk before they read a single field.
-
-You feel it most in a vendor's detail view. A fully verified vendor shows every document in the platform's saturated blue, the strongest signal the system can give. An unverified one is the same layout drained of that color, each document reading Not uploaded, so the absence of trust is as legible as its presence.
+The hierarchies and visual cues make the weight of an element track its compliance status directly. A roster reads like a blueprint where the trustworthy things are literally bolder, so a manager scanning a list feels the risk before they read a single field.
 
 <MDXImage
   src="https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fsandbox%2Fvendorpass%2Fmodal-verified.jpg?alt=media"

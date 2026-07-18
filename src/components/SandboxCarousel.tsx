@@ -80,8 +80,9 @@ export function SandboxCarousel({
               className="flex flex-col items-start"
             >
               <h3 className="text-h2">{current?.title}</h3>
+              {/* Tags are desktop-only metadata (matches ProjectCoverFlow). */}
               {currentTags.length > 0 ? (
-                <div className="mt-2 flex flex-col gap-1">
+                <div className="mt-2 hidden flex-col gap-1 lg:flex">
                   {currentTags.map((tag) => (
                     <span
                       key={tag}

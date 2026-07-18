@@ -82,7 +82,10 @@ export default async function Home({
           on scroll-in — a hold here would just be dead air before content. */}
       <RevealOnView rise={false}>
         <section id="work" className="container-page py-16 grid grid-cols-1 lg:grid-cols-12 gap-x-8 lg:gap-x-16 gap-y-0 scroll-mt-24">
-          <h3 className="text-h3 sticky top-24 z-20 mb-8 lg:col-span-3">{t("caseStudy")}</h3>
+          {/* Sticky only from lg, where the label owns its own column and the
+              images sit in col-start-4. Below lg the grid is ONE column, so a
+              pinned transparent label would float over the project images. */}
+          <h3 className="text-h3 z-20 mb-8 lg:sticky lg:top-24 lg:col-span-3">{t("caseStudy")}</h3>
           <FeaturedProjects items={projects} detailsLabel={t("details")} />
         </section>
       </RevealOnView>
