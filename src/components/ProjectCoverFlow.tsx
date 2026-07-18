@@ -68,7 +68,7 @@ export function ProjectCoverFlow({
 }: Props) {
   return (
     <article className="relative pb-16 mb-16 hairline-b col-span-1 lg:col-span-12 grid grid-cols-1 lg:grid-cols-12 gap-x-8 gap-y-6 lg:gap-x-16">
-      <div className="hidden lg:col-span-3 lg:col-start-1 lg:block">
+      <div className="hidden lg:col-span-4 lg:col-start-1 lg:block">
         <div className="flex flex-col items-start lg:sticky lg:top-[151px]">
           <ProjectMeta
             slug={slug}
@@ -78,7 +78,7 @@ export function ProjectCoverFlow({
         </div>
       </div>
 
-      <div className="flex flex-col gap-6 lg:col-span-9 lg:col-start-4">
+      <div className="flex flex-col gap-6 lg:col-span-8 lg:col-start-5">
         <div className="lg:hidden">
           <ProjectMeta
             slug={slug}

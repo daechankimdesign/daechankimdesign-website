@@ -687,21 +687,27 @@ function EnvelopeGraphic({ className }: { className?: string }) {
 }
 
 /**
- * The envelope preview. Flies in from the RIGHT edge of the screen with a random
- * tilt ONLY while the "Love letter" button (or the envelope itself) is hovered;
- * on mouse-leave it waits PREVIEW_HIDE_MS before flying back out, the grace
- * period to slide the cursor over and click it. Clicking opens the letter. The
- * hover state is shared via the provider, so ANY "Love letter to design" trigger
- * on the page (hero, footer, ...) lights up whichever envelope is mounted near
- * it — position it with `className` (absolute, relative to a positioned
- * ancestor). Rendered client-only (mounted gate) so framer's off-screen initial
- * stays out of SSR.
+ * The envelope preview. Flies in from the screen edge (`from`: "right", the
+ * default, or "left") with a random tilt ONLY while the "Love letter" button (or
+ * the envelope itself) is hovered; on mouse-leave it waits PREVIEW_HIDE_MS before
+ * flying back out, the grace period to slide the cursor over and click it.
+ * Clicking opens the letter. The hover state is shared via the provider, so ANY
+ * "Love letter to design" trigger on the page (hero, footer, ...) lights up
+ * whichever envelope is mounted near it — position it with `className`
+ * (absolute, relative to a positioned ancestor). Rendered client-only (mounted
+ * gate) so framer's off-screen initial stays out of SSR.
  */
-export function EnvelopePreview({ className = "" }: { className?: string }) {
+export function EnvelopePreview({
+  className = "",
+  from = "right",
+}: {
+  className?: string;
+  from?: "left" | "right";
+}) {
   const ll = useLoveLetter();
   const reduce = useReducedMotion();
   const mounted = useIsMounted();
-  const [offX, setOffX] = useState(1400); // start just past the right screen edge
+  const [offX, setOffX] = useState(1400); // magnitude only; sign applied via `from` below
 
   useEffect(() => {
     if (reduce) return;
@@ -720,6 +726,11 @@ export function EnvelopePreview({ className = "" }: { className?: string }) {
 
   const shown = ll?.previewShown ?? false;
   const tilt = ll?.previewTilt ?? 0;
+  // Mirror the off-screen distance AND the entry tilt for a left approach, so it
+  // reads as a coherent swoop from that side rather than the same right-leaning
+  // spin arriving from the opposite direction.
+  const signedOffX = from === "left" ? -offX : offX;
+  const entryRotate = from === "left" ? -20 : 20;
 
   if (!mounted) return null;
 
@@ -731,16 +742,16 @@ export function EnvelopePreview({ className = "" }: { className?: string }) {
       onMouseLeave={() => ll?.hidePreviewSoon()}
       aria-label="Open the love letter to design"
       className={`cursor-pointer ${className}`}
-      initial={reduce ? false : { x: offX, rotate: 20, opacity: 0 }}
+      initial={reduce ? false : { x: signedOffX, rotate: entryRotate, opacity: 0 }}
       animate={
         reduce
           ? { opacity: shown ? 1 : 0 }
           : shown
             ? { x: 0, rotate: tilt, opacity: 1 }
-            : { x: offX, rotate: 20, opacity: 0 }
+            : { x: signedOffX, rotate: entryRotate, opacity: 0 }
       }
       transition={
-        reduce ? { duration: 0 } : { type: "spring", stiffness: 80, damping: 18 }
+        reduce ? { duration: 0 } : { type: "spring", stiffness: 250, damping: 30 }
       }
       whileHover={reduce ? undefined : { y: -4 }}
       whileTap={reduce ? undefined : { scale: 0.94 }}

@@ -19,7 +19,7 @@ export function FeaturedProjects({
 }) {
   if (items.length === 0) {
     return (
-      <p className="text-body text-fg-muted col-span-1 lg:col-span-9 lg:col-start-4">
+      <p className="text-body text-fg-muted col-span-1 lg:col-span-8 lg:col-start-5">
         No projects yet.
       </p>
     );
