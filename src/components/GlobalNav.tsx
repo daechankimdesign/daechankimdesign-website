@@ -5,7 +5,7 @@ import posthog from "posthog-js";
 import { motion, useReducedMotion } from "framer-motion";
 import { useTranslations } from "next-intl";
 import { Settings as SettingsIcon } from "iconoir-react";
-import { Link, usePathname } from "@/i18n/navigation";
+import { Link, usePathname, useRouter } from "@/i18n/navigation";
 import { RESUME_URL } from "@/lib/links";
 import { SettingsModal } from "./SettingsModal";
 import { navHoverEnter, navHoverLeave } from "@/lib/navHover";
@@ -19,6 +19,25 @@ const useIsoLayoutEffect =
 // The settings wheel (language switcher) is hidden for now. Flip to true to
 // bring the gear — and its SettingsModal — back into the top bar's right group.
 const SHOW_SETTINGS: boolean = false;
+
+// Scroll the About page's #contact section to the VERTICAL CENTRE of the viewport
+// — the same treatment the side document tab gives a clicked section (block:
+// "center"). Polls for the element (rAF, ~3s cap) so it also lands correctly
+// right after a cross-page navigation to /about, before that page has rendered.
+// Module scope so its DOM/time reads aren't analysed as component render.
+function centerOnContact(smooth: boolean) {
+  const startedAt = performance.now();
+  const step = () => {
+    const el = document.getElementById("contact");
+    if (el) {
+      el.scrollIntoView({ behavior: smooth ? "smooth" : "auto", block: "center" });
+      window.history.replaceState(window.history.state, "", "#contact");
+      return;
+    }
+    if (performance.now() - startedAt < 3000) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
 
 /**
  * Top bar. On the Home page it stays HIDDEN over the hero and slides DOWN from
@@ -39,6 +58,7 @@ export function GlobalNav() {
   const t = useTranslations("Nav");
   const reduce = useReducedMotion();
   const pathname = usePathname();
+  const router = useRouter();
   const isHome = pathname === "/";
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [shown, setShown] = useState(!isHome);
@@ -149,7 +169,22 @@ export function GlobalNav() {
           <Link
             href="/about#contact"
             className="text-body uppercase tracking-[0.04em] no-underline transition-opacity hover:opacity-60 text-[#e1e1e1]"
-            onClick={() => posthog.capture("contact_clicked", { location: "nav" })}
+            onClick={(e) => {
+              posthog.capture("contact_clicked", { location: "nav" });
+              // Modified / non-primary clicks keep native behaviour (new tab, etc.).
+              if (
+                e.button !== 0 ||
+                e.metaKey ||
+                e.ctrlKey ||
+                e.shiftKey ||
+                e.altKey
+              )
+                return;
+              e.preventDefault();
+              // Navigate to /about first if we're elsewhere; then centre #contact.
+              if (pathname !== "/about") router.push("/about");
+              centerOnContact(!reduce);
+            }}
           >
             {t("contact")}
           </Link>
