@@ -1,4 +1,5 @@
 import { ProgressiveImage } from "../ProgressiveImage";
+import { ClickZoom } from "../ClickZoom";
 
 type GalleryImage = { src: string; alt?: string };
 
@@ -11,14 +12,15 @@ export function Gallery({ images = [] }: { images?: GalleryImage[] }) {
   return (
     <div className="my-8 grid grid-cols-2 gap-3 sm:grid-cols-3">
       {images.map((img, i) => (
-        <ProgressiveImage
-          key={`${img.src}-${i}`}
-          src={img.src}
-          alt={img.alt ?? ""}
-          width={800}
-          height={800}
-          sizes="(max-width: 640px) 50vw, 33vw"
-        />
+        <ClickZoom key={`${img.src}-${i}`}>
+          <ProgressiveImage
+            src={img.src}
+            alt={img.alt ?? ""}
+            width={800}
+            height={800}
+            sizes="(max-width: 640px) 50vw, 33vw"
+          />
+        </ClickZoom>
       ))}
     </div>
   );

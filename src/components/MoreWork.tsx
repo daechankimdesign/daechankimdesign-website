@@ -80,7 +80,7 @@ export async function MoreWork({
                 LoveLetterButton both render `.link-button .hairline-b`, and both
                 use the `right` (in-app forward) arrow here. This is an <a>
                 rather than a <button> only because it navigates. */}
-            <LinkButton href="/project" arrow="right">
+            <LinkButton href="/#work" arrow="right">
               {t("viewAll")}
             </LinkButton>
           </div>

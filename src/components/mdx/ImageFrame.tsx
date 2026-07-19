@@ -1,7 +1,7 @@
 "use client";
 
-import type { CSSProperties, ReactNode } from "react";
-import { motion, useReducedMotion } from "framer-motion";
+import type { CSSProperties } from "react";
+import { motion, useReducedMotion, type Variants } from "framer-motion";
 import { ProgressiveImage } from "../ProgressiveImage";
 import { EASE_OUT, DURATION } from "@/lib/motion";
 
@@ -13,26 +13,32 @@ type FrameItem = {
   width: number;
   height: number;
   /** Edge the card travels in FROM: `bottom` rises, `left` slides rightward into
-      place. Defaults to `bottom`, matching the page's fade-up language. */
+      place. Defaults to `bottom`, matching the page's fade-up language. Ignored in
+      `background` mode, where the panel always drops in from the top. */
   from?: Entrance;
 };
 
+/** A screenshot rendered blurred behind the foreground cards — the "app window
+    floating over its own context" look, instead of the flat tinted panel. */
+type Background = { src: string; alt?: string };
+
 /**
- * A set of screenshots presented together on a tinted panel — the MDX equivalent
- * of laying product shots side by side on a seamless. Each keeps its own file and
- * native aspect; nothing is baked into a composite.
+ * A set of screenshots presented together on a panel. Each keeps its own file
+ * and native aspect; nothing is baked into a composite.
  *
- * Sizing: `flex-grow` is set to each item's aspect ratio against `flex-basis: 0`,
- * so widths land proportional to aspect and every screenshot resolves to the SAME
- * height — tops and bottoms align even when the sources were cropped to slightly
- * different ratios. Below `sm` they stack full-width and the ratio is inert.
- *
- * Motion: the panel is the stage and stays put; the cards animate INTO it, in
- * order, so a multi-step flow plays as the sequence it depicts rather than
- * appearing all at once. Cards sit side by side, so they cross the viewport
- * threshold together and the stagger is a real beat, not a scroll artifact.
- * (Stacked on mobile, each simply animates as it arrives.) Only opacity and
- * transform animate, so nothing reflows.
+ * Two panel treatments:
+ *  - DEFAULT (Oria): a flat `bg-surface-subtle` seamless. Cards lie side by side
+ *    and `flex-grow` by aspect against `flex-basis: 0`, so every card resolves to
+ *    the SAME height even from slightly different source ratios. Below `sm` they
+ *    stack full-width and the ratio is inert. Each card reveals once on scroll-in.
+ *  - `background` (Sucholary): the panel's surface becomes a BLURRED screenshot —
+ *    the reading environment the UI actually lives in — with a light scrim over
+ *    it. The foreground cards float centered and size-capped (`foregroundWidth`)
+ *    so the blurred context reads around them. This mode is a SCROLL-TRIGGERED
+ *    sequence that REPLAYS every time it re-enters view (no exit animation — the
+ *    reset snaps while off-screen): (1) the screenshot fades in sharp, so the
+ *    highlighted passage registers, (2) it blurs back into context, (3) the panel
+ *    drops in from the top over it.
  *
  * IMAGE-FRAME RULE (see ProgressiveImage): content images stay square and
  * borderless, and the panel obeys that — it is a flat, square-cornered block. The
@@ -41,7 +47,7 @@ type FrameItem = {
  * belongs to the UI in the picture, not to the picture frame.
  */
 
-// Starting displacement per entrance edge; each card animates back to 0.
+// Starting displacement per entrance edge; each card animates back to 0 (default mode).
 const OFFSET: Record<Entrance, { x?: number; y?: number }> = {
   bottom: { y: 24 },
   top: { y: -24 },
@@ -49,7 +55,7 @@ const OFFSET: Record<Entrance, { x?: number; y?: number }> = {
   right: { x: 24 },
 };
 
-// Mirrors RevealBlock: settle just before the block is fully on-screen, once.
+// Mirrors RevealBlock: settle just before the block is fully on-screen, once (default mode).
 const VIEWPORT = { once: true, margin: "0px 0px -10% 0px" } as const;
 
 // Beat between cards. Deliberately longer than the header's line cascade
@@ -58,65 +64,207 @@ const VIEWPORT = { once: true, margin: "0px 0px -10% 0px" } as const;
 // so the next one launches as the previous settles.
 const BEAT = 0.45;
 
+// DEFAULT-mode card: flat, rounded, softly shadowed, and grown to a shared height
+// by aspect ratio (so a row of screenshots aligns tops and bottoms).
+const CARD_CLASS =
+  "overflow-hidden rounded-xl shadow-[0_2px_6px_-2px_rgba(0,0,0,0.06),0_16px_36px_-12px_rgba(0,0,0,0.16)] sm:flex-[var(--frame-grow)_1_0%]";
+
+// BACKGROUND-mode card: the floating panel. It simply FILLS its definite-width
+// foreground wrapper (`w-full`) — no aspect-driven flex-grow, which would depend
+// on the parent resolving a width and made the panel size/position unreliable.
+const BG_CARD_CLASS =
+  "w-full overflow-hidden rounded-xl shadow-[0_2px_6px_-2px_rgba(0,0,0,0.06),0_16px_36px_-12px_rgba(0,0,0,0.16)]";
+
+// Default max width of the floating foreground cluster in `background` mode, so
+// the blurred context stays visible around it.
+const DEFAULT_FOREGROUND_WIDTH = 340;
+
+// How far the panel travels down from the top in `background` mode (px).
+const PANEL_DROP = 40;
+// The backdrop scrim — a translucent near-white over the blurred screenshot so it
+// recedes and the foreground reads.
+const SCRIM = "rgb(250 250 250 / 0.38)";
+// The blur the screenshot settles to (also the static value under reduced motion).
+const BG_BLUR = "blur(12px)";
+// Scale the backdrop past its clip so the blur has no hard edge.
+const BG_SCALE = 1.1;
+
+// ── background-mode choreography ──────────────────────────────────────────────
+// The stage carries the in-view label to its children via context; it replays on
+// every re-entry (once:false). Children reset to `hidden` INSTANTLY (duration 0)
+// so the off-screen reset is never seen as an exit animation.
+const BG_VIEWPORT = { once: false, amount: 0.35 } as const;
+const STAGE: Variants = { hidden: {}, shown: {} };
+
+// Backdrop: fade in SHARP first (opacity over the first ~22%), then blur.
+const BACKDROP_VARIANTS: Variants = {
+  hidden: {
+    opacity: 0,
+    scale: BG_SCALE,
+    filter: "blur(0px)",
+    transition: { duration: 0 },
+  },
+  shown: {
+    opacity: [0, 1, 1],
+    scale: BG_SCALE,
+    filter: ["blur(0px)", "blur(0px)", BG_BLUR],
+    transition: { duration: DURATION, times: [0, 0.22, 1], ease: EASE_OUT },
+  },
+};
+
+// Panel: drops in from the top, beginning as the backdrop blur is underway, so the
+// three beats read as "appear, blur, and then the panel arrives".
+const PANEL_LEAD = 1.0;
+const PANEL_VARIANTS: Variants = {
+  hidden: { opacity: 0, y: -PANEL_DROP, transition: { duration: 0 } },
+  shown: (i: number) => ({
+    opacity: 1,
+    y: 0,
+    transition: { duration: DURATION, ease: EASE_OUT, delay: PANEL_LEAD + i * BEAT },
+  }),
+};
+
 export function ImageFrame({
   items = [],
   caption,
+  background,
+  foregroundWidth = DEFAULT_FOREGROUND_WIDTH,
 }: {
   items?: FrameItem[];
   caption?: string;
+  background?: Background;
+  foregroundWidth?: number;
 }) {
   const reduce = useReducedMotion();
   if (!items.length) return null;
 
+  const captionEl = caption ? (
+    <figcaption className="text-note mt-2 text-fg-muted">{caption}</figcaption>
+  ) : null;
+
+  const growStyle = (item: FrameItem) =>
+    ({ "--frame-grow": String(item.width / item.height) }) as CSSProperties;
+
+  const progressive = (item: FrameItem) => (
+    <ProgressiveImage
+      src={item.src}
+      alt={item.alt}
+      width={item.width}
+      height={item.height}
+      sizes="(max-width: 640px) 100vw, 400px"
+    />
+  );
+
+  // ── Background mode: floating panel over a blurred screenshot ────────────────
+  if (background) {
+    const scrim = (
+      <div className="absolute inset-0" style={{ backgroundColor: SCRIM }} />
+    );
+    // Centering: the OUTER frame is a flex box with `justify-center`; the
+    // foreground is a DEFINITE-width flex item (never `w-full`/100%, which would
+    // lay out full-width first — leaving no free space for justify — then shrink,
+    // pinning it left). A definite width centers reliably in the frame's own box.
+    // `maxWidth:100%` keeps it inside the frame on narrow screens.
+    const foregroundStyle = { width: foregroundWidth, maxWidth: "100%" };
+    const foregroundClass =
+      "relative z-10 flex flex-col gap-6 sm:flex-row sm:items-start sm:gap-8";
+
+    // Reduced motion: the settled state, static — backdrop blurred, panel in place.
+    if (reduce) {
+      return (
+        <figure className="my-8">
+          <div className="relative flex items-center justify-center overflow-hidden rounded-3xl p-8 sm:p-14">
+            <div aria-hidden className="absolute inset-0">
+              {/* eslint-disable-next-line @next/next/no-img-element -- decorative blurred backdrop; the optimizer is off on deploy and next/image adds no value here */}
+              <img
+                src={background.src}
+                alt=""
+                className="h-full w-full scale-110 object-cover"
+                style={{ filter: BG_BLUR }}
+              />
+              {scrim}
+            </div>
+            <div className={foregroundClass} style={foregroundStyle}>
+              {items.map((item) => (
+                <div key={item.src} className={BG_CARD_CLASS}>
+                  {progressive(item)}
+                </div>
+              ))}
+            </div>
+          </div>
+          {captionEl}
+        </figure>
+      );
+    }
+
+    // Scroll-triggered, replays on re-entry: appear sharp → blur → panel drops in.
+    return (
+      <figure className="my-8">
+        <motion.div
+          className="relative flex items-center justify-center overflow-hidden rounded-3xl p-8 sm:p-14"
+          variants={STAGE}
+          initial="hidden"
+          whileInView="shown"
+          viewport={BG_VIEWPORT}
+        >
+          <div aria-hidden className="absolute inset-0">
+            {/* eslint-disable-next-line @next/next/no-img-element -- decorative blurred backdrop; the optimizer is off on deploy and next/image adds no value here */}
+            <motion.img
+              src={background.src}
+              alt=""
+              variants={BACKDROP_VARIANTS}
+              className="h-full w-full object-cover"
+            />
+            {scrim}
+          </div>
+          <div className={foregroundClass} style={foregroundStyle}>
+            {items.map((item, i) => (
+              <motion.div
+                key={item.src}
+                custom={i}
+                variants={PANEL_VARIANTS}
+                className={BG_CARD_CLASS}
+              >
+                {progressive(item)}
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
+        {captionEl}
+      </figure>
+    );
+  }
+
+  // ── Default mode: flat tinted seamless, each card reveals once ───────────────
+  const cards = items.map((item, i) => {
+    if (reduce) {
+      return (
+        <div key={item.src} style={growStyle(item)} className={CARD_CLASS}>
+          {progressive(item)}
+        </div>
+      );
+    }
+    return (
+      <motion.div
+        key={item.src}
+        style={growStyle(item)}
+        className={CARD_CLASS}
+        initial={{ opacity: 0, ...OFFSET[item.from ?? "bottom"] }}
+        whileInView={{ opacity: 1, x: 0, y: 0 }}
+        viewport={VIEWPORT}
+        transition={{ duration: DURATION, ease: EASE_OUT, delay: i * BEAT }}
+      >
+        {progressive(item)}
+      </motion.div>
+    );
+  });
+
   return (
     <figure className="my-8">
       <div className="flex flex-col gap-6 bg-surface-subtle p-6 sm:flex-row sm:items-start sm:gap-10 sm:p-10">
-        {items.map((item, i) => {
-          const style = {
-            "--frame-grow": String(item.width / item.height),
-          } as CSSProperties;
-          const className =
-            "overflow-hidden rounded-xl shadow-[0_2px_6px_-2px_rgba(0,0,0,0.06),0_16px_36px_-12px_rgba(0,0,0,0.16)] sm:flex-[var(--frame-grow)_1_0%]";
-
-          const image: ReactNode = (
-            <ProgressiveImage
-              src={item.src}
-              alt={item.alt}
-              width={item.width}
-              height={item.height}
-              sizes="(max-width: 640px) 100vw, 400px"
-            />
-          );
-
-          // Reduced motion: the plain card, fully visible and in place.
-          if (reduce) {
-            return (
-              <div key={item.src} style={style} className={className}>
-                {image}
-              </div>
-            );
-          }
-
-          return (
-            <motion.div
-              key={item.src}
-              style={style}
-              className={className}
-              initial={{ opacity: 0, ...OFFSET[item.from ?? "bottom"] }}
-              whileInView={{ opacity: 1, x: 0, y: 0 }}
-              viewport={VIEWPORT}
-              transition={{ duration: DURATION, ease: EASE_OUT, delay: i * BEAT }}
-            >
-              {image}
-            </motion.div>
-          );
-        })}
+        {cards}
       </div>
-      {caption ? (
-        <figcaption className="text-note mt-2 text-fg-muted">
-          {caption}
-        </figcaption>
-      ) : null}
+      {captionEl}
     </figure>
   );
 }

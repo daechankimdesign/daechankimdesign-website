@@ -61,9 +61,10 @@ export function SideDocumentTab({
   const isDetail =
     pathname.startsWith("/project/case-study/") ||
     pathname.startsWith("/project/play/");
-  // Fallback index when there's no in-app history to return to (e.g. the page
-  // was opened directly in a fresh tab or from an external link).
-  const backTo = "/project";
+  // Fallback destination when there's no in-app history to return to (e.g. the
+  // page was opened directly in a fresh tab or from an external link). Points to
+  // home, since the /project index is unlinked from nav.
+  const backTo = "/";
   const backLabel = t("back");
 
   // Prefer returning to wherever the user actually came from. When there's

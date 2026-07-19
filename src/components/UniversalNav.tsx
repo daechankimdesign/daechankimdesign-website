@@ -12,12 +12,11 @@ import {
 } from "@/lib/navHover";
 
 const NAV = [
-  { href: "/", key: "home" },
-  // Unified Work tab — spans both /project/case-study/* and /project/play/*
-  // (isActive uses startsWith(`${href}/`), so it lights on either sub-section).
-  { href: "/project", key: "work" },
-  // Blog is hidden from navigation for now (no posts yet). The /blog route still
-  // exists but is unlinked — re-add this entry to surface it again.
+  // "Work" IS the home board: the merged project + experiment grid lives on "/".
+  // This pill also stays lit on every /project detail route (see isActive), and on
+  // those pages its label gains a "| Project" / "| Experiment" suffix (see
+  // labelFor). Blog is hidden for now (no posts yet).
+  { href: "/", key: "work" },
   { href: "/about", key: "about" },
 ] as const;
 
@@ -40,6 +39,11 @@ const EASE: [number, number, number, number] = [0.22, 1, 0.36, 1];
 const GROW = 0.28;
 
 const spring = { type: "spring", stiffness: 420, damping: 36 } as const;
+
+// A slight beat before the pill slides in on first page load, so it arrives just
+// after the page starts settling rather than at the very first frame. Applies to
+// the initial mount only (see firstMount) — scroll re-entrances stay immediate.
+const LOAD_DELAY = 0.35;
 
 /**
  * The hairline-bordered pill. When `collapsed`, every item that isn't the
@@ -65,8 +69,25 @@ function NavPill({
   // pathname from next-intl is locale-stripped (e.g. "/project/foo").
   const isActive = (href: string) =>
     href === "/"
-      ? pathname === "/"
+      ? // Work: the home board AND every /project route (index + detail) light it.
+        pathname === "/" ||
+        pathname === "/project" ||
+        pathname.startsWith("/project/")
       : pathname === href || pathname.startsWith(`${href}/`);
+
+  // The Work pill shows WHERE you are: "Work" on the board, "Work /Project" on a
+  // case-study detail page, "Work /Experiment" on a play detail page. Every other
+  // item keeps its plain label.
+  const labelFor = (item: (typeof NAV)[number]) => {
+    if (item.href === "/") {
+      if (pathname.startsWith("/project/case-study"))
+        return `${t("work")} /${t("caseStudy")}`;
+      if (pathname.startsWith("/project/play"))
+        return `${t("work")} /${t("play")}`;
+      return t("work");
+    }
+    return t(item.key);
+  };
 
   const activeHref = NAV.find((item) => isActive(item.href))?.href ?? null;
   // The highlight rests on the active tab and slides to whatever is hovered, so
@@ -77,21 +98,24 @@ function NavPill({
     <nav
       aria-label="Primary"
       onMouseLeave={() => setHoveredItem(null)}
-      className="isolate flex items-center gap-1 rounded-full border-[0.6px] border-[#ececec] bg-canvas px-1.5 py-1 drop-shadow-xl"
+      className="isolate flex items-center gap-1 rounded-full border-[0.6px] border-[#ececec] bg-canvas p-1 drop-shadow-xl"
     >
       {NAV.map((item) => {
         const active = isActive(item.href);
         const asDot = collapsed && !active;
         const highlighted = item.href === highlightedHref;
-        const lit = active || hoveredItem === item.href;
+        const label = labelFor(item);
         return (
           <div key={item.href} onMouseEnter={() => setHoveredItem(item.href)}>
             <Link
               href={item.href}
               aria-current={active ? "page" : undefined}
-              aria-label={t(item.key)}
+              aria-label={label}
               className={`relative flex items-center justify-center rounded-full px-3 py-1.5 no-underline transition-colors ${
-                lit ? "text-fg" : "text-fg-muted"
+                // The item UNDER the dark highlight reads white; every other item
+                // is muted on the light pill container. Keyed to `highlighted`
+                // (not active/hover) so the color tracks the sliding pill exactly.
+                highlighted ? "text-canvas" : "text-fg-muted"
               }`}
             >
               {/* One shared highlight pill — z-0, BEHIND every label — that rests
@@ -99,7 +123,7 @@ function NavPill({
               {highlighted ? (
                 <motion.span
                   layoutId={`nav-highlight-${scope}`}
-                  className="absolute inset-0 z-0 rounded-full bg-surface"
+                  className="absolute inset-0 z-0 rounded-full bg-fg"
                   transition={{ type: "spring", stiffness: 500, damping: 38 }}
                 />
               ) : null}
@@ -120,8 +144,16 @@ function NavPill({
                   reveal; collapses to 0 to hide. Animates width — not scale —
                   so the text never distorts. */}
               <span className="relative z-10 flex items-center justify-center">
+                {/* Keyed by label: framer resolves `width:"auto"` to a fixed px
+                    and caches it, so when the label changes on navigation (Work →
+                    Work | Project) a persisted span would keep the old width and
+                    `overflow-hidden` would clip the longer text. Remounting on the
+                    label re-measures; initial={false} makes it appear at the right
+                    width with no flash. Collapse/expand is unaffected (same label
+                    → same key → same element). */}
                 <motion.span
-                  className="block overflow-hidden whitespace-nowrap text-body"
+                  key={label}
+                  className="block overflow-hidden whitespace-nowrap text-nav"
                   initial={false}
                   animate={
                     asDot
@@ -143,7 +175,7 @@ function NavPill({
                         }
                   }
                 >
-                  {t(item.key)}
+                  {label}
                 </motion.span>
               </span>
             </Link>
@@ -224,8 +256,14 @@ export function UniversalNav() {
 
   // inset-x-0 + mx-auto + w-max centers horizontally without a transform, so
   // framer-motion is free to own translateY for the slide.
+  //
+  // No `initial={false}`: the pill plays its entrance on first mount, so on load
+  // the top pill slides down into place (y: -56 → 0). This runs only on a full
+  // page load — UniversalNav lives in the layout and persists across client
+  // navigations, so it never replays on route changes. Top↔bottom scroll swaps
+  // are unaffected (AnimatePresence `initial` governs only the first mount).
   return (
-    <AnimatePresence initial={false}>
+    <AnimatePresence>
       {docked ? (
         <motion.div
           key="bottom"

@@ -4,6 +4,7 @@ import { MDXImage } from "./MDXImage";
 import { ImageFrame } from "./ImageFrame";
 import { PhotoGrid } from "./PhotoGrid";
 import { MacbookFrame } from "./MacbookFrame";
+import { QuoteCarousel } from "./QuoteCarousel";
 import { ProjectMeta } from "./ProjectMeta";
 import { Gallery } from "./Gallery";
 import { ExperienceItem } from "./ExperienceItem";
@@ -33,6 +34,9 @@ export const mdxComponents: MDXComponents = {
   // entrance direction — turning a "slide right" into a diagonal. The panel is
   // the stage and stays put; the cards animate into it.
   ImageFrame: (props) => <ImageFrame {...props} />,
+  // NOT wrapped in RevealBlock: QuoteCarousel pins with position: sticky, and a
+  // transformed ancestor (which RevealBlock is) breaks sticky's viewport anchor.
+  QuoteCarousel: (props) => <QuoteCarousel {...props} />,
   // Wrapped like MDXImage: PhotoGrid is static, so it takes the standard block
   // fade-up. Flat, borderless documentary photos as one editorial unit.
   PhotoGrid: (props) => (
