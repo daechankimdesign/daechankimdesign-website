@@ -224,6 +224,30 @@ export function leadWithCaseStudy(items: BoardItem[]): BoardItem[] {
 }
 
 /**
+ * Editorial cadence for the board: SPACE the case studies out so each one anchors
+ * a row-pair instead of clumping at the top and bottom. Emit a project, then up to
+ * 2 play pieces, and repeat. With the default spans (project = wide ⅔ tile, play =
+ * standard ⅓ tile) the 12-col grid then reads:
+ *   row 1 [project · play]   row 2 [play · project]   row 3 [play · play] …
+ * so case studies zig-zag left→right down the page (and it still LEADS with a
+ * project). Reverse-chronological WITHIN each type is preserved. PURE (same
+ * cache()-sharing contract as leadWithCaseStudy) — returns a new array.
+ */
+export function interleaveBoard(items: BoardItem[]): BoardItem[] {
+  const projects = items.filter((it) => it.type === "projects");
+  const plays = items.filter((it) => it.type === "sandbox");
+  const out: BoardItem[] = [];
+  let p = 0;
+  for (const project of projects) {
+    out.push(project);
+    out.push(...plays.slice(p, p + 2));
+    p += 2;
+  }
+  out.push(...plays.slice(p));
+  return out;
+}
+
+/**
  * The merged, sorted board dataset. Loads both work types for the requested
  * locale, then reads the LAYOUT fields (`span`, `aspect`) and the sort `date`
  * from the canonical EN item — those are language-agnostic, so they live only in
@@ -258,7 +282,7 @@ export const getWorkBoardItems = cache(async (
   const sorted = perType
     .flat()
     .sort((a, b) => b.sortKey.localeCompare(a.sortKey));
-  return leadWithCaseStudy(sorted);
+  return interleaveBoard(sorted);
 });
 
 /** Full compile for a detail page. Returns null if the source is missing. */

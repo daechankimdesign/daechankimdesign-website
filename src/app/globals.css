@@ -181,6 +181,15 @@ footer.reveal-footer {
   letter-spacing: -0.02em;
   font-size: 16px;
 }
+/* Navigation label — the UniversalNav pill. A step down from body (14px) with a
+   compact single-line height, since it's UI chrome, not prose. Its own token so
+   the nav's size can move independently of body copy. */
+@utility text-nav {
+  font-weight: 400;
+  line-height: 1.4;
+  letter-spacing: -0.02em;
+  font-size: 14px;
+}
 /* The ALL-CAPS label token: meta rows + small tags (~12px), per the About
    mockup. Kept >= 11px floor. Labels/tags only — for small SENTENCE-case prose
    (figcaptions, notices, dates) use `text-note` below, NOT this. */

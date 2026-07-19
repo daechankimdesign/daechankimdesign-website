@@ -1,7 +1,7 @@
 import { setRequestLocale, getTranslations } from "next-intl/server";
-import { getAllFrontmatter, getWorkBoardItems } from "@/lib/mdx";
+import { getWorkBoardItems } from "@/lib/mdx";
 import { HeroHeadline } from "@/components/HeroHeadline";
-import { HomeWorkSection } from "@/components/HomeWorkSection";
+import { WorkBoardClient } from "@/components/WorkBoardClient";
 
 // Hero image stack: one card flies into the right-hand pile per reveal step
 // (3 header lines + the sub text = 4). `src` = 480px card image (quick load), `full` =
@@ -57,11 +57,7 @@ export default async function Home({
   const { locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations("Nav");
-  const [projects, sandbox, boardItems] = await Promise.all([
-    getAllFrontmatter("projects", locale),
-    getAllFrontmatter("sandbox", locale),
-    getWorkBoardItems(locale),
-  ]);
+  const boardItems = await getWorkBoardItems(locale);
 
   return (
     <>
@@ -75,24 +71,24 @@ export default async function Home({
           the top of the viewport. */}
       <div id="hero-sentinel" aria-hidden />
 
-      {/* Work — the whole region behind a view toggle: the current stacked read
-          (case-study image stacks + Experiments strip) or the merged /work tile
-          board with its filter side-tab. See HomeWorkSection. */}
-      <HomeWorkSection
-        projects={projects}
-        sandbox={sandbox}
-        boardItems={boardItems}
-        labels={{
-          caseStudy: t("caseStudy"),
-          play: t("play"),
-          details: t("details"),
-          work: t("work"),
-          all: t("all"),
-          stackedView: t("stackedView"),
-          tileView: t("tileView"),
-          viewOptions: t("viewOptions"),
-        }}
-      />
+      {/* Work — the merged project + experiment grid (the same board as /project),
+          shown WITHOUT its own "Work" heading since this is the home index.
+          `snap-section` makes it a scroll-snap target so the "View all" button's
+          /#work jump LANDS on the grid (near the top, cleared past the nav by the
+          .snap-section 5rem scroll-margin) instead of the hero — the only other
+          snap point — pulling it back. */}
+      <section id="work" className="snap-section container-page pb-16">
+        <WorkBoardClient
+          items={boardItems}
+          heading={t("work")}
+          showHeading={false}
+          labels={{
+            all: t("all"),
+            caseStudy: t("caseStudy"),
+            play: t("play"),
+          }}
+        />
+      </section>
     </>
   );
 }

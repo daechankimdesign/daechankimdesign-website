@@ -43,10 +43,15 @@ export function WorkBoardClient({
   items,
   heading,
   labels,
+  showHeading = true,
 }: {
   items: BoardItem[];
   heading: string;
   labels: Labels;
+  // The home index reuses this grid WITHOUT the "Work" heading (the page has its
+  // own context); the standalone /project page keeps it. Default true preserves
+  // /project's title.
+  showHeading?: boolean;
 }) {
   const reduce = useReducedMotion();
   const [active, setActive] = useState<WorkType | null>(null);
@@ -104,13 +109,15 @@ export function WorkBoardClient({
       {/* Right: main content — the "Work" heading (About-style Reveal entrance)
           then the grid. */}
       <div className="min-w-0 flex-1">
-        <header className="mb-8">
-          <Reveal>
-            <RevealItem as="h1" className="text-display">
-              {heading}
-            </RevealItem>
-          </Reveal>
-        </header>
+        {showHeading ? (
+          <header className="mb-8">
+            <Reveal>
+              <RevealItem as="h1" className="text-display">
+                {heading}
+              </RevealItem>
+            </Reveal>
+          </header>
+        ) : null}
 
         {shown.length === 0 ? (
           <p className="text-body text-fg-muted">No work yet.</p>

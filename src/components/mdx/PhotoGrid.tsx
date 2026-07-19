@@ -1,4 +1,5 @@
 import { ProgressiveImage } from "../ProgressiveImage";
+import { ClickZoom } from "../ClickZoom";
 
 type PhotoGridItem = {
   src: string;
@@ -40,14 +41,15 @@ export function PhotoGrid({
     <figure className="my-8">
       <div className={`grid grid-cols-1 gap-3 ${colClass}`}>
         {items.map((item) => (
-          <ProgressiveImage
-            key={item.src}
-            src={item.src}
-            alt={item.alt}
-            width={item.width}
-            height={item.height}
-            sizes="(max-width: 640px) 100vw, 50vw"
-          />
+          <ClickZoom key={item.src}>
+            <ProgressiveImage
+              src={item.src}
+              alt={item.alt}
+              width={item.width}
+              height={item.height}
+              sizes="(max-width: 640px) 100vw, 50vw"
+            />
+          </ClickZoom>
         ))}
       </div>
       {caption ? (
