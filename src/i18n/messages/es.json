@@ -31,5 +31,13 @@
   },
   "Common": {
     "comingSoon": "Próximamente"
+  },
+  "WorkTags": {
+    "shipped": "Publicado",
+    "concept": "Concepto",
+    "filterBy": "Disciplina",
+    "clear": "Limpiar",
+    "empty": "Ningún trabajo coincide con estos filtros.",
+    "showing": "Mostrando %shown% de %total%"
   }
 }

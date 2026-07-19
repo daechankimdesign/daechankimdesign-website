@@ -18,7 +18,7 @@ export default async function WorkIndexPage({
 
   return (
     <main className="container-page pt-16 pb-24 lg:pt-40">
-      <WorkBoard items={items} />
+      <WorkBoard items={items} syncUrl />
     </main>
   );
 }

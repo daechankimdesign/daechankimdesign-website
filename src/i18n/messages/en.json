@@ -31,5 +31,19 @@
   },
   "Common": {
     "comingSoon": "Coming soon"
+  },
+  "WorkTags": {
+    "shipped": "Shipped",
+    "concept": "Concept",
+    "filterBy": "Discipline",
+    "clear": "Clear",
+    "empty": "No work matches these filters.",
+    "showing": "Showing %shown% of %total%",
+    "productDesign": "Product Design",
+    "userExperience": "User Experience",
+    "serviceDesign": "Service Design",
+    "aiExperience": "AI Experience",
+    "designResearch": "Design Research",
+    "aiDevelopment": "AI Development"
   }
 }

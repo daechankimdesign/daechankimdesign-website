@@ -1,6 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import { useTranslations } from "next-intl";
 import { AnimatePresence, motion } from "framer-motion";
 import { Link, usePathname } from "@/i18n/navigation";
@@ -44,6 +50,127 @@ const spring = { type: "spring", stiffness: 420, damping: 36 } as const;
 // after the page starts settling rather than at the very first frame. Applies to
 // the initial mount only (see firstMount) — scroll re-entrances stay immediate.
 const LOAD_DELAY = 0.35;
+
+// Measure before the browser paints on the client (so the pill's first frame is
+// already at the label's real width — no grow-in flash), falling back to a plain
+// effect on the server to avoid the SSR useLayoutEffect warning.
+const useIsoLayoutEffect =
+  typeof window !== "undefined" ? useLayoutEffect : useEffect;
+
+/**
+ * One pill item. The label drives the pill's width, which ANIMATES (never scales,
+ * so the text can't distort) to the label's natural width — 0 when collapsed to a
+ * dot. When the label itself CHANGES (Work → Work /Project → Work /Experiment on
+ * navigation) the pill grows/shrinks smoothly to the new text while the old label
+ * rolls up + out and the new rolls up + in.
+ *
+ * The width animates to a concrete px value read off an off-screen measurer (not
+ * `width:"auto"`, which framer resolves once and caches — the old approach had to
+ * REMOUNT on every label change to re-measure, which is why the swap was instant).
+ */
+function NavItem({
+  href,
+  label,
+  active,
+  asDot,
+  highlighted,
+  scope,
+  onMouseEnter,
+}: {
+  href: string;
+  label: string;
+  active: boolean;
+  asDot: boolean;
+  highlighted: boolean;
+  scope: string;
+  onMouseEnter: () => void;
+}) {
+  const measureRef = useRef<HTMLSpanElement>(null);
+  // null until first measured → the very first render uses "auto" (correct width,
+  // no animation); every render after is a px number, so label changes animate.
+  const [labelWidth, setLabelWidth] = useState<number | null>(null);
+  useIsoLayoutEffect(() => {
+    if (measureRef.current)
+      // Subpixel width, rounded UP, so the clipping window never shaves the last
+      // glyph's edge (offsetWidth floors and can clip by ~1px).
+      setLabelWidth(Math.ceil(measureRef.current.getBoundingClientRect().width));
+  }, [label]);
+
+  return (
+    <div onMouseEnter={onMouseEnter}>
+      <Link
+        href={href}
+        aria-current={active ? "page" : undefined}
+        aria-label={label}
+        className={`relative flex items-center justify-center rounded-full px-3 py-1.5 no-underline transition-colors ${
+          // The item UNDER the dark highlight reads white; every other item is
+          // muted on the light pill container. Keyed to `highlighted` (not
+          // active/hover) so the color tracks the sliding pill exactly.
+          highlighted ? "text-canvas" : "text-fg-muted"
+        }`}
+      >
+        {/* One shared highlight pill — z-0, BEHIND every label — that rests on the
+            active tab and slides to the hovered tab. */}
+        {highlighted ? (
+          <motion.span
+            layoutId={`nav-highlight-${scope}`}
+            className="absolute inset-0 z-0 rounded-full bg-fg"
+            transition={{ type: "spring", stiffness: 500, damping: 38 }}
+          />
+        ) : null}
+        {/* Dot: absolutely centered in the Link's padding box (inset-0 + m-auto),
+            so it never adds width — the label alone drives the box. Fades in FAST
+            (no scale pop) so it's already present as the label collapses INTO it. */}
+        <motion.span
+          aria-hidden
+          className="pointer-events-none absolute inset-0 z-10 m-auto h-2 w-2 rounded-full bg-surface"
+          initial={false}
+          animate={{ opacity: asDot ? 1 : 0 }}
+          transition={{ duration: 0.1, ease: "linear" }}
+        />
+        {/* Label window: width animates (never scale) to the measured natural
+            width, 0 when collapsed. overflow-hidden clips both the width reveal
+            AND the vertical roll of the label swap below. */}
+        <motion.span
+          className="relative z-10 block overflow-hidden text-nav"
+          initial={false}
+          animate={{ width: asDot ? 0 : labelWidth ?? "auto", opacity: asDot ? 0 : 1 }}
+          transition={{
+            width: { duration: asDot ? 0.26 : GROW, ease: EASE },
+            opacity: asDot ? { duration: 0.12 } : { duration: 0.2, delay: GROW },
+          }}
+        >
+          {/* popLayout pops the exiting label to absolute so the entering one can
+              take its place immediately — the two roll past each other (old up +
+              out, new up + in) instead of waiting. initial={false} keeps the first
+              label from rolling in on mount. */}
+          <AnimatePresence mode="popLayout" initial={false}>
+            <motion.span
+              key={label}
+              className="block whitespace-nowrap"
+              initial={{ opacity: 0, y: "100%" }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: "-100%" }}
+              transition={{ duration: 0.3, ease: EASE }}
+            >
+              {label}
+            </motion.span>
+          </AnimatePresence>
+        </motion.span>
+        {/* Off-screen measurer — the label at its natural width, feeding the width
+            animation above. Never animated; invisible + absolute so it adds no
+            layout. */}
+        <span
+          ref={measureRef}
+          aria-hidden
+          className="pointer-events-none invisible absolute whitespace-nowrap text-nav"
+        >
+          {label}
+        </span>
+      </Link>
+    </div>
+  );
+}
 
 /**
  * The hairline-bordered pill. When `collapsed`, every item that isn't the
@@ -106,80 +233,16 @@ function NavPill({
         const highlighted = item.href === highlightedHref;
         const label = labelFor(item);
         return (
-          <div key={item.href} onMouseEnter={() => setHoveredItem(item.href)}>
-            <Link
-              href={item.href}
-              aria-current={active ? "page" : undefined}
-              aria-label={label}
-              className={`relative flex items-center justify-center rounded-full px-3 py-1.5 no-underline transition-colors ${
-                // The item UNDER the dark highlight reads white; every other item
-                // is muted on the light pill container. Keyed to `highlighted`
-                // (not active/hover) so the color tracks the sliding pill exactly.
-                highlighted ? "text-canvas" : "text-fg-muted"
-              }`}
-            >
-              {/* One shared highlight pill — z-0, BEHIND every label — that rests
-                  on the active tab and slides to the hovered tab. */}
-              {highlighted ? (
-                <motion.span
-                  layoutId={`nav-highlight-${scope}`}
-                  className="absolute inset-0 z-0 rounded-full bg-fg"
-                  transition={{ type: "spring", stiffness: 500, damping: 38 }}
-                />
-              ) : null}
-              {/* Dot: absolutely centered in the Link's padding box (inset-0 +
-                  m-auto), so it never adds width — the label alone drives the
-                  box. Full-size and fading in FAST (no scale pop), so it's
-                  already present as the label collapses INTO it — never a
-                  "collapsed, then a dot grows in" gap. z-10 keeps it above the
-                  sliding highlight pill. */}
-              <motion.span
-                aria-hidden
-                className="pointer-events-none absolute inset-0 z-10 m-auto h-2 w-2 rounded-full bg-surface"
-                initial={false}
-                animate={{ opacity: asDot ? 1 : 0 }}
-                transition={{ duration: 0.1, ease: "linear" }}
-              />
-              {/* Label (z-10) drives the width: grows first then fades in to
-                  reveal; collapses to 0 to hide. Animates width — not scale —
-                  so the text never distorts. */}
-              <span className="relative z-10 flex items-center justify-center">
-                {/* Keyed by label: framer resolves `width:"auto"` to a fixed px
-                    and caches it, so when the label changes on navigation (Work →
-                    Work | Project) a persisted span would keep the old width and
-                    `overflow-hidden` would clip the longer text. Remounting on the
-                    label re-measures; initial={false} makes it appear at the right
-                    width with no flash. Collapse/expand is unaffected (same label
-                    → same key → same element). */}
-                <motion.span
-                  key={label}
-                  className="block overflow-hidden whitespace-nowrap text-nav"
-                  initial={false}
-                  animate={
-                    asDot
-                      ? {
-                          width: 0,
-                          opacity: 0,
-                          transition: {
-                            width: { duration: 0.26, ease: EASE },
-                            opacity: { duration: 0.12 },
-                          },
-                        }
-                      : {
-                          width: "auto",
-                          opacity: 1,
-                          transition: {
-                            width: { duration: GROW, ease: EASE },
-                            opacity: { duration: 0.2, delay: GROW },
-                          },
-                        }
-                  }
-                >
-                  {label}
-                </motion.span>
-              </span>
-            </Link>
-          </div>
+          <NavItem
+            key={item.href}
+            href={item.href}
+            label={label}
+            active={active}
+            asDot={asDot}
+            highlighted={highlighted}
+            scope={scope}
+            onMouseEnter={() => setHoveredItem(item.href)}
+          />
         );
       })}
     </nav>
@@ -211,8 +274,15 @@ export function UniversalNav() {
   );
   const lastY = useRef(0);
   const hoverTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // True only for the first render, so the load delay applies to the top pill's
+  // initial mount and not to later scroll-up re-entrances. A ref (not state): the
+  // effect flips it without a re-render, so it can never cancel the in-flight
+  // delayed entrance; the next genuine re-render (a scroll) reads it false.
+  const firstMount = useRef(true);
 
   useEffect(() => {
+    // First commit is done; the initial-load delay no longer applies.
+    firstMount.current = false;
     const mq = window.matchMedia("(max-width: 767px)");
     const onMq = () => setIsMobile(mq.matches);
     const onScroll = () => {
@@ -307,7 +377,9 @@ export function UniversalNav() {
           initial={{ y: -56, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: -56, opacity: 0 }}
-          transition={spring}
+          transition={
+            firstMount.current ? { ...spring, delay: LOAD_DELAY } : spring
+          }
         >
           <NavPill scope="top" />
         </motion.div>

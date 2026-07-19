@@ -1,9 +1,10 @@
 import { notFound } from "next/navigation";
 import { setRequestLocale, getTranslations } from "next-intl/server";
-import { getCompiled, getSlugs } from "@/lib/mdx";
+import { getCompiled, getSlugs, getWorkMeta } from "@/lib/mdx";
 import { routing } from "@/i18n/routing";
 import { Reveal, RevealItem } from "@/components/Reveal";
 import { SideDocumentTab } from "@/components/SideDocumentTab";
+import { StatusBadge } from "@/components/StatusBadge";
 import { MoreWork } from "@/components/MoreWork";
 import { Colophon } from "@/components/Colophon";
 
@@ -45,6 +46,8 @@ export default async function CaseStudyDetailPage({
     : null;
 
   const typeLabel = (await getTranslations("Nav"))("caseStudy");
+  const wt = await getTranslations("WorkTags");
+  const meta = await getWorkMeta("projects", slug);
 
   return (
     <main className="container-page pt-32 pb-16">
@@ -67,21 +70,25 @@ export default async function CaseStudyDetailPage({
           <header className="mb-8 measure">
             <Reveal>
               <RevealItem as="p" className="mb-4">
-                <span className="text-caption inline-flex items-center bg-fg px-2.5 py-1 text-canvas">
-                  {typeLabel}
+                <span className="inline-flex flex-wrap items-center gap-2">
+                  <span className="text-caption inline-flex items-center bg-fg px-2.5 py-1 text-canvas">
+                    {typeLabel}
+                  </span>
+                  {meta.status ? (
+                    <StatusBadge status={meta.status} label={wt(meta.status)} />
+                  ) : null}
                 </span>
               </RevealItem>
               <RevealItem as="h1" className="text-display">
                 {frontmatter.title}
               </RevealItem>
-              {frontmatter.summary ? (
-                <RevealItem as="p" className="text-body mt-3 text-fg-muted">
-                  {frontmatter.summary}
-                </RevealItem>
-              ) : null}
-              {frontmatter.tags && frontmatter.tags.length > 0 ? (
+              {/* `summary` is intentionally NOT rendered here: it's kept in the
+                  MDX frontmatter (still used for the board tiles / metadata) but
+                  hidden from the detail page header. Disciplines (tags) live in
+                  the board filter, not here — the header shows year + tools. */}
+              {meta.year || meta.tools.length > 0 ? (
                 <RevealItem as="p" className="text-caption mt-3 text-fg-muted uppercase">
-                  {frontmatter.tags.join("  ·  ")}
+                  {[meta.year, ...meta.tools].filter(Boolean).join("  ·  ")}
                 </RevealItem>
               ) : null}
             </Reveal>
