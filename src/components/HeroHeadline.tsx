@@ -293,16 +293,18 @@ export function HeroHeadline({ stack }: { stack: HeroStackItem[] }) {
         >
           <div className="relative">
             {/* Envelope preview — rendered BEFORE the button in DOM order (no
-                z-index needed) so it paints BEHIND it; centered on the button's
-                own box via inset-0 + m-auto (a transform-free centering trick,
-                since framer-motion owns EnvelopePreview's own `transform` for the
-                fly-in/tilt — a translate utility here would just get overwritten).
+                z-index needed) so it paints BEHIND it; vertically centered
+                (inset-y-0 + m-auto, a transform-free centering trick, since
+                framer-motion owns EnvelopePreview's own `transform` for the
+                fly-in/tilt — a translate utility here would just get overwritten)
+                and pinned to the button's RIGHT edge (right-0) so it lands
+                aligned with the arrow, not the start of the "Love letter" label.
                 from="left": this anchor sits in the LEFT column, so it flies in
                 from the left edge (the footer's stays "right", its default, since
                 its anchor is on the right). Untouched: EnvelopePreview's own
                 randomness/tilt/timing — see MOBILE_AUTO_DELAY above for the
                 mobile (no-hover) auto-trigger. */}
-            <EnvelopePreview className="absolute inset-0 m-auto" from="left" />
+            <EnvelopePreview className="absolute inset-y-0 right-0 m-auto" from="left" />
             <LoveLetterButton arrow="right" />
           </div>
           {/* Resume lives on Firebase Storage (media/about/), not public/ —

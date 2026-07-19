@@ -49,7 +49,7 @@ export async function Colophon({
   const t = await getTranslations("Content");
 
   return (
-    <div className="mt-12 mb-12">
+    <div className="my-20">
       {when || org ? (
         <div className="text-note mb-2 flex items-baseline justify-between gap-4 text-fg-subtle">
           <span>{when ? `${t("updated")} ${when}` : ""}</span>

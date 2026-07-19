@@ -2,6 +2,8 @@ import type { MDXComponents } from "next-mdx-remote-client/rsc";
 import { VideoPlayer } from "./VideoPlayer";
 import { MDXImage } from "./MDXImage";
 import { ImageFrame } from "./ImageFrame";
+import { PhotoGrid } from "./PhotoGrid";
+import { MacbookFrame } from "./MacbookFrame";
 import { ProjectMeta } from "./ProjectMeta";
 import { Gallery } from "./Gallery";
 import { ExperienceItem } from "./ExperienceItem";
@@ -31,6 +33,21 @@ export const mdxComponents: MDXComponents = {
   // entrance direction — turning a "slide right" into a diagonal. The panel is
   // the stage and stays put; the cards animate into it.
   ImageFrame: (props) => <ImageFrame {...props} />,
+  // Wrapped like MDXImage: PhotoGrid is static, so it takes the standard block
+  // fade-up. Flat, borderless documentary photos as one editorial unit.
+  PhotoGrid: (props) => (
+    <RevealBlock as="div">
+      <PhotoGrid {...props} />
+    </RevealBlock>
+  ),
+  // Wrapped, unlike ImageFrame: the MacBook frame is static (no motion of its
+  // own), so it takes the same quiet block fade-up every other image gets rather
+  // than popping in while the surrounding prose fades.
+  MacbookFrame: (props) => (
+    <RevealBlock as="div">
+      <MacbookFrame {...props} />
+    </RevealBlock>
+  ),
   ProjectMeta: (props) => (
     <RevealBlock as="div">
       <ProjectMeta {...props} />

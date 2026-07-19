@@ -15,15 +15,15 @@ embedPosterMobile: https://firebasestorage.googleapis.com/v0/b/daechankimdesign-
 org: Techstars Startup Weekend
 ---
 
-VendorPass came out of two days at the [Boston Tech Week 2026](https://www.tech-week.com/). As a part of the Techstars Startup Weekend, I teamed up with [Chaitanya](https://www.linkedin.com/in/chaitanya-g-316633244/), [Douglas](https://www.linkedin.com/in/douglas-m-438990190/), and [Mekhal](https://www.linkedin.com/in/mekhalrajr/) to tackle one problem and built a working product against the clock. I led design and product, shaping the flows and the interface, while teammates ran user research and business planning. What we shipped by Sunday is the app embedded above.
+VendorPass came out of two days at the [Boston Tech Week 2026](https://www.tech-week.com/). As part of the Techstars Startup Weekend, I teamed up with [Chaitanya](https://www.linkedin.com/in/chaitanya-g-316633244/), [Douglas](https://www.linkedin.com/in/douglas-m-438990190/), and [Mekhal](https://www.linkedin.com/in/mekhalrajr/) to tackle one problem and built a working product against the clock. I led design and product, shaping the flows and the interface, while teammates ran user research and business planning. What we shipped by Sunday is the app embedded above.
 
-The idea was building two sided market place; help property managers find local contractors (vendors), such as plumbers, electricians, and landscapers, who are licensed and qualified for the jobs, and create a new promotional channel for the contractors. For the property managers, the hard part is not finding a contractor. It is trusting that the paperwork behind them is real and still current.
+The idea was a two-sided marketplace. On one side, help property managers find local contractors (vendors), such as plumbers, electricians, and landscapers, who are licensed and qualified for the job; on the other, give those contractors a new promotional channel. For the property managers, the hard part is not finding a contractor. It is trusting that the paperwork behind them is real and still current.
 
 ## The problem
 
 <Dek>Managers never lack contractors. They lack a fast way to trust them.</Dek>
 
-The idea sprung out of one of team member's observation. A property manager juggles vendors across many buildings, and compliance is a liability minefield. An expired certificate of insurance or a lapsed business license can turn a routine repair into a lawsuit. Today that verification lives in email threads, loose PDFs, and spreadsheets that go stale the moment they are saved. Our research over the weekend kept surfacing the same thing: managers do not lack contractors, they lack a fast way to trust them. **VendorPass turns that scatter into a single source of truth**, where a vendor's standing is a status you can read at a glance instead of a folder you have to audit.
+The idea sprang from one team member's observation. A property manager juggles vendors across many buildings, and compliance is a liability minefield. An expired certificate of insurance or a lapsed business license can turn a routine repair into a lawsuit. Today that verification lives in email threads, loose PDFs, and spreadsheets that go stale the moment they are saved. Our research over the weekend kept surfacing the same thing: managers do not lack contractors, they lack a fast way to trust them. **VendorPass turns that scatter into a single source of truth**, where a vendor's standing is a status to read at a glance, not a folder to audit.
 
 ## How it works
 
@@ -51,11 +51,22 @@ This is the core idea, and the part I designed the whole interface around. Every
 
 The hierarchies and visual cues make the weight of an element track its compliance status directly. A roster reads like a blueprint where the trustworthy things are literally bolder, so a manager scanning a list feels the risk before they read a single field.
 
-<MDXImage
-  src="https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fsandbox%2Fvendorpass%2Fmodal-verified.jpg?alt=media"
-  alt="A verified vendor's detail modal: business license, W-9, and certificate of insurance each badged Verified in saturated blue, with the Tier 3 chip at top"
-  width={1800}
-  height={1125}
+<ImageFrame
+  items={[
+    {
+      src: "https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fsandbox%2Fvendorpass%2Fmodal-unverified.jpg?alt=media",
+      alt: "The vendor detail modal at Tier 1: Fresh Coat Painting badged Unverified in gray, with business license, W-9, and certificate of insurance all Not uploaded",
+      width: 1800,
+      height: 1125,
+    },
+    {
+      src: "https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fsandbox%2Fvendorpass%2Fmodal-verified.jpg?alt=media",
+      alt: "The same modal at Tier 3: a verified vendor with business license, W-9, and certificate of insurance each badged Verified in saturated blue",
+      width: 1800,
+      height: 1125,
+    },
+  ]}
+  caption="One modal, two trust levels. Unverified reads gray with every document Not uploaded; Tier 3 Verified reads in saturated blue with each certificate confirmed, so visual weight tracks compliance at a glance."
 />
 
 ## The build
@@ -70,4 +81,4 @@ Vendor data is split public and private at the database level: search reads only
 
 <Dek>A weekend proved the model; getting real vendors to upload is the next problem.</Dek>
 
-By Sunday we had a live marketplace, a real document-to-tier pipeline, and a design system that made the trust model legible at a glance, which is more than most weekends produce. The piece I am proudest of is that verification model, the way three tiers turn a compliance chore into something you can read instantly. The honest open question is everything downstream of a real vendor base: the tiers only mean something once enough vendors have uploaded real documents and enough admins have done the promoting, and that chicken-and-egg problem is not something a weekend, or design alone, can solve. What the weekend did prove is the shape of the answer.
+By Sunday we had a live marketplace, a real document-to-tier pipeline, and a design system that made the trust model legible at a glance, which is more than most weekends produce. The piece I am proudest of is that verification model, the way three tiers turn a compliance chore into something that reads instantly. The honest open question is everything downstream of a real vendor base: the tiers only mean something once enough vendors have uploaded real documents and enough admins have done the promoting, and that chicken-and-egg problem is not something a weekend, or design alone, can solve. What the weekend did prove is the shape of the answer.

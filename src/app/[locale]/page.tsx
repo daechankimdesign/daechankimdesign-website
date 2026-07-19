@@ -1,9 +1,7 @@
 import { setRequestLocale, getTranslations } from "next-intl/server";
-import { getAllFrontmatter } from "@/lib/mdx";
-import { RevealOnView } from "@/components/Reveal";
+import { getAllFrontmatter, getWorkBoardItems } from "@/lib/mdx";
 import { HeroHeadline } from "@/components/HeroHeadline";
-import { FeaturedProjects } from "@/components/FeaturedProjects";
-import { SandboxCarousel } from "@/components/SandboxCarousel";
+import { HomeWorkSection } from "@/components/HomeWorkSection";
 
 // Hero image stack: one card flies into the right-hand pile per reveal step
 // (3 header lines + the sub text = 4). `src` = 480px card image (quick load), `full` =
@@ -59,9 +57,10 @@ export default async function Home({
   const { locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations("Nav");
-  const [projects, sandbox] = await Promise.all([
+  const [projects, sandbox, boardItems] = await Promise.all([
     getAllFrontmatter("projects", locale),
     getAllFrontmatter("sandbox", locale),
+    getWorkBoardItems(locale),
   ]);
 
   return (
@@ -76,29 +75,24 @@ export default async function Home({
           the top of the viewport. */}
       <div id="hero-sentinel" aria-hidden />
 
-      {/* Projects — featured showcase. Opacity-only reveal (rise=false): the
-          section holds a sticky heading, which a transformed ancestor breaks.
-          No delay: it sits below the hero's min-h-[70vh] section, so it reveals
-          on scroll-in — a hold here would just be dead air before content. */}
-      <RevealOnView rise={false}>
-        <section id="work" className="container-page py-16 grid grid-cols-1 lg:grid-cols-12 gap-x-8 lg:gap-x-16 gap-y-0 scroll-mt-24">
-          {/* Sticky only from lg, where the label owns its own column and the
-              images sit in col-start-5. Below lg the grid is ONE column, so a
-              pinned transparent label would float over the project images. */}
-          <h3 className="text-h3 z-20 mb-8 lg:sticky lg:top-24 lg:col-span-4">{t("caseStudy")}</h3>
-          <FeaturedProjects items={projects} detailsLabel={t("details")} />
-        </section>
-      </RevealOnView>
-
-      {/* Sandbox — native horizontal scroll strip (overscroll-x-contain guards
-          Chrome's back-swipe). Opacity-only reveal keeps it unobtrusive. */}
-      <RevealOnView rise={false}>
-        <SandboxCarousel
-          items={sandbox}
-          heading={t("play")}
-          detailsLabel={t("details")}
-        />
-      </RevealOnView>
+      {/* Work — the whole region behind a view toggle: the current stacked read
+          (case-study image stacks + Experiments strip) or the merged /work tile
+          board with its filter side-tab. See HomeWorkSection. */}
+      <HomeWorkSection
+        projects={projects}
+        sandbox={sandbox}
+        boardItems={boardItems}
+        labels={{
+          caseStudy: t("caseStudy"),
+          play: t("play"),
+          details: t("details"),
+          work: t("work"),
+          all: t("all"),
+          stackedView: t("stackedView"),
+          tileView: t("tileView"),
+          viewOptions: t("viewOptions"),
+        }}
+      />
     </>
   );
 }
