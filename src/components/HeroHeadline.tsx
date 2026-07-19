@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import { HeroImageStack, type HeroStackItem } from "./HeroImageStack";
+import { type HeroStackItem } from "./HeroImageStack";
+import { HeroCoverFlow } from "./HeroCoverFlow";
 import { Highlighter } from "./Highlighter";
 import { LinkButton } from "./LinkButton";
 import { EnvelopePreview, LoveLetterButton, useLoveLetter } from "./LoveLetter";
@@ -164,8 +165,6 @@ export function HeroHeadline({ stack }: { stack: HeroStackItem[] }) {
 
   const ledeShown = count > HEADLINE.length;
   const buttonsShown = count > HEADLINE.length + 1;
-  // One image reveals per header line + one for the sub text (== stack.length).
-  const cardsRevealed = Math.min(count, stack.length);
 
   // Mobile has no hover to reveal the envelope preview, so once the CTA row
   // appears, fly it in on its own after MOBILE_AUTO_DELAY — no interaction
@@ -319,8 +318,16 @@ export function HeroHeadline({ stack }: { stack: HeroStackItem[] }) {
         </motion.div>
       </div>
 
-      {/* Right — image stack; a card flies in on each text reveal. */}
-      <HeroImageStack items={stack} revealed={cardsRevealed} reduce={!!reduce} />
+      {/* Right — image deck. Fades in with the first header line (resting on the
+          primary photo), then flips through each photo once after the text
+          settles (see HeroCoverFlow). Clicking the centered card opens the
+          lightbox. */}
+      <HeroCoverFlow
+        items={stack}
+        show={entered}
+        flourish={buttonsShown}
+        reduce={!!reduce}
+      />
     </div>
   );
 }

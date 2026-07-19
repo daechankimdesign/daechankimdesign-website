@@ -161,14 +161,14 @@ export function GlobalNav() {
             href={RESUME_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-body uppercase tracking-[0.04em] no-underline transition-opacity hover:opacity-60 text-[#e1e1e1]"
+            className="text-nav uppercase tracking-[0.04em] no-underline transition-opacity hover:opacity-60 text-[#e1e1e1]"
             onClick={() => posthog.capture("resume_downloaded")}
           >
             {t("resume")}
           </a>
           <Link
             href="/about#contact"
-            className="text-body uppercase tracking-[0.04em] no-underline transition-opacity hover:opacity-60 text-[#e1e1e1]"
+            className="text-nav uppercase tracking-[0.04em] no-underline transition-opacity hover:opacity-60 text-[#e1e1e1]"
             onClick={(e) => {
               posthog.capture("contact_clicked", { location: "nav" });
               // Modified / non-primary clicks keep native behaviour (new tab, etc.).

@@ -8,15 +8,28 @@ import rehypeUnwrapImages from "rehype-unwrap-images";
 import { mdxComponents } from "@/components/mdx";
 import { getCachedTranslation } from "@/lib/translations";
 import { routing } from "@/i18n/routing";
+import {
+  type WorkStatus,
+  stringList,
+  toWorkStatus,
+} from "@/lib/taxonomy";
 
 export type ContentType = "projects" | "sandbox" | "blog";
 
-/** Frontmatter shape. Translate: title, summary. Preserve: slug, thumbnail, date, updated, org, tags. */
+/** Frontmatter shape. Translate: title, summary. Preserve: slug, thumbnail, date,
+    updated, org, tags. EN-only (NOT in the translation contract, like span/aspect):
+    tools, status. */
 export type Frontmatter = {
   title: string;
   summary?: string;
   thumbnail?: string;
   date?: string;
+  /** Craft tools used, verbatim proper nouns (e.g. "Claude Code", "Figma").
+      A visual tag on the tile + slug header. EN-only — never translated. */
+  tools?: string[];
+  /** Lifecycle: "shipped" | "concept". A canonical key rendered via i18n
+      (WorkTags.*), not a display string. EN-only. Absent ⇒ no status badge. */
+  status?: WorkStatus;
   /** ISO date the DOCUMENT was last revised (distinct from `date`, which is when
       the WORK happened). Shown in the end-of-story colophon; falls back to
       `date`. A date is language-agnostic, so it's preserved, never translated. */
@@ -24,6 +37,9 @@ export type Frontmatter = {
   /** Organization the work was done UNDER — the employer/school/self, not the
       client. Rendered as "@Oria" in the colophon. A proper noun, so preserved. */
   org?: string;
+  /** DISCIPLINES only (from the closed DISCIPLINES vocabulary) — the work-board
+      filter facets. Repurposed: was a mixed bag of disciplines + tools + topics.
+      Stays in PRESERVED_KEYS (already there); read EN-only for the board/header. */
   tags?: string[];
   /** Sandbox live-demo URL — rendered as an interactive frame atop the body. */
   embed?: string;
@@ -183,6 +199,15 @@ export type BoardItem = ContentItem & {
   span: Span;
   aspect?: string;
   sortKey: string;
+  // Taxonomy, read EN-only (like span/aspect) — never from the translated doc.
+  /** 4-digit work year, derived from `date`. */
+  year: string;
+  /** Filter facets — the closed discipline vocabulary. */
+  disciplines: string[];
+  /** Craft tools, verbatim. Visual tag. */
+  tools: string[];
+  /** Lifecycle badge; absent ⇒ no badge. */
+  status?: WorkStatus;
 };
 
 // case-study ↔ projects, play ↔ sandbox (mirrors SettingsModal's SEGMENT_TO_TYPE).
@@ -268,13 +293,19 @@ export const getWorkBoardItems = cache(async (
       const enBySlug = new Map(enItems.map((it) => [it.slug, it.frontmatter]));
       return items.map((it): BoardItem => {
         const en = enBySlug.get(it.slug) ?? it.frontmatter;
+        const sortKey = normalizeDate(en.date ?? it.frontmatter.date);
         return {
           ...it,
           type,
           basePath: WORK_BASE_PATH[type],
           span: resolveSpan(en.span, type),
           aspect: typeof en.aspect === "string" ? en.aspect : undefined,
-          sortKey: normalizeDate(en.date ?? it.frontmatter.date),
+          sortKey,
+          // Taxonomy from the canonical EN item (language-agnostic).
+          year: sortKey.slice(0, 4),
+          disciplines: stringList(en.tags),
+          tools: stringList(en.tools),
+          status: toWorkStatus(en.status),
         };
       });
     }),
@@ -283,6 +314,27 @@ export const getWorkBoardItems = cache(async (
     .flat()
     .sort((a, b) => b.sortKey.localeCompare(a.sortKey));
   return interleaveBoard(sorted);
+});
+
+/**
+ * EN-only visual-tag data (year / tools / status) for a slug detail header.
+ * Detail pages compile the TRANSLATED doc via getCompiled, but tools/status are
+ * EN-only (off the preservation contract), so they're read from the canonical
+ * source here — cheap (no MDX compile), immune to translation staleness. `date`
+ * is preserved, so the derived year is identical across locales anyway.
+ */
+export const getWorkMeta = cache(async (
+  type: ContentType,
+  slug: string,
+): Promise<{ year: string; tools: string[]; status?: WorkStatus }> => {
+  const mdx = await readDiskSource(type, slug);
+  if (!mdx) return { year: "", tools: [] };
+  const { frontmatter } = getFrontmatter<Frontmatter>(mdx);
+  return {
+    year: normalizeDate(frontmatter.date).slice(0, 4),
+    tools: stringList(frontmatter.tools),
+    status: toWorkStatus(frontmatter.status),
+  };
 });
 
 /** Full compile for a detail page. Returns null if the source is missing. */

@@ -1,5 +1,10 @@
 import { getTranslations } from "next-intl/server";
-import { getWorkBoardItems, leadWithCaseStudy, type WorkType } from "@/lib/mdx";
+import {
+  getWorkBoardItems,
+  leadWithCaseStudy,
+  type BoardItem,
+  type WorkType,
+} from "@/lib/mdx";
 import { LinkButton } from "./LinkButton";
 import { RevealOnView } from "./Reveal";
 import { RevealTile } from "./RevealTile";
@@ -53,8 +58,11 @@ export async function MoreWork({
   if (items.length === 0) return null;
 
   const t = await getTranslations("Nav");
+  const wt = await getTranslations("WorkTags");
   const labelFor = (type: WorkType) =>
     type === "projects" ? t("caseStudy") : t("play");
+  const statusLabelFor = (it: BoardItem) =>
+    it.status ? wt(it.status) : undefined;
 
   return (
     <>
@@ -98,7 +106,11 @@ export async function MoreWork({
               <RevealTile index={i}>
                 {/* No `priority`: this is always below the fold, and eager-loading
                     it would compete with the article's own LCP image. */}
-                <WorkTile item={item} typeLabel={labelFor(item.type)} />
+                <WorkTile
+                  item={item}
+                  typeLabel={labelFor(item.type)}
+                  statusLabel={statusLabelFor(item)}
+                />
               </RevealTile>
             </li>
           ))}

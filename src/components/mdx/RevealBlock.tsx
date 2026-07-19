@@ -28,9 +28,21 @@ import { EASE_OUT, DURATION, DELAY } from "@/lib/motion";
 const HIDDEN = { opacity: 0, y: 16 } as const;
 const SHOW = { opacity: 1, y: 0 } as const;
 
-// Reveal slightly before the block is fully on-screen so it reads as settled by
-// the time the reader reaches it, never lagging behind the scroll.
-const VIEWPORT = { once: true, margin: "0px 0px -10% 0px" } as const;
+// HOW SOON a block starts to reveal, relative to the scroll — the one knob to
+// turn if body text lags behind a quick scroll. It's the BOTTOM of the in-view
+// trigger's root margin:
+//   • POSITIVE (e.g. "15%") starts the fade while the block is still that far
+//     BELOW the fold, so the 2s reveal has a head start and reads as settled by
+//     the time you reach it. Raise it if text still can't keep up.
+//   • NEGATIVE ("-10%") waited until the block was already that far INTO view,
+//     then began — which is why it trailed a brisk scroll.
+// (To change the fade SPEED instead of its lead, that's DURATION in lib/motion.ts,
+// but that token is shared with the hero + headers.)
+const ENTER_LEAD = "25%";
+const VIEWPORT = {
+  once: true,
+  margin: `0px 0px ${ENTER_LEAD} 0px`,
+} as const;
 
 const TAGS = {
   div: motion.div,

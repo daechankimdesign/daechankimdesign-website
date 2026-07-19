@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { useRef, useState, useSyncExternalStore } from "react";
 import {
   motion,
   useScroll,
-  useTransform,
+  useMotionValueEvent,
   useReducedMotion,
 } from "framer-motion";
 import { ProgressiveImage } from "../ProgressiveImage";
@@ -21,20 +21,22 @@ type Slide = {
 };
 
 /**
- * A pinned, scroll-driven quote carousel. Each slide pairs an interview photo
- * with that person's quote. The section is taller than the viewport; while the
- * reader scrolls through it, the carousel PINS (position: sticky) and vertical
- * scroll drives the horizontal slide from one quote to the next. Each slide
- * dwells at a rest point with smooth transitions between, so the track never
- * releases the pin mid-slide — it always settles on a whole quote.
+ * A quote carousel that pairs each interview photo with that person's quote and
+ * advances horizontally as you scroll.
  *
- * DESKTOP-ONLY, mirroring ProfileStack: the pin needs a tall scroll region and a
- * steady pointer. Below `lg`, and for reduced motion, it renders a plain stacked
- * layout (photo + quote, one after another) with no pin or scroll-jacking.
+ * INLINE — no pin, no reserved scroll height. It sits in the document flow like
+ * any other figure (`my-8`), so the prose above and below keeps its natural
+ * spacing: NO tall pinned section wedging the text apart, no vertical gaps.
  *
- * MUST be registered UNWRAPPED in mdxComponents (no RevealBlock): RevealBlock
- * applies a transform, and a transformed ancestor breaks position: sticky's
- * viewport reference, un-pinning the whole effect.
+ * SNAP, NOT SCRUB — the fix for "stops mid-slide": the figure's position in the
+ * viewport selects a DISCRETE active index (quote 0 while it's in the lower half
+ * of its pass, the next as it crosses center), and the track TWEENS to that quote
+ * with a spring. A scrubbed track parks half-slid wherever you stop; this one
+ * always animates to a whole quote and settles there. Same pattern as the About
+ * page's ProfileStack (scroll-triggered discrete step → clean tween).
+ *
+ * Mobile and reduced-motion render a plain stacked layout (each pair one after
+ * another) — the most natural reading on a phone.
  */
 export function QuoteCarousel({ items = [] }: { items?: Slide[] }) {
   const reduce = useReducedMotion();
@@ -46,7 +48,7 @@ export function QuoteCarousel({ items = [] }: { items?: Slide[] }) {
 
   if (!items.length) return null;
   if (reduce || compact) return <StaticStack items={items} />;
-  return <PinnedCarousel items={items} />;
+  return <ScrollCarousel items={items} />;
 }
 
 // ── Desktop-only gate (same store pattern as ProfileStack) ────────────────────
@@ -59,84 +61,79 @@ const subscribeCompact = (onChange: () => void) => {
 const getCompact = () => window.matchMedia(COMPACT_Q).matches;
 const getCompactServer = () => false;
 
-// ── Pinned, scroll-driven mode ────────────────────────────────────────────────
-function PinnedCarousel({ items }: { items: Slide[] }) {
-  const sectionRef = useRef<HTMLDivElement>(null);
-  const frameRef = useRef<HTMLDivElement>(null);
-  // Translate the track in PIXELS off a measured frame width — unambiguous and
-  // responsive, avoiding the "% of which box?" trap when a flex track is wider
-  // than its clip frame.
-  const [frameW, setFrameW] = useState(0);
+const clamp = (v: number, lo: number, hi: number) =>
+  Math.min(Math.max(v, lo), hi);
 
-  useEffect(() => {
-    const el = frameRef.current;
-    if (!el) return;
-    const measure = () => setFrameW(el.offsetWidth);
-    measure();
-    const ro = new ResizeObserver(measure);
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, []);
+// Each slide caps at SLIDE_PCT of the frame so the neighbouring slides peek in at
+// the edges; PEEK is what shows per side (5% when the slide is 90%).
+const SLIDE_PCT = 90;
+const PEEK = (100 - SLIDE_PCT) / 2;
 
-  // Section top → viewport top starts the pin; section bottom → viewport bottom
-  // ends it. The whole Nancy→Chayan slide happens inside that pinned window.
-  const { scrollYProgress } = useScroll({
-    target: sectionRef,
-    offset: ["start start", "end end"],
-  });
-
+// ── Inline, snap-to-quote peek carousel (no pin, no reserved height) ──────────
+function ScrollCarousel({ items }: { items: Slide[] }) {
+  const ref = useRef<HTMLElement>(null);
+  const [active, setActive] = useState(0);
   const n = items.length;
 
-  // Hold-aware keyframes: each slide DWELLS around its aligned rest point, and the
-  // horizontal move happens between dwells — so the pin never releases with the
-  // track parked awkwardly mid-slide. Half of each slide's scroll budget is dwell.
-  const input = useMemo(() => {
-    const pts: number[] = [];
-    for (let i = 0; i < n; i++) {
-      const center = n === 1 ? 0 : i / (n - 1);
-      const half = 0.5 / n;
-      pts.push(Math.max(0, center - half), Math.min(1, center + half));
-    }
-    return pts;
-  }, [n]);
-  // Output tracks the same keyframes: slide i rests at -i × frameW.
-  const output = useMemo(
-    () => input.map((_, k) => -Math.floor(k / 2) * frameW),
-    [input, frameW],
-  );
-  const x = useTransform(scrollYProgress, input, output);
+  // Progress 0 as the figure enters at the viewport bottom, 1 as it leaves past
+  // the top; 0.5 is the figure centered. The [0,1] range splits into n equal
+  // zones, one per quote, so crossing a zone boundary flips the active quote.
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ["start end", "end start"],
+  });
+  useMotionValueEvent(scrollYProgress, "change", (p) => {
+    setActive(clamp(Math.floor(p * n), 0, n - 1));
+  });
+
+  // Edge-align the ends so the carousel reads as part of the text column: the
+  // FIRST slide sits flush-left (its photo lines up with the article's left
+  // edge), the LAST flush-right, and any middle slide stays centred with PEEK%
+  // of each neighbour showing. Value is a % of the track's own width — no pixel
+  // measurement. Springs between whole slides, so it never parks mid-slide.
+  const offsetPct =
+    active <= 0
+      ? 0
+      : active >= n - 1
+        ? 100 - SLIDE_PCT * n
+        : PEEK - SLIDE_PCT * active;
 
   return (
-    <section
-      ref={sectionRef}
-      className="relative my-8"
-      style={{ height: `${n * 100}svh` }}
-    >
-      <div className="sticky top-0 flex h-[100svh] flex-col items-center justify-center gap-8">
-        <div ref={frameRef} className="w-full overflow-hidden">
-          <motion.div className="flex items-stretch" style={{ x }}>
-            {items.map((slide) => (
-              <div
-                key={slide.name}
-                className="shrink-0"
-                style={{ width: frameW || "100%" }}
-              >
-                <SlideView slide={slide} />
-              </div>
-            ))}
-          </motion.div>
-        </div>
-
-        {/* Scroll-progress hint — reassures that the pin is scroll-driven, not
-            frozen, and reads as a carousel position indicator. */}
-        <div className="h-0.5 w-24 overflow-hidden rounded-full bg-hairline">
-          <motion.div
-            className="h-full w-full origin-left rounded-full bg-fg"
-            style={{ scaleX: scrollYProgress }}
-          />
-        </div>
+    <figure ref={ref} className="my-8">
+      <div className="w-full overflow-hidden">
+        <motion.div
+          className="flex items-stretch"
+          animate={{ x: `${offsetPct}%` }}
+          transition={{ type: "spring", stiffness: 140, damping: 22, mass: 1 }}
+        >
+          {items.map((slide) => (
+            <div
+              key={slide.name}
+              // pr-3, not px-3: a right-only gutter keeps every card's LEFT edge
+              // flush, so the flush-left first slide's photo aligns with the text.
+              className="min-w-0 shrink-0 pr-3"
+              style={{ flexBasis: `${SLIDE_PCT}%` }}
+            >
+              <SlideView slide={slide} />
+            </div>
+          ))}
+        </motion.div>
       </div>
-    </section>
+
+      {/* Segmented indicator — the active quote reads as a wider bar. */}
+      {n > 1 ? (
+        <div className="mt-4 flex justify-center gap-2">
+          {items.map((slide, i) => (
+            <span
+              key={slide.name}
+              className={`h-1.5 rounded-full transition-all duration-300 ${
+                i === active ? "w-6 bg-fg" : "w-1.5 bg-hairline"
+              }`}
+            />
+          ))}
+        </div>
+      ) : null}
+    </figure>
   );
 }
 
@@ -153,9 +150,12 @@ function SlideView({ slide }: { slide: Slide }) {
           sizes="(max-width: 640px) 100vw, 400px"
         />
       </div>
-      <blockquote className="text-sub-display measure-lede text-fg">
+      {/* Matches the project's quote hierarchy (the MDX `blockquote` / About
+          endorsement): left hairline, 16px body, muted, with a bold-muted name.
+          NOT text-sub-display, which is a hero token, not a quote token. */}
+      <blockquote className="hairline-l text-body pl-6 text-fg-muted">
         &ldquo;{slide.quote}&rdquo;
-        <figcaption className="text-body mt-4 font-medium text-fg-muted">
+        <figcaption className="text-body mt-4 font-medium text-fg-muted not-italic">
           {slide.name}
         </figcaption>
       </blockquote>
@@ -163,7 +163,7 @@ function SlideView({ slide }: { slide: Slide }) {
   );
 }
 
-// ── Static fallback (mobile + reduced motion): plain stacked pairs, no pin ─────
+// ── Static fallback (mobile + reduced motion): plain stacked pairs ─────────────
 function StaticStack({ items }: { items: Slide[] }) {
   return (
     <div className="my-8 flex flex-col gap-12">

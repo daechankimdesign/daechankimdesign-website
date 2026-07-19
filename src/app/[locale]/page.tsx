@@ -1,7 +1,7 @@
-import { setRequestLocale, getTranslations } from "next-intl/server";
+import { setRequestLocale } from "next-intl/server";
 import { getWorkBoardItems } from "@/lib/mdx";
 import { HeroHeadline } from "@/components/HeroHeadline";
-import { WorkBoardClient } from "@/components/WorkBoardClient";
+import { WorkBoard } from "@/components/WorkBoard";
 
 // Hero image stack: one card flies into the right-hand pile per reveal step
 // (3 header lines + the sub text = 4). `src` = 480px card image (quick load), `full` =
@@ -56,7 +56,6 @@ export default async function Home({
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
-  const t = await getTranslations("Nav");
   const boardItems = await getWorkBoardItems(locale);
 
   return (
@@ -78,16 +77,7 @@ export default async function Home({
           .snap-section 5rem scroll-margin) instead of the hero — the only other
           snap point — pulling it back. */}
       <section id="work" className="snap-section container-page pb-16">
-        <WorkBoardClient
-          items={boardItems}
-          heading={t("work")}
-          showHeading={false}
-          labels={{
-            all: t("all"),
-            caseStudy: t("caseStudy"),
-            play: t("play"),
-          }}
-        />
+        <WorkBoard items={boardItems} showHeading={false} />
       </section>
     </>
   );

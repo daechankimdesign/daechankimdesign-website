@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { useReducedMotion } from "framer-motion";
 import { Link } from "@/i18n/navigation";
 import { ProgressiveImage } from "./ProgressiveImage";
+import { StatusBadge } from "./StatusBadge";
 import { drawHighlight } from "@/lib/highlight";
 import type { BoardItem, Span } from "@/lib/mdx";
 import posthog from "posthog-js";
@@ -46,11 +47,14 @@ const TIER: Record<Span, { w: number; h: number; sizes: string }> = {
 export function WorkTile({
   item,
   typeLabel,
+  statusLabel,
   priority = false,
 }: {
   item: BoardItem;
   /** Localized "Case Study" / "Play" label for the eyebrow. */
   typeLabel: string;
+  /** Localized "Shipped" / "Concept" label. Omitted ⇒ no status badge. */
+  statusLabel?: string;
   /** Eager-load this tile's image (use only for the first/LCP tile). */
   priority?: boolean;
 }) {
@@ -148,12 +152,17 @@ export function WorkTile({
         />
       </div>
 
-      {/* Type badge — filled pill, colour keyed to the type (case study vs play). */}
-      <span
-        className={`text-caption inline-flex items-center px-2.5 py-1 ${typeBadge}`}
-      >
-        {typeLabel}
-      </span>
+      {/* Eyebrow — type badge (filled) + status badge (outline). */}
+      <div className="flex flex-wrap items-center gap-2">
+        <span
+          className={`text-caption inline-flex items-center px-2.5 py-1 ${typeBadge}`}
+        >
+          {typeLabel}
+        </span>
+        {item.status && statusLabel ? (
+          <StatusBadge status={item.status} label={statusLabel} />
+        ) : null}
+      </div>
 
       {/* Title — hand-drawn highlighter on hover (see ExperienceItem), not a dim.
           `hl-host` (position:relative) anchors rough-notation's absolutely-
@@ -166,9 +175,10 @@ export function WorkTile({
         </span>
       </h3>
 
-      {frontmatter.tags && frontmatter.tags.length > 0 ? (
+      {/* Meta — year + tools (disciplines live in the filter rail, not here). */}
+      {item.year || item.tools.length > 0 ? (
         <p className="text-caption mt-3 text-fg-muted uppercase">
-          {frontmatter.tags.join("  ·  ")}
+          {[item.year, ...item.tools].filter(Boolean).join("  ·  ")}
         </p>
       ) : null}
     </Link>

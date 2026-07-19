@@ -162,9 +162,11 @@ export function SideDocumentTab({
       aria-label="Table of contents"
       className="flex flex-col gap-6"
       // Supporting chrome — settles in LAST, after header and body. Shared
-      // tokens (see src/lib/motion.ts); inert under reduced motion.
-      initial={reduce ? false : { opacity: 0, y: 8 }}
-      animate={reduce ? undefined : { opacity: 1, y: 0 }}
+      // tokens (see src/lib/motion.ts); inert under reduced motion. Opacity ONLY
+      // (no y-rise): the tab sits in a sticky column, so any entrance transform
+      // reads as vertical drift as you scroll while it settles over ~2s.
+      initial={reduce ? false : { opacity: 0 }}
+      animate={reduce ? undefined : { opacity: 1 }}
       transition={
         reduce
           ? undefined
@@ -189,13 +191,24 @@ export function SideDocumentTab({
               <a
                 href={`#${h.id}`}
                 onClick={(e) => handleTocClick(e, h.id)}
-                className={`block text-body no-underline transition-colors ${
-                  activeId === h.id
-                    ? "font-medium text-fg"
-                    : "text-fg-muted hover:text-fg"
+                className={`relative block text-body no-underline transition-colors ${
+                  activeId === h.id ? "text-fg" : "text-fg-muted hover:text-fg"
                 }`}
               >
-                {h.text}
+                {/* Invisible bold sizer reserves the ACTIVE (heavier, wider-
+                    wrapping) height for every item, so the list never reflows
+                    vertically when the active weight toggles on scroll. The real
+                    text overlays it; only its weight changes, never the box. */}
+                <span aria-hidden className="invisible font-medium">
+                  {h.text}
+                </span>
+                <span
+                  className={`absolute inset-0 ${
+                    activeId === h.id ? "font-medium" : ""
+                  }`}
+                >
+                  {h.text}
+                </span>
               </a>
             </li>
           );
