@@ -13,7 +13,10 @@
     "resume": "이력서",
     "contact": "연락처",
     "settings": "설정",
-    "back": "뒤로"
+    "back": "뒤로",
+    "stackedView": "스택 보기",
+    "tileView": "타일 보기",
+    "viewOptions": "보기 옵션"
   },
   "Settings": {
     "title": "설정",

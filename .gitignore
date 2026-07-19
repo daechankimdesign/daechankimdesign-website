@@ -76,3 +76,7 @@ Portfolio Ideation/Design Ethos.md
 /Portfolio Ideation
 /.obsidian
 .env.local
+
+# iCloud dataless stub of a personal Finder alias — not project source; kept
+# untracked so it can never time out git indexing again.
+01_Job Postings alias

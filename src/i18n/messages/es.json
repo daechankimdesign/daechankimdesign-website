@@ -13,7 +13,10 @@
     "resume": "Currículum",
     "contact": "Contacto",
     "settings": "Ajustes",
-    "back": "Atrás"
+    "back": "Atrás",
+    "stackedView": "Vista apilada",
+    "tileView": "Vista de mosaico",
+    "viewOptions": "Opciones de vista"
   },
   "Settings": {
     "title": "Ajustes",

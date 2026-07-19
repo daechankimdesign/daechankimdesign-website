@@ -13,7 +13,10 @@
     "resume": "Resume",
     "contact": "Contact",
     "settings": "Settings",
-    "back": "Back"
+    "back": "Back",
+    "stackedView": "Stacked view",
+    "tileView": "Tile view",
+    "viewOptions": "View options"
   },
   "Settings": {
     "title": "Settings",
