@@ -14,16 +14,16 @@
  *  1. the closed set every item's `tags` frontmatter must draw from, and
  *  2. the fixed facet display order in the filter rail — never sorted by
  *     localized label (Korean/Spanish collate differently and would reshuffle
- *     the chips between locales). Order here is by portfolio frequency.
+ *     the chips between locales). Order here is a hand-curated editorial sequence.
  * Stored verbatim in `tags`; localized for display via the i18n key below.
  */
 export const DISCIPLINES = [
   "Product Design",
   "User Experience",
-  "Service Design",
-  "AI Experience",
   "Design Research",
+  "Service Design",
   "AI Development",
+  "AI Experience",
 ] as const;
 export type Discipline = (typeof DISCIPLINES)[number];
 

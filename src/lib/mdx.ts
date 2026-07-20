@@ -5,7 +5,7 @@ import { evaluate } from "next-mdx-remote-client/rsc";
 import { getFrontmatter } from "next-mdx-remote-client/utils";
 import rehypeSlug from "rehype-slug";
 import rehypeUnwrapImages from "rehype-unwrap-images";
-import { mdxComponents } from "@/components/mdx";
+import { mdxComponents, workMdxComponents } from "@/components/mdx";
 import { getCachedTranslation } from "@/lib/translations";
 import { routing } from "@/i18n/routing";
 import {
@@ -357,7 +357,10 @@ export const getCompiled = cache(async (
       // <figure> MDXImage renders isn't nested in a <p> (invalid HTML).
       mdxOptions: { rehypePlugins: [rehypeUnwrapImages, rehypeSlug] },
     },
-    components: mdxComponents,
+    // All work documents (case studies AND experiments/sandbox) mark their
+    // **bold** with the highlighter. Only standalone pages like About, which
+    // compile via getCompiledPage, keep plain bold. See workMdxComponents.
+    components: workMdxComponents,
   });
 
   return { content, frontmatter, error, translated: loaded.translated };

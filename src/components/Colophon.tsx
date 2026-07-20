@@ -49,14 +49,16 @@ export async function Colophon({
   const t = await getTranslations("Content");
 
   return (
-    <div className="my-20">
+    // The closing rule now lives at the top of MoreWork, directly above the
+    // "More work" heading, so it reads as that section's divider. The colophon
+    // keeps just the meta line.
+    <div className="mt-20 mb-10">
       {when || org ? (
-        <div className="text-note mb-2 flex items-baseline justify-between gap-4 text-fg-subtle">
+        <div className="text-note flex items-baseline justify-between gap-4 text-fg-subtle">
           <span>{when ? `${t("updated")} ${when}` : ""}</span>
           {org ? <span>@{org}</span> : null}
         </div>
       ) : null}
-      <hr className="hairline-b border-0" />
     </div>
   );
 }

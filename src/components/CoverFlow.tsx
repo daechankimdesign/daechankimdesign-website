@@ -166,6 +166,35 @@ export interface CoverFlowProps {
   /** Built-in centered title/subtitle overlay. Set false to render your own. */
   showCaption?: boolean
   /**
+   * Opacity of the flat white veil drawn over every OFF-centre card (0 = none,
+   * 1 = fully hidden). Higher fades the side cards further toward the canvas. A
+   * flat veil, never a gradient. Default 0.5.
+   */
+  sideVeilOpacity?: number
+  /**
+   * Hovering the deck fans its cards apart by this multiplier (1 = off), sprung
+   * so it eases open/closed. Default 1.
+   */
+  hoverExpand?: number
+  /**
+   * Px a card lifts (translateY up) while the pointer is over it, animated.
+   * Horizontal decks only. 0 = off. Default 0.
+   */
+  hoverLiftPx?: number
+  /**
+   * While the deck is hovered, fade the OFF-centre veil to 0 so the side cards
+   * show in full (sprung, and back on leave). Needs `sideVeilOpacity` > 0 to have
+   * anything to reveal. Default false.
+   */
+  hoverRevealSides?: boolean
+  /**
+   * Rising edge (false → true) snaps the deck's spring onto its current position
+   * so it materializes there (e.g. an "unfocused" pre-roll where no card is
+   * centered) instead of gliding in from a stale value. Wire to whatever makes the
+   * deck visible.
+   */
+  appear?: boolean
+  /**
    * Hover a card to slide it to center (after a short delay). Guarded so the
    * layout shift it causes never re-triggers itself — only a fresh mouse move
    * arms the next slide.
@@ -211,6 +240,11 @@ export function CoverFlow({
   orientation = 'horizontal',
   positionValue,
   showCaption = true,
+  sideVeilOpacity = 0.5,
+  hoverExpand = 1,
+  hoverLiftPx = 0,
+  hoverRevealSides = false,
+  appear = false,
   enableHoverSlide = false,
   scrollThreshold = 100,
   reduceMotion,
@@ -285,7 +319,21 @@ export function CoverFlow({
   const systemReducedMotion = useReducedMotion()
   const prefersReducedMotion = reduceMotion ?? systemReducedMotion
   const scrollX = useMotionValue(safeInitial)
-  const springX = useSpring(scrollX, { stiffness: 150, damping: 30, mass: 1 })
+  // Near-critical (no wobble) but softened to a ~0.45s settle, so each intro focus
+  // shift GLIDES across most of its 600ms text beat instead of snapping in ~0.33s
+  // and then sitting frozen ~0.27s — that freeze read as a "hard stop." Lower the
+  // stiffness for even less freeze (softer manual snapping is the trade). Also
+  // governs the entrance sweep and manual drag/scroll snapping.
+  const springX = useSpring(scrollX, { stiffness: 90, damping: 18, mass: 1 })
+  // Hover-to-expand: the container's mouse-enter/leave drives `spreadTarget`
+  // between `hoverExpand` and 1; `spread` springs to it and each card multiplies
+  // its offset by it, fanning the deck open. 1 (default) is a no-op.
+  const spreadTarget = useMotionValue(1)
+  const spread = useSpring(spreadTarget, { stiffness: 200, damping: 26 })
+  // Hover-to-reveal: the same mouse-enter/leave fades the side veil to 0 (and back
+  // to `sideVeilOpacity`), so hovering the deck un-fades the off-centre cards.
+  const veilTarget = useMotionValue(sideVeilOpacity)
+  const veil = useSpring(veilTarget, { stiffness: 200, damping: 26 })
   // Externally driven (scroll-linked) → the deck follows `positionValue` directly
   // so it stays locked to the page scroll; otherwise it uses its own spring.
   const effectiveScrollX = positionValue ?? (prefersReducedMotion ? scrollX : springX)
@@ -300,12 +348,27 @@ export function CoverFlow({
   })
 
   useEffect(() => {
+    // Drive the deck to the RAW position — it may be fractional / negative during
+    // an intro (e.g. a "-1" hold where the deck is visible but UNFOCUSED, all cards
+    // pushed right of center). The ACTIVE card still snaps to a real, clamped index
+    // for veils / clicks. scrollX.set is a MotionValue write, not setState.
+    scrollX.set(initialIndex)
     const clamped = clampIndex(initialIndex, items.length)
-    if (clamped !== activeIndexRef.current) {
-      setActiveIndex(clamped)
-      scrollX.set(clamped)
-    }
+    if (clamped !== activeIndexRef.current) setActiveIndex(clamped)
   }, [initialIndex, items.length, scrollX])
+
+  // On the rising edge of `appear`, snap the SPRING onto the current (possibly
+  // unfocused, e.g. -1) position so the deck MATERIALIZES there instead of gliding
+  // in from a stale mount/re-entry value — then useSpring eases it to each focus
+  // target as the text advances. Reduced motion drives the deck off scrollX (not
+  // springX), so it's skipped. .jump is a MotionValue write (no cascading render).
+  const appearedRef = useRef(false)
+  useEffect(() => {
+    if (appear && !appearedRef.current && !prefersReducedMotion) {
+      springX.jump(scrollX.get())
+    }
+    appearedRef.current = appear
+  }, [appear, prefersReducedMotion, springX, scrollX])
 
   useEffect(() => {
     if (!isMountedForCallbackRef.current) { isMountedForCallbackRef.current = true; return }
@@ -470,6 +533,14 @@ export function CoverFlow({
         aria-label="Cover Flow"
         tabIndex={0}
         onKeyDown={onKeyDown}
+        onMouseEnter={() => {
+          spreadTarget.set(hoverExpand)
+          if (hoverRevealSides) veilTarget.set(0)
+        }}
+        onMouseLeave={() => {
+          spreadTarget.set(1)
+          veilTarget.set(sideVeilOpacity)
+        }}
         drag={positionValue ? false : orientation === 'vertical' ? 'y' : 'x'}
         // Pin the DRAG axis to 0 so the container itself never translates — the
         // gesture only feeds scrollX (which moves the cards). Must match `drag`:
@@ -505,6 +576,9 @@ export function CoverFlow({
               isActive={index === activeIndex}
               showReflection={showReflection}
               reflectionFilterId={reflectionFilterId}
+              veil={veil}
+              spread={spread}
+              hoverLiftPx={hoverLiftPx}
               enableClickToSnap={enableClickToSnap}
               reduceMotion={prefersReducedMotion ?? false}
               orientation={orientation}
@@ -557,6 +631,9 @@ interface CardProps {
   isActive: boolean
   showReflection: boolean
   reflectionFilterId?: string
+  veil: MotionValue<number>
+  spread: MotionValue<number>
+  hoverLiftPx: number
   enableClickToSnap: boolean
   reduceMotion: boolean
   orientation: 'horizontal' | 'vertical'
@@ -577,6 +654,9 @@ const CoverFlowItemCard = memo(function CoverFlowItemCard({
   isActive,
   showReflection,
   reflectionFilterId,
+  veil,
+  spread,
+  hoverLiftPx,
   enableClickToSnap,
   reduceMotion,
   orientation,
@@ -594,14 +674,23 @@ const CoverFlowItemCard = memo(function CoverFlowItemCard({
     return orientation === 'vertical' ? -base : base
   })
 
-  const offset = useTransform(scrollX, (value) => {
-    const pos = index - value
-    const absPos = Math.abs(pos)
-    if (absPos < 1) return pos * centerGap
-    return pos < 0
-      ? -centerGap - (absPos - 1) * stackSpacing
-      : centerGap + (absPos - 1) * stackSpacing
-  })
+  // Multiplied by `spread` (1 = normal) so hovering the deck fans the cards apart.
+  const offset = useTransform(
+    [scrollX, spread] as MotionValue<number>[],
+    (latest: number[]) => {
+      const value = latest[0]
+      const sp = latest[1]
+      const pos = index - value
+      const absPos = Math.abs(pos)
+      const base =
+        absPos < 1
+          ? pos * centerGap
+          : pos < 0
+            ? -centerGap - (absPos - 1) * stackSpacing
+            : centerGap + (absPos - 1) * stackSpacing
+      return base * sp
+    },
+  )
 
   const z = useTransform(scrollX, (value) => {
     if (reduceMotion) return 0
@@ -614,8 +703,8 @@ const CoverFlowItemCard = memo(function CoverFlowItemCard({
   // Off-centre cards fade toward WHITE (a #ffffff veil), not darkened, so the
   // deck reads cleanly on the light canvas; the centred card stays fully opaque.
   const veilOpacity = useTransform(
-    scrollX,
-    (value) => (Math.abs(index - value) < 0.5 ? 0 : 0.5),
+    [scrollX, veil] as MotionValue<number>[],
+    (latest: number[]) => (Math.abs(index - latest[0]) < 0.5 ? 0 : latest[1]),
   )
 
   const imageRenderer = renderImage ?? defaultRenderImage
@@ -624,6 +713,16 @@ const CoverFlowItemCard = memo(function CoverFlowItemCard({
   return (
     <motion.div
       className={`absolute top-1/2 left-1/2 preserve-3d will-change-transform group-[.is-dragging]/cf:!cursor-grabbing ${cursorClass}`}
+      // Lift the hovered card straight up (horizontal decks only — vertical decks
+      // drive `y` via the offset, so a y-lift there would fight it). Sprung.
+      whileHover={
+        hoverLiftPx && orientation === 'horizontal'
+          ? {
+              y: -hoverLiftPx,
+              transition: { type: 'spring', stiffness: 400, damping: 30 },
+            }
+          : undefined
+      }
       style={{
         width,
         height,

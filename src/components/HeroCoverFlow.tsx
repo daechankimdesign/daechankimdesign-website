@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { EASE_OUT } from "@/lib/motion";
@@ -8,17 +8,26 @@ import { CoverFlow, type RenderImageProps } from "./CoverFlow";
 import { HeroGallery } from "./HeroGallery";
 import type { HeroStackItem } from "./HeroImageStack";
 
-// One-time intro flip-through cadence: after the hero text finishes, the deck
-// steps through each photo ~this long apart, then settles back on the first.
-const FLIP_INTERVAL = 850;
+// Deck geometry — prominent, right-anchored, SQUARE frame (object-cover trims the
+// two landscape shots to square; the two square shots fit as-is). This is the MAX
+// card size: CoverFlow scales it DOWN to fit the column, and the column itself is
+// fluid (clamp, below), so the card is responsive to the viewport with this as
+// its ceiling.
+const ITEM_W = 360;
+const ITEM_H = 360;
 
-// Deck geometry. A 4:3 landscape frame (the hero photos are documentary
-// landscape / near-square); object-cover trims the two square shots top/bottom a
-// touch. Kept small so the rotated side cards only just kiss the column edges
-// (the stage is overflow-visible). CoverFlow scales this DOWN to fit narrower
-// columns automatically, so these are the large-screen ceiling, not fixed px.
-const ITEM_W = 260;
-const ITEM_H = 195;
+// Off-centre cards fade hard toward the white canvas so the focused photo clearly
+// leads and any side-card bleed all but disappears. A flat veil, NOT a gradient.
+const SIDE_VEIL = 0.82;
+
+// Initial appearance: a gentle fade + slide-in FROM THE RIGHT that lasts EXACTLY
+// until photo 1 is triggered — the window where "Daechan Kim," is alone, before
+// line 2 steps in. So APPEAR_DURATION matches HeroHeadline's STEP (600ms, the line
+// 1 → line 2 gap): the deck finishes arriving just as photo 1 sweeps into focus.
+// Keep the two in sync if STEP changes. APPEAR_SLIDE_X is tunable — bigger = a more
+// pronounced from-the-side arrival.
+const APPEAR_DURATION = 0.6;
+const APPEAR_SLIDE_X = 100;
 
 /**
  * next/image renderer for the deck. App Hosting serves the Firebase Storage URLs
@@ -51,39 +60,44 @@ function renderImage(p: RenderImageProps) {
 
 /**
  * The hero image deck — a horizontal cover-flow that replaces the old fly-in
- * pile. It fades in with the first header line (resting on the primary photo);
- * once the hero text has fully revealed (`flourish`), it auto-flips through every
- * photo once to highlight each, then settles back on the first. ANY real user
- * interaction (drag / wheel / key) aborts the flip-through and hands over manual
- * control — after that CoverFlow owns its own index and we never write it again,
- * so nothing fights the user. Clicking the centered card opens the shared
- * HeroGallery lightbox; clicking a side card centers it first. Reduced motion →
- * a static, flat, centered deck (no flip-through, no 3D).
+ * pile. It fades in UNFOCUSED on the first header line (all cards pushed right, no
+ * card centered), then photo 1 sweeps into focus from the right on the second line;
+ * thereafter the CENTERED photo tracks the
+ * hero's text reveal: each line that steps in slides the deck to the next photo,
+ * so focus changes land on the same beats as the text (`focus`, derived from the
+ * reveal counter). `initialIndex` is driven straight from `focus` — CoverFlow
+ * springs to it on change, and once the reveal ends `focus` is constant, so the
+ * deck naturally hands over to manual control (drag / wheel / click) with no
+ * fight. Clicking the centered card opens the shared HeroGallery lightbox;
+ * clicking a side card centers it first. Reduced motion → a static, flat deck on
+ * the primary photo.
+ *
+ * Prominent + right-anchored: a wide column pulled into the page's right gutter
+ * (safe — html/body are `overflow-x: clip`, so the right bleed clips at the
+ * viewport edge, never a scrollbar). Shifting the deck right also carries the side
+ * cards clear of the headline, so nothing paints over the text.
  */
 export function HeroCoverFlow({
   items,
   show,
-  flourish,
+  focus,
   reduce,
 }: {
   items: HeroStackItem[];
-  /** Fade the deck in (tied to the first header line appearing). */
+  /** Fade the deck in (tied to the second header line appearing). */
   show: boolean;
-  /** Run the one-time flip-through (tied to the text fully revealing). */
-  flourish: boolean;
+  /**
+   * Position the deck centers on, from the hero's text-reveal counter. May be -1:
+   * the "unfocused" hold where the deck is visible but no photo is centered (all
+   * pushed right), before photo 1 (index 0) sweeps into focus.
+   */
+  focus: number;
   reduce: boolean;
 }) {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
-  // Drives the deck's centered card. We only WRITE this during the intro
-  // flip-through; CoverFlow re-syncs only when `initialIndex` actually CHANGES,
-  // so once the flip-through ends (or is aborted) we leave it alone and the deck
-  // is fully user-owned.
-  const [driveIndex, setDriveIndex] = useState(0);
-  const flipTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
 
-  // HERO_STACK is a stable module constant, so this maps once. Adapts the stack
-  // shape to CoverFlow's item shape (title/subtitle are carried for structural
-  // typing but not shown — showCaption is off).
+  // Adapts the stack shape to CoverFlow's item shape (title/subtitle are carried
+  // for structural typing but not shown — showCaption is off).
   const cfItems = useMemo(
     () =>
       items.map((it, i) => ({
@@ -95,58 +109,40 @@ export function HeroCoverFlow({
     [items],
   );
 
-  const clearFlip = useCallback(() => {
-    flipTimers.current.forEach(clearTimeout);
-    flipTimers.current = [];
-  }, []);
-
-  // Reset to the primary photo whenever the hero resets (leaves the viewport), so
-  // a re-entry replays the flip-through from the top.
-  useEffect(() => {
-    if (!show) {
-      clearFlip();
-      setDriveIndex(0);
-    }
-  }, [show, clearFlip]);
-
-  // One-time flip-through: step through 1..n-1, then back to 0. Skipped under
-  // reduced motion (the deck just rests, flat, on the primary photo).
-  useEffect(() => {
-    if (!flourish || reduce || cfItems.length < 2) return;
-    const seq: number[] = [];
-    for (let i = 1; i < cfItems.length; i++) seq.push(i);
-    seq.push(0);
-    seq.forEach((idx, k) => {
-      flipTimers.current.push(
-        setTimeout(() => setDriveIndex(idx), (k + 1) * FLIP_INTERVAL),
-      );
-    });
-    return clearFlip;
-  }, [flourish, reduce, cfItems.length, clearFlip]);
+  // Reduced motion rests flat on the primary photo (no unfocused hold, no
+  // sequence); otherwise the deck follows the text-reveal focus, including the -1
+  // "unfocused" start. Derived in render — no effect/state sync fights the deck.
+  const centerIndex = reduce ? 0 : focus;
 
   return (
-    <div className="relative order-first w-full shrink-0 self-center lg:order-none lg:w-[440px] lg:self-start">
+    <div className="relative order-first w-full shrink-0 self-center overflow-visible lg:order-none lg:-mr-[60px] lg:w-[clamp(380px,40vw,500px)] lg:self-start">
       <motion.div
-        // ANY real interaction cancels the auto flip-through. Capture phase so it
-        // runs before CoverFlow's own wheel/drag handlers (which still fire and
-        // drive the deck) — the abort and the navigation happen together.
-        onPointerDownCapture={clearFlip}
-        onWheelCapture={clearFlip}
-        onKeyDownCapture={clearFlip}
-        className="relative h-[320px] w-full sm:h-[360px] lg:h-[440px]"
+        className="relative h-[300px] w-full overflow-visible sm:h-[360px] lg:h-[440px]"
         initial={false}
-        animate={{ opacity: show ? 1 : 0, scale: show ? 1 : 0.96 }}
-        transition={reduce ? { duration: 0 } : { duration: 0.6, ease: EASE_OUT }}
+        // Initial appearance — the deck eases in FROM THE RIGHT (a long fade +
+        // slide over APPEAR_DURATION) UNFOCUSED with the FIRST header line ("Daechan
+        // Kim,"), spanning the window before line 2 appears. It then sweeps photo 1
+        // into focus from the right on line 2 as `focus` goes -1 → 0. The x-slide is
+        // a transform (no layout shift); inert under reduced motion.
+        animate={{ opacity: show ? 1 : 0, x: show ? 0 : APPEAR_SLIDE_X }}
+        transition={
+          reduce ? { duration: 0 } : { duration: APPEAR_DURATION, ease: EASE_OUT }
+        }
       >
         <CoverFlow
           items={cfItems}
-          initialIndex={driveIndex}
+          initialIndex={centerIndex}
           itemWidth={ITEM_W}
           itemHeight={ITEM_H}
-          centerGap={150}
-          stackSpacing={48}
-          rotation={48}
+          centerGap={100}
+          stackSpacing={40}
+          rotation={45}
           showCaption={false}
+          sideVeilOpacity={SIDE_VEIL}
+          hoverExpand={1.5}
+          hoverLiftPx={12}
+          hoverRevealSides
+          appear={show}
           enableClickToSnap
           enableScroll
           reduceMotion={reduce}

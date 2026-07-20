@@ -371,6 +371,14 @@ body::before {
 .hl-host {
   position: relative;
 }
+/* The highlighted text sits ABOVE the marker. rough-notation inserts its SVG as
+   a positioned sibling, which would otherwise paint over the (non-positioned)
+   text and tint it; giving the mark its own stacking keeps the text crisp with
+   the translucent marker behind it. */
+.hl-mark {
+  position: relative;
+  z-index: 1;
+}
 
 /* ── Width system ──────────────────────────────────────────────────────────
    One shell, one content column, two reading measures. Compose them; don't

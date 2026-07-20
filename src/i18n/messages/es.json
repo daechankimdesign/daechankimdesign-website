@@ -35,7 +35,7 @@
   "WorkTags": {
     "shipped": "Publicado",
     "concept": "Concepto",
-    "filterBy": "Disciplina",
+    "filterBy": "Filtros",
     "clear": "Limpiar",
     "empty": "Ningún trabajo coincide con estos filtros.",
     "showing": "Mostrando %shown% de %total%"

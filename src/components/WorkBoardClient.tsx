@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { motion, useReducedMotion } from "framer-motion";
+import { useEffect, useState } from "react";
+import { motion, useReducedMotion, type Variants } from "framer-motion";
 import posthog from "posthog-js";
 import { WorkTile } from "./WorkTile";
+import { FilterSheet } from "./FilterSheet";
 import { Reveal, RevealItem } from "./Reveal";
 import { RevealTile } from "./RevealTile";
-import { EASE_OUT, DURATION, DELAY } from "@/lib/motion";
+import { EASE_OUT, DURATION, DELAY, STAGGER } from "@/lib/motion";
 import { DISCIPLINES } from "@/lib/taxonomy";
 import type { BoardItem, Span, WorkType } from "@/lib/mdx";
 
@@ -24,19 +25,26 @@ export type WorkLabels = {
   play: string;
   shipped: string;
   concept: string;
-  /** Discipline group eyebrow, e.g. "Discipline". */
+  /** Discipline accordion header, e.g. "Discipline". */
   filterBy: string;
   clear: string;
   empty: string;
-  /** Live-region template with {shown}/{total} placeholders. */
+  /** Live-region template with %shown%/%total% tokens. */
   showing: string;
-  /** English discipline name → localized chip label. */
+  /** English discipline name → localized label. */
   disciplines: Record<string, string>;
 };
 
+// ── EXPERIMENT: bottom-sheet filter · EASY REVERT ───────────────────────────
+// When true, the standalone /project board presents its filter as a bottom-fixed
+// "Filters" pill that expands upward (see FilterSheet) instead of the left rail.
+// Flip to FALSE to restore the left rail EXACTLY — the rail markup, all filter
+// logic, labels, and URL sync are untouched; the sheet is purely additive. Never
+// affects the home-board reuse (gated on `syncUrl` = the /project page only).
+const BOTTOM_SHEET = false;
+
 type FilterKey = WorkType | "all";
 
-// "All" (default) sits above the two type filters and clears the type filter.
 const TYPE_FILTERS: { key: FilterKey; labelKey: "all" | "caseStudy" | "play" }[] =
   [
     { key: "all", labelKey: "all" },
@@ -44,24 +52,50 @@ const TYPE_FILTERS: { key: FilterKey; labelKey: "all" | "caseStudy" | "play" }[]
     { key: "sandbox", labelKey: "play" },
   ];
 
+// One SINGLE-SELECT filter spanning type + disciplines. "all" is the default /
+// reset; picking a type or a discipline is mutually exclusive with everything
+// else (no AND-combining). Disciplines live in a collapsible accordion but are
+// otherwise first-class options in the same group.
+export type Active =
+  | { kind: "all" }
+  | { kind: "type"; value: WorkType }
+  | { kind: "disc"; value: string };
+
 /** URL slug for a discipline: "Product Design" → "product-design". */
 const discSlug = (d: string) => d.toLowerCase().replace(/\s+/g, "-");
+
+/** Shared option styling — disciplines read IDENTICALLY to the type tabs:
+    muted, full-opacity + medium weight when active. */
+const optionClass = (isActive: boolean) =>
+  `text-body text-left no-underline transition-colors ${
+    isActive ? "font-medium text-fg" : "text-fg-muted hover:text-fg"
+  }`;
+
+// Accordion children entrance — the same fade-up + easeOutExpo vocabulary as the
+// side tab, cascaded down the list (staggerChildren) so the options settle in one
+// after another when the accordion opens. No delay: this fires on click, so it
+// starts immediately (unlike the page-load side tab, which trails everything).
+const DISC_LIST: Variants = {
+  hidden: {},
+  show: { transition: { staggerChildren: STAGGER } },
+};
+const DISC_ITEM: Variants = {
+  hidden: { opacity: 0, y: 8 },
+  show: { opacity: 1, y: 0, transition: { duration: DURATION, ease: EASE_OUT } },
+};
 
 /**
  * The combined work board. Layout + intro mirror the About page: a side tab on
  * the left and a main content column whose "Work" heading sits where About's
  * "Daechan Kim" does, revealed by the same mount-time Reveal cascade.
  *
- * TWO filter axes:
- *  - TYPE (All / Project / Experiment): single-select, exclusive (unchanged).
- *  - DISCIPLINE: multi-select chips, OR within the axis. Combined with type via
- *    AND. Disciplines come from the repurposed `tags` field; the raw build-stack
- *    tags moved to the `tools` visual badge, so the facet list stays coherent.
- *
- * Filtering is pure `.filter()` over the props array (never mutates the cache()d
- * board). On `/project`, filter state syncs to the URL (`?type=…&d=a,b`) via the
- * history API — shareable, and no useSearchParams/Suspense needed, so the home
- * reuse (`syncUrl={false}`) stays fully static.
+ * FILTER: a single exclusive selection — All (default), a type (Project /
+ * Experiment), or one discipline. Disciplines sit in a collapsible "Discipline"
+ * accordion but belong to the same single-select group, so choosing one clears
+ * any type and vice versa. Filtering is pure `.filter()` over the props array
+ * (never mutates the cache()d board). On `/project`, the selection syncs to the
+ * URL (`?f=…`) via the history API — shareable, and with no useSearchParams /
+ * Suspense, so the home reuse (`syncUrl={false}`) stays fully static.
  */
 export function WorkBoardClient({
   items,
@@ -74,64 +108,62 @@ export function WorkBoardClient({
   heading: string;
   labels: WorkLabels;
   showHeading?: boolean;
-  /** Sync filter state to the URL. Only the standalone /project board does. */
+  /** Sync selection to the URL. Only the standalone /project board does. */
   syncUrl?: boolean;
 }) {
   const reduce = useReducedMotion();
-  const [activeType, setActiveType] = useState<WorkType | null>(null);
-  const [activeDisc, setActiveDisc] = useState<string[]>([]);
+  const [active, setActive] = useState<Active>({ kind: "all" });
+  const [discOpen, setDiscOpen] = useState(false);
   // On the home reuse (no URL sync) we're "hydrated" immediately; the /project
-  // board flips it true after reading the initial URL, so the writer below never
+  // board flips it true after reading the initial URL so the writer below never
   // clobbers a shared link on first paint.
   const [hydrated, setHydrated] = useState(!syncUrl);
-  const gridRef = useRef<HTMLUListElement>(null);
 
-  // Facets: the closed vocabulary, in registry order, limited to disciplines
+  // Facets: the closed vocabulary, registry order, limited to disciplines
   // actually present — a fixed spine, never reshuffled by locale or data order.
   const facets = DISCIPLINES.filter((d) =>
     items.some((it) => it.disciplines.includes(d)),
   );
 
-  // Read initial state from the URL once (client-only; avoids useSearchParams).
+  // Read the initial selection from the URL once (client-only; no useSearchParams).
   useEffect(() => {
     if (!syncUrl) return;
-    const p = new URLSearchParams(window.location.search);
-    const t = p.get("type");
-    if (t === "projects" || t === "sandbox") setActiveType(t);
-    const d = p.get("d");
-    if (d) {
-      const wanted = d.split(",");
-      setActiveDisc(facets.filter((f) => wanted.includes(discSlug(f))));
+    const f = new URLSearchParams(window.location.search).get("f");
+    if (f === "projects" || f === "sandbox") {
+      setActive({ kind: "type", value: f });
+    } else if (f) {
+      const d = facets.find((x) => discSlug(x) === f);
+      if (d) {
+        setActive({ kind: "disc", value: d });
+        setDiscOpen(true);
+      }
     }
     setHydrated(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Write state to the URL (shareable). replaceState keeps history clean.
+  // Write the selection to the URL (shareable). replaceState keeps history clean.
   useEffect(() => {
     if (!syncUrl || !hydrated) return;
-    const p = new URLSearchParams();
-    if (activeType) p.set("type", activeType);
-    if (activeDisc.length) p.set("d", activeDisc.map(discSlug).join(","));
-    const qs = p.toString();
+    const f =
+      active.kind === "type"
+        ? active.value
+        : active.kind === "disc"
+          ? discSlug(active.value)
+          : "";
     window.history.replaceState(
       null,
       "",
-      qs ? `?${qs}` : window.location.pathname,
+      f ? `?f=${f}` : window.location.pathname,
     );
-  }, [activeType, activeDisc, hydrated, syncUrl]);
+  }, [active, hydrated, syncUrl]);
 
-  const byType = activeType
-    ? items.filter((it) => it.type === activeType)
-    : items;
-  const countFor = (d: string) =>
-    byType.reduce((n, it) => n + (it.disciplines.includes(d) ? 1 : 0), 0);
-
-  const shown = items.filter(
-    (it) =>
-      (activeType === null || it.type === activeType) &&
-      (activeDisc.length === 0 ||
-        it.disciplines.some((d) => activeDisc.includes(d))),
+  const shown = items.filter((it) =>
+    active.kind === "all"
+      ? true
+      : active.kind === "type"
+        ? it.type === active.value
+        : it.disciplines.includes(active.value),
   );
 
   const labelFor = (type: WorkType) =>
@@ -139,37 +171,42 @@ export function WorkBoardClient({
   const statusLabelFor = (it: BoardItem) =>
     it.status ? labels[it.status] : undefined;
 
-  const setType = (key: FilterKey) => {
-    const next = key === "all" ? null : (key as WorkType);
-    setActiveType(next);
-    posthog.capture("work_filter_applied", {
-      filter: key,
-      disciplines: activeDisc,
-    });
+  const selectType = (key: FilterKey) => {
+    setActive(key === "all" ? { kind: "all" } : { kind: "type", value: key });
+    posthog.capture("work_filter_applied", { filter: key });
   };
-  const toggleDisc = (d: string) => {
-    setActiveDisc((prev) => {
-      const next = prev.includes(d)
-        ? prev.filter((x) => x !== d)
-        : [...prev, d];
-      posthog.capture("work_filter_applied", {
-        filter: activeType ?? "all",
-        disciplines: next,
-      });
-      return next;
-    });
+  const selectDisc = (d: string) => {
+    setActive((prev) =>
+      prev.kind === "disc" && prev.value === d
+        ? { kind: "all" }
+        : { kind: "disc", value: d },
+    );
+    posthog.capture("work_filter_applied", { filter: d });
   };
 
   const status = labels.showing
     .replace("%shown%", String(shown.length))
     .replace("%total%", String(items.length));
 
+  // Bottom sheet only on the standalone /project board (syncUrl), never the home
+  // reuse — a fixed pill there would float over the hero and footer.
+  const useSheet = BOTTOM_SHEET && syncUrl;
+
   return (
-    <div className="flex flex-col gap-10 lg:flex-row lg:gap-12">
-      {/* Left: filters — settles in last, like the About tab. */}
+    <div
+      className={
+        useSheet ? "pb-28" : "flex flex-col gap-10 lg:flex-row lg:gap-12"
+      }
+    >
+      {/* Left: filters — settle in last, like the About tab. With BOTTOM_SHEET on
+          (/project only) the rail is replaced by the bottom FilterSheet. */}
+      {useSheet ? null : (
       <aside className="lg:order-first lg:w-48 lg:shrink-0">
-        <div className="lg:sticky lg:top-24">
+        <div className="lg:sticky lg:top-24 lg:flex lg:h-[calc(100vh_-_8rem)] lg:flex-col">
           <motion.div
+            role="group"
+            aria-label="Filter work"
+            className="flex flex-col lg:h-full"
             initial={reduce ? false : { opacity: 0, y: 8 }}
             animate={reduce ? undefined : { opacity: 1, y: 0 }}
             transition={
@@ -178,89 +215,92 @@ export function WorkBoardClient({
                 : { duration: DURATION, ease: EASE_OUT, delay: DELAY.sideTab }
             }
           >
-            {/* Type — single-select text tabs (unchanged). */}
-            <nav
-              aria-label="Filter work by type"
-              className="flex flex-row gap-5 border-b border-hairline pb-4 lg:flex-col lg:items-start lg:gap-3 lg:border-0 lg:pb-0"
-            >
+            {/* Type — single-select text tabs. */}
+            <div className="flex flex-row gap-5 border-b border-hairline pb-4 lg:flex-col lg:items-start lg:gap-3 lg:border-0 lg:pb-0">
               {TYPE_FILTERS.map((f) => {
                 const isActive =
-                  f.key === "all" ? activeType === null : activeType === f.key;
+                  f.key === "all"
+                    ? active.kind === "all"
+                    : active.kind === "type" && active.value === f.key;
                 return (
                   <button
                     key={f.key}
                     type="button"
                     aria-pressed={isActive}
-                    onClick={() => setType(f.key)}
-                    className={`text-body text-left no-underline transition-colors ${
-                      isActive
-                        ? "font-medium text-fg"
-                        : "text-fg-muted hover:text-fg"
-                    }`}
+                    onClick={() => selectType(f.key)}
+                    className={optionClass(isActive)}
                   >
                     {labels[f.labelKey]}
                   </button>
                 );
               })}
-            </nav>
+            </div>
 
-            {/* Discipline — multi-select chips (OR). Pill shape signals "these
-                accumulate", vs the plain type tabs. */}
+            {/* Filters — pinned to the BOTTOM of the side tab (lg:mt-auto), with a
+                hairline divider marking its top. The disciplines expand UPWARD
+                (rendered ABOVE the header) so a long list grows toward the type
+                tabs rather than off the bottom of the tab. Chevron points up when
+                collapsed to signal the upward reveal. */}
             {facets.length > 0 ? (
-              <div
-                role="group"
-                aria-label={labels.filterBy}
-                className="mt-4 flex flex-row flex-wrap gap-2 border-b border-hairline pb-4 lg:mt-6 lg:border-0 lg:pb-0"
-              >
-                <p className="text-caption w-full text-fg-muted uppercase">
-                  {labels.filterBy}
-                </p>
-                {facets.map((d) => {
-                  const isActive = activeDisc.includes(d);
-                  const count = countFor(d);
-                  const disabled = count === 0 && !isActive;
-                  const label = labels.disciplines[d] ?? d;
-                  return (
-                    <button
-                      key={d}
-                      type="button"
-                      aria-pressed={isActive}
-                      aria-label={`${label}, ${count}`}
-                      disabled={disabled}
-                      onClick={() => toggleDisc(d)}
-                      className={`text-caption inline-flex items-center gap-1.5 rounded-full px-3 py-1 transition-colors ${
-                        isActive
-                          ? "bg-fg text-canvas"
-                          : disabled
-                            ? "border border-hairline text-fg-subtle opacity-50"
-                            : "border border-hairline text-fg-muted hover:border-fg hover:text-fg"
-                      }`}
-                    >
-                      {label}
-                      <span
-                        className={
-                          isActive ? "text-canvas/70" : "text-fg-subtle"
-                        }
-                      >
-                        {count}
-                      </span>
-                    </button>
-                  );
-                })}
-                {activeDisc.length > 0 ? (
-                  <button
-                    type="button"
-                    onClick={() => setActiveDisc([])}
-                    className="text-caption w-full text-left text-fg-muted underline underline-offset-2 hover:text-fg"
+              <div className="mt-4 lg:mt-auto lg:pt-8">
+                <hr className="hairline-b mb-4 border-0" />
+
+                {discOpen ? (
+                  <motion.div
+                    className="mb-3 flex flex-col items-start gap-3"
+                    variants={DISC_LIST}
+                    initial={reduce ? false : "hidden"}
+                    animate="show"
                   >
-                    {labels.clear}
-                  </button>
+                    {facets.map((d) => {
+                      const isActive =
+                        active.kind === "disc" && active.value === d;
+                      return (
+                        <motion.button
+                          key={d}
+                          type="button"
+                          variants={reduce ? undefined : DISC_ITEM}
+                          aria-pressed={isActive}
+                          onClick={() => selectDisc(d)}
+                          className={optionClass(isActive)}
+                        >
+                          {labels.disciplines[d] ?? d}
+                        </motion.button>
+                      );
+                    })}
+                  </motion.div>
                 ) : null}
+
+                <button
+                  type="button"
+                  aria-expanded={discOpen}
+                  onClick={() => setDiscOpen((o) => !o)}
+                  className="text-body inline-flex items-center gap-1.5 text-left text-fg-muted transition-colors hover:text-fg"
+                >
+                  {labels.filterBy}
+                  <svg
+                    aria-hidden
+                    viewBox="0 0 12 12"
+                    className={`h-3 w-3 transition-transform duration-200 ${
+                      discOpen ? "" : "rotate-180"
+                    }`}
+                  >
+                    <path
+                      d="M2.5 4.5 6 8l3.5-3.5"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </button>
               </div>
             ) : null}
           </motion.div>
         </div>
       </aside>
+      )}
 
       {/* Right: heading (About-style Reveal) then the grid. */}
       <div className="min-w-0 flex-1">
@@ -284,20 +324,14 @@ export function WorkBoardClient({
             <p>{labels.empty}</p>
             <button
               type="button"
-              onClick={() => {
-                setActiveType(null);
-                setActiveDisc([]);
-              }}
+              onClick={() => selectType("all")}
               className="text-caption mt-3 text-fg-muted underline underline-offset-2 hover:text-fg"
             >
               {labels.clear}
             </button>
           </div>
         ) : (
-          <ul
-            ref={gridRef}
-            className="grid grid-cols-1 items-start gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-12 lg:gap-y-16"
-          >
+          <ul className="grid grid-cols-1 items-start gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-12 lg:gap-y-16">
             {shown.map((item, i) => (
               <li
                 key={`${item.type}-${item.slug}`}
@@ -316,6 +350,16 @@ export function WorkBoardClient({
           </ul>
         )}
       </div>
+
+      {useSheet ? (
+        <FilterSheet
+          active={active}
+          facets={facets}
+          labels={labels}
+          onSelectType={selectType}
+          onSelectDisc={selectDisc}
+        />
+      ) : null}
     </div>
   );
 }
