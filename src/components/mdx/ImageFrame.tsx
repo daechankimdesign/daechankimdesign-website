@@ -69,11 +69,20 @@ const BEAT = 0.45;
 const CARD_CLASS =
   "overflow-hidden rounded-xl shadow-[0_2px_6px_-2px_rgba(0,0,0,0.06),0_16px_36px_-12px_rgba(0,0,0,0.16)] sm:flex-[var(--frame-grow)_1_0%]";
 
-// BACKGROUND-mode card: the floating panel. It simply FILLS its definite-width
-// foreground wrapper (`w-full`) — no aspect-driven flex-grow, which would depend
-// on the parent resolving a width and made the panel size/position unreliable.
-const BG_CARD_CLASS =
-  "w-full overflow-hidden rounded-xl shadow-[0_2px_6px_-2px_rgba(0,0,0,0.06),0_16px_36px_-12px_rgba(0,0,0,0.16)]";
+// BACKGROUND-mode card base: floats over the blurred backdrop.
+const BG_CARD_BASE =
+  "overflow-hidden rounded-xl shadow-[0_2px_6px_-2px_rgba(0,0,0,0.06),0_16px_36px_-12px_rgba(0,0,0,0.16)]";
+
+// A card row sizes by aspect (flex-grow = aspect, flex-basis 0) so mixed-aspect
+// cards resolve to a shared HEIGHT: a portrait phone stays narrow beside a
+// landscape desktop. But flex-grow only FILLS the track when the grows sum to
+// ≥ 1; a lone portrait card (aspect < 1) would take just that fraction and shrink
+// oddly. So a single card fills with `w-full`, and only multi-card rows size by
+// aspect. (Stacked below `sm`, every card is full width.)
+const bgCardClass = (count: number) =>
+  count > 1
+    ? `${BG_CARD_BASE} sm:flex-[var(--frame-grow)_1_0%]`
+    : `${BG_CARD_BASE} w-full`;
 
 // Default max width of the floating foreground cluster in `background` mode, so
 // the blurred context stays visible around it.
@@ -186,7 +195,11 @@ export function ImageFrame({
             </div>
             <div className={foregroundClass} style={foregroundStyle}>
               {items.map((item) => (
-                <div key={item.src} className={BG_CARD_CLASS}>
+                <div
+                  key={item.src}
+                  style={growStyle(item)}
+                  className={bgCardClass(items.length)}
+                >
                   {progressive(item)}
                 </div>
               ))}
@@ -223,7 +236,8 @@ export function ImageFrame({
                 key={item.src}
                 custom={i}
                 variants={PANEL_VARIANTS}
-                className={BG_CARD_CLASS}
+                style={growStyle(item)}
+                className={bgCardClass(items.length)}
               >
                 {progressive(item)}
               </motion.div>

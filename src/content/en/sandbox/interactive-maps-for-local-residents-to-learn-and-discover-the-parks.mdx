@@ -17,28 +17,32 @@ embedPosterMobile: https://firebasestorage.googleapis.com/v0/b/daechankimdesign-
 org: Other Tomorrows
 ---
 
-This project is a custom interactive map I built at Other Tomorrows for the **Emerald Necklace Conservancy**, the historic chain of parks that threads through Boston, from Charlesgate down through the Back Bay Fens, the Riverway, and Jamaica Pond to the Arnold Arboretum and Franklin Park. The client wanted visitors to be able to hold the whole necklace in their hand: to feel that these are one connected system, instead of the eight separate parks, and to freely explore any part of the parks right from their phone.
+A custom interactive map I built at Other Tomorrows for the **Emerald Necklace Conservancy**, the historic chain of parks that runs through Boston, from Charlesgate through the Back Bay Fens, the Riverway, and Jamaica Pond to the Arnold Arboretum and Franklin Park. The client wanted visitors to read the eight parks as one connected system, and to explore any of them from their phone.
 
-<div style={{ display: "flex", gap: "12px", maxWidth: "600px", margin: "2rem auto" }}>
-  <div style={{ flex: 1, minWidth: 0 }}>
-    <MDXImage
-      src="https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fsandbox%2Finteractive-maps-for-local-residents-to-learn-and-discover-the-parks%2Fmobile-map.jpg?alt=media"
-      alt="The map on a phone, showing the Emerald Necklace and the point-of-interest carousel"
-      width={831}
-      height={1800}
-    />
-  </div>
-  <div style={{ flex: 1, minWidth: 0 }}>
-    <MDXImage
-      src="https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fsandbox%2Finteractive-maps-for-local-residents-to-learn-and-discover-the-parks%2Fmobile-poi.jpg?alt=media"
-      alt="A point of interest on a phone, opening as a bottom sheet"
-      width={831}
-      height={1800}
-    />
-  </div>
-</div>
+<ImageFrame
+  foregroundWidth={640}
+  background={{
+    src: "https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fsandbox%2Finteractive-maps-for-local-residents-to-learn-and-discover-the-parks%2Fmap-live-necklace.jpg?alt=media",
+    alt: "The full Emerald Necklace on the live map",
+  }}
+  items={[
+    {
+      src: "https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fsandbox%2Finteractive-maps-for-local-residents-to-learn-and-discover-the-parks%2Fmobile-poi.jpg?alt=media",
+      alt: "A point of interest on mobile: the Hunnewell Visitor Center detail opens as a bottom sheet over the map",
+      width: 831,
+      height: 1800,
+    },
+    {
+      src: "https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fsandbox%2Finteractive-maps-for-local-residents-to-learn-and-discover-the-parks%2Fpoi-detail.jpg?alt=media",
+      alt: "The same point of interest on desktop: the Hunnewell Visitor Center detail card floats over the map",
+      width: 1800,
+      height: 1125,
+    },
+  ]}
+  caption="The same point of interest on mobile and desktop, over the map it belongs to."
+/>
 
-I came onto the project after the first round of design and took the map over. the part I own here is the interaction.(revise the two previous sentences) I reworked it around one question: how do you let someone roam the whole system freely, follow their curiosity from one park to the next, and open up the story of any place, without ever feeling lost or handled?(i dont like the sentence structure around here) Most of what I did lives in that layer — the movement, the states, the moment-to-moment feel of exploring. (no em-dash)
+I joined after the first round of design and took over the map. The interaction is the part I own. I reworked it around one problem: how to let someone move across the whole system, cross from one park to the next, and open the details of any place without getting lost. Most of my work lives in that layer: the movement, the states, and the moment-to-moment feel of exploring.
 
 <VideoPlayer
   type="video"
@@ -46,14 +50,14 @@ I came onto the project after the first round of design and took the map over. t
   poster="https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fsandbox%2Finteractive-maps-for-local-residents-to-learn-and-discover-the-parks%2Fcome-alive-poster.jpg?alt=media"
   width={1440}
   height={1002}
-  caption="It opens as a still image of the necklace; the first touch loads the live map and settles you into the parks."
+  caption="It opens as a still image of the necklace, and the first touch loads the live map."
 />
 
 ## How it works
 
-<Dek>See it all at once, and looking for a place becomes wandering, not searching.</Dek>
+<Dek>The whole system shows at once, so finding a place feels like exploring, not searching.</Dek>
 
-The map opens on the full necklace at a glance to invites you to explore. (this sentences is too poetic yet not my writing style ->) Pan and zoom the system, tap a park to focus it, or tap a point of interest to open its details — photo, hours, accessibility, the story of the place — (no emdash) with a filter panel to narrow by park, facility, or activity. Everything is tuned to feel like exploring rather than searching: the parks ease into their green, overlapping pins fan apart so none get buried, and even the loading moment keeps you company — _finding a sun-basking painted turtle_, drawn from the critters that actually live along the Necklace. (no em-dash)
+The map opens on the full necklace, so the whole system is visible at once. Panning and zooming moves across it, tapping a park focuses it, and tapping a point of interest opens its details: the photo, hours, accessibility, and the story of the place. A filter panel narrows by park, facility, or activity. Smaller touches keep it closer to exploring than searching: a focused park fills with green, overlapping pins fan apart so none get buried, and the loading state reads _finding a sun-basking painted turtle_, one of the critters that actually live along the Necklace.
 
 <VideoPlayer
   type="video"
@@ -61,7 +65,7 @@ The map opens on the full necklace at a glance to invites you to explore. (this 
   poster="https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fsandbox%2Finteractive-maps-for-local-residents-to-learn-and-discover-the-parks%2Ffocus-park-poster.jpg?alt=media"
   width={1440}
   height={1002}
-  caption="Tap a park to focus it: it fills with green and its points of interest gather into the carousel, then tap a place to open its details."
+  caption="A focused park fills with green and its points of interest gather into the carousel; opening a place shows its details."
 />
 
 <MDXImage
@@ -73,13 +77,13 @@ The map opens on the full necklace at a glance to invites you to explore. (this 
 
 ## The build
 
-<Dek>A React code snippet for Framer connecting Mapbox, Airtable, and the team's visual vision.</Dek>
+<Dek>One React component for Framer, wiring Mapbox, Airtable, and the team's design together.</Dek>
 
-It is a custom React component that drops straight into the Conservancy's Framer site. Mapbox GL renders a style over a custom Emerald Necklace tileset; all the content lives in Airtable and is pulled through a small Cloudflare Worker, so no keys ever reach the browser. It's data-driven by convention — add a field named `Filter--Activities` in Airtable and an "Activities" filter just appears, no code change needed. And to keep it fast and cheap, the billable Mapbox map doesn't even load until your first interaction; before that it's a static image of the necklace. Built with Claude Code, matched to the design screen by screen.
+It is a custom React component that drops straight into the Conservancy's Framer site. Mapbox GL renders a style over a custom Emerald Necklace tileset, and the content lives in Airtable, pulled through a small Cloudflare Worker so no keys ever reach the browser. It is data-driven by convention: add a field named `Filter--Activities` in Airtable and an "Activities" filter appears, with no code change. To keep it fast and cheap, the billable Mapbox map does not load until the first interaction; before that it is a static image of the necklace. Built with Claude Code, matched to the design screen by screen.
 
 <MDXImage
   src="https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fsandbox%2Finteractive-maps-for-local-residents-to-learn-and-discover-the-parks%2Ffilters.jpg?alt=media"
-  alt="The filter panel — every category (parks, iconic views, facilities, activities) is generated from Airtable fields"
+  alt="The filter panel: every category (parks, iconic views, facilities, activities) is generated from Airtable fields"
   width={1800}
   height={1125}
 />
@@ -88,4 +92,4 @@ It is a custom React component that drops straight into the Conservancy's Framer
 
 <Dek>Live for the Conservancy now: fun to move through, and the necklace reads as one system.</Dek>
 
-What I care most about is that it stays genuinely fun to move through while still delivering the one idea that matters most — that the Emerald Necklace is a single, continuous system, not a scatter of parks. It's live for the Conservancy now; the version here is my own.
+What I care about most is that it stays genuinely fun to move through while still landing the one idea that matters: the Emerald Necklace is a single, continuous system, not a scatter of parks. It is live for the Conservancy now, and the version here is my own.

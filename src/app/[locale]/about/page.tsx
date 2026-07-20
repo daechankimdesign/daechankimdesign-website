@@ -48,7 +48,7 @@ export default async function AboutPage({
         {/* Middle: profile image (sticky on desktop), between tab and content */}
         <aside className="lg:w-56 lg:shrink-0">
           {portrait ? (
-            <div className="mx-auto w-40 lg:mx-0 lg:w-auto lg:max-w-none lg:sticky lg:top-24">
+            <div className="mr-auto w-40 lg:mx-0 lg:w-auto lg:max-w-none lg:sticky lg:top-24">
               <ProfileStack
                 portrait={portrait}
                 alt={frontmatter.title}

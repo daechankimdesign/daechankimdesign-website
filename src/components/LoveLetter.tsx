@@ -32,12 +32,19 @@ import { HL_COLOR } from "@/lib/highlight";
 
 // ---- open/close bridge (footer button + envelope call open()) --------------
 type LoveLetterAPI = {
+  // Trigger: continue the hover envelope (or play the whole rise→drop if it
+  // wasn't raised) and then open the letter.
   open: () => void;
   close: () => void;
-  // Envelope preview: hovering the footer button (or the envelope) flies the
-  // envelope in; leaving schedules it to fly out after a grace period.
+  // Hovering a trigger (or the envelope itself) RAISES the envelope to its peak;
+  // leaving schedules it to drop back out after a grace period.
   previewShown: boolean;
-  previewTilt: number;
+  // A click-commit is animating (envelope dropping before the letter mounts).
+  committing: boolean;
+  // The letter modal is mounted.
+  letterOpen: boolean;
+  // Called by the envelope stage once its drop lands → mount the letter.
+  finishIntro: () => void;
   showPreview: () => void;
   hidePreviewSoon: () => void;
 };
@@ -56,8 +63,8 @@ function useIsMounted() {
   );
 }
 
-const TILT_MAX = 12; // envelope resting tilt: random in [-TILT_MAX, TILT_MAX] deg
-const PREVIEW_HIDE_MS = 3000; // grace after mouse-leave before the envelope flies out
+const PREVIEW_HIDE_MS = 500; // grace after mouse-leave before the envelope drops
+// (long enough to travel from the trigger to the risen envelope and click it)
 
 // Portrait from the About page (frontmatter `portrait`).
 export const PORTRAIT_SRC =
@@ -502,90 +509,133 @@ function LoveLetterModal({ onClose }: { onClose: () => void }) {
   );
 }
 
-// ---- envelope intro + overlay ----------------------------------------------
-// Every open (from the footer button, the envelope, OR anywhere else) plays the
-// same intro: a large envelope — wider than the letter — slides up from the
-// bottom of the screen, pauses, then slides back out; only then does the letter
-// slide in. The sequence is attached to the letter's appearance (gated on
-// `open`), so it runs regardless of what triggered it. Reduced motion skips it.
-const INTRO_DURATION = 0.8; // total: slide-in 0.4s + slide-out 0.4s (no hold)
+// ---- envelope stage (hover-driven) -----------------------------------------
+// The envelope no longer flies in from the side. Hovering ANY "Love letter"
+// trigger RAISES a large envelope from the bottom of the screen to a peak, where
+// it holds. Clicking CONTINUES the motion — the envelope drops back down and the
+// letter slides in behind it. Moving off without clicking simply DROPS the
+// envelope back out; nothing opens. One persistent, client-only stage serves
+// every trigger on the page. Reduced motion skips it (straight to the letter).
 const PEEK_VH = 40; // how far the envelope's top peeks above the bottom edge
+const RISE_DUR = 0.4; // envelope rise (hover) duration
+const DROP_DUR = 0.4; // envelope drop (leave / commit) duration
+const PEEK_TILT = 6; // resting tilt at the peak (deg)
 
-function EnvelopeIntro({ onDone }: { onDone: () => void }) {
+const PEEK = { y: `-${PEEK_VH}vh`, rotate: -PEEK_TILT }; // risen, held at the peak
+const REST = { y: "0vh", rotate: 0 }; // hidden below the bottom edge
+const LANDED = { y: "0vh", rotate: PEEK_TILT }; // dropped after a commit (slight lean)
+
+function EnvelopeStage() {
+  const ll = useLoveLetter();
+  const reduce = useReducedMotion();
+  const peeked = ll?.previewShown ?? false;
+  const committing = ll?.committing ?? false;
+  const letterOpen = ll?.letterOpen ?? false;
+
+  // The click-commit is a small two-step: rise (only if not already peaked) then
+  // drop, then mount the letter. It's driven by DETERMINISTIC TIMERS matching the
+  // leg durations — NOT onAnimationComplete/await (animation-completion events
+  // can stall, e.g. under StrictMode's double-mount or a throttled tab, leaving
+  // the intro hung). "idle" = not committing. The envelope still ANIMATES to each
+  // phase's target declaratively; the timers only sequence the phases + finish.
+  const [commitPhase, setCommitPhase] = useState<"idle" | "rise" | "drop">("idle");
+  useEffect(() => {
+    if (!committing) {
+      setCommitPhase("idle");
+      return;
+    }
+    if (reduce) {
+      ll?.finishIntro();
+      return;
+    }
+    const needsRise = !peeked; // already at the peak (hover→click) ⇒ skip the rise
+    setCommitPhase(needsRise ? "rise" : "drop");
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    let at = 0;
+    if (needsRise) {
+      at += RISE_DUR * 1000;
+      timers.push(setTimeout(() => setCommitPhase("drop"), at));
+    }
+    at += DROP_DUR * 1000;
+    timers.push(setTimeout(() => ll?.finishIntro(), at));
+    return () => timers.forEach(clearTimeout);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [committing, reduce]);
+
+  // Resolve the current animation target.
+  let target: { y: string; rotate: number };
+  if (committing) target = commitPhase === "rise" ? PEEK : LANDED;
+  else if (letterOpen) target = REST;
+  else target = peeked ? PEEK : REST;
+
+  // Rising overshoots (backOut); dropping anticipates (backIn).
+  const goingUp = target.y !== "0vh";
+  const transition = reduce
+    ? { duration: 0 }
+    : {
+        duration: goingUp ? RISE_DUR : DROP_DUR,
+        ease: (goingUp ? "backOut" : "backIn") as "backOut" | "backIn",
+      };
+
+  if (reduce) return null;
+
   return (
-    <div
-      aria-hidden
-      className="pointer-events-none fixed inset-x-0 top-full z-50 flex justify-center"
-    >
-      {/* The envelope sits just BELOW the screen (top-full puts its top at the
-          bottom edge); only its top PEEK_VH slides up into view, the rest stays
-          clipped under the bottom. Significantly narrower than the letter. */}
-      <motion.div
-        className="w-[45vw] sm:w-[20vw]"
-        initial={{ y: "0vh", rotate: 0 }}
-        // Rises straight to the 40vh peek and drops back out (no hold), tilting as
-        // it travels: leans one way on the way up, swings the other on the way down.
-        animate={{
-          y: ["0vh", `-${PEEK_VH}vh`, "0vh"],
-          rotate: [0, -6, 6],
-        }}
-        transition={{
-          duration: INTRO_DURATION,
-          times: [0, 0.5, 1],
-          // springy: overshoot on the way up, anticipate on the way out
-          ease: ["backOut", "backIn"],
-        }}
-        onAnimationComplete={onDone}
+    <div className="pointer-events-none fixed inset-x-0 top-full z-50 flex justify-center">
+      {/* The envelope rests just BELOW the screen (top-full puts its top at the
+          bottom edge); rising translates it up by PEEK_VH into view. Hovering it
+          keeps it up (grace period) and clicking it opens — same as the trigger. */}
+      <motion.button
+        type="button"
+        aria-label="Open the love letter to design"
+        onClick={() => ll?.open()}
+        onMouseEnter={() => ll?.showPreview()}
+        onMouseLeave={() => ll?.hidePreviewSoon()}
+        className="pointer-events-auto w-[45vw] cursor-pointer sm:w-[20vw]"
+        initial={REST}
+        animate={target}
+        transition={transition}
       >
         <EnvelopeGraphic className="h-auto w-full drop-shadow-2xl" />
-      </motion.div>
+      </motion.button>
     </div>
-  );
-}
-
-function LoveLetterOverlay({ onClose }: { onClose: () => void }) {
-  const reduce = useReducedMotion();
-  // Envelope intro first, then the letter. Reduced motion goes straight to it.
-  const [showLetter, setShowLetter] = useState(!!reduce);
-  return (
-    <>
-      {!reduce && !showLetter && (
-        <EnvelopeIntro onDone={() => setShowLetter(true)} />
-      )}
-      {showLetter && <LoveLetterModal onClose={onClose} />}
-    </>
   );
 }
 
 // ---- provider (hosts the portal) -------------------------------------------
 export function LoveLetterProvider({ children }: { children: ReactNode }) {
-  const [open, setOpen] = useState(false);
-  // Bumped on every open so the overlay gets a fresh key/instance — otherwise a
-  // fast close-then-reopen (during the sheet's exit) reuses the same instance and
-  // the envelope intro is skipped (showLetter never resets to false).
+  const reduce = useReducedMotion();
+  const [open, setOpen] = useState(false); // letter modal mounted
+  const [committing, setCommitting] = useState(false); // click intro in flight
+  // Bumped on every open so the modal gets a fresh key/instance — otherwise a
+  // fast close-then-reopen (during the sheet's exit) reuses the same instance.
   const [openId, setOpenId] = useState(0);
 
-  // Envelope preview (footer). Hovering the "Love letter" button — or the
-  // envelope itself — flies the envelope in; leaving either schedules a fly-out
-  // after PREVIEW_HIDE_MS, the grace period to move the mouse over and click it.
+  // Hover state. Hovering a "Love letter" trigger — or the envelope itself —
+  // RAISES the envelope to its peak; leaving either schedules it to DROP back out
+  // after PREVIEW_HIDE_MS, the grace period to travel to the envelope and click.
   const [previewShown, setPreviewShown] = useState(false);
-  const [previewTilt, setPreviewTilt] = useState(0);
-  const shownRef = useRef(false); // avoids re-rolling the tilt on re-hover while shown
+  const shownRef = useRef(false);
   const hideTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const showPreview = () => {
+    if (open || committing) return; // the intro/letter own the envelope now
     if (hideTimer.current) clearTimeout(hideTimer.current);
     if (!shownRef.current) {
       shownRef.current = true;
-      setPreviewTilt((Math.random() * 2 - 1) * TILT_MAX);
       setPreviewShown(true);
     }
   };
   const hidePreviewSoon = () => {
+    if (committing) return; // a commit is dropping it already
     if (hideTimer.current) clearTimeout(hideTimer.current);
     hideTimer.current = setTimeout(() => {
       shownRef.current = false;
       setPreviewShown(false);
     }, PREVIEW_HIDE_MS);
+  };
+  const clearPeek = () => {
+    if (hideTimer.current) clearTimeout(hideTimer.current);
+    shownRef.current = false;
+    setPreviewShown(false);
   };
   useEffect(
     () => () => {
@@ -594,12 +644,12 @@ export function LoveLetterProvider({ children }: { children: ReactNode }) {
     [],
   );
 
-  // Lock the PAGE while the letter is open (intro + peek + full), so scrolling
-  // only moves the modal, never the content behind it. This site scrolls on
-  // <html> (see globals.css), so locking body overflow alone doesn't hold — lock
-  // the documentElement, padding the scrollbar gutter so the page doesn't shift.
+  // Lock the PAGE while the intro is committing OR the letter is open, so
+  // scrolling only moves the modal, never the content behind it. This site
+  // scrolls on <html> (see globals.css), so locking body overflow alone doesn't
+  // hold — lock the documentElement, padding the scrollbar gutter to avoid shift.
   useEffect(() => {
-    if (!open) return;
+    if (!open && !committing) return;
     const doc = document.documentElement;
     const gutter = window.innerWidth - doc.clientWidth;
     const prevOverflow = doc.style.overflow;
@@ -610,17 +660,36 @@ export function LoveLetterProvider({ children }: { children: ReactNode }) {
       doc.style.overflow = prevOverflow;
       doc.style.paddingRight = prevPad;
     };
-  }, [open]);
+  }, [open, committing]);
 
   const value: LoveLetterAPI = {
     open: () => {
+      posthog.capture("love_letter_opened");
+      if (hideTimer.current) clearTimeout(hideTimer.current);
+      // Reduced motion has no envelope — go straight to the letter.
+      if (reduce) {
+        setOpenId((n) => n + 1);
+        setOpen(true);
+        return;
+      }
+      // Otherwise hand off to the envelope stage: it continues the intro (drop,
+      // rising first if needed) and calls finishIntro when the envelope lands.
+      setCommitting(true);
+    },
+    close: () => {
+      setOpen(false);
+      setCommitting(false);
+      clearPeek();
+    },
+    previewShown,
+    committing,
+    letterOpen: open,
+    finishIntro: () => {
       setOpenId((n) => n + 1);
       setOpen(true);
-      posthog.capture("love_letter_opened");
+      setCommitting(false);
+      clearPeek();
     },
-    close: () => setOpen(false),
-    previewShown,
-    previewTilt,
     showPreview,
     hidePreviewSoon,
   };
@@ -630,14 +699,18 @@ export function LoveLetterProvider({ children }: { children: ReactNode }) {
       {children}
       {mounted &&
         createPortal(
-          <AnimatePresence>
-            {open ? (
-              <LoveLetterOverlay
-                key={`ll-${openId}`}
-                onClose={() => setOpen(false)}
-              />
-            ) : null}
-          </AnimatePresence>,
+          <>
+            {/* Persistent hover envelope (client-only) — serves every trigger. */}
+            <EnvelopeStage />
+            <AnimatePresence>
+              {open ? (
+                <LoveLetterModal
+                  key={`ll-${openId}`}
+                  onClose={() => value.close()}
+                />
+              ) : null}
+            </AnimatePresence>
+          </>,
           document.body,
         )}
     </LoveLetterContext.Provider>
@@ -692,83 +765,8 @@ function EnvelopeGraphic({ className }: { className?: string }) {
 }
 
 /**
- * The envelope preview. Flies in from the screen edge (`from`: "right", the
- * default, or "left") with a random tilt ONLY while the "Love letter" button (or
- * the envelope itself) is hovered; on mouse-leave it waits PREVIEW_HIDE_MS before
- * flying back out, the grace period to slide the cursor over and click it.
- * Clicking opens the letter. The hover state is shared via the provider, so ANY
- * "Love letter to design" trigger on the page (hero, footer, ...) lights up
- * whichever envelope is mounted near it — position it with `className`
- * (absolute, relative to a positioned ancestor). Rendered client-only (mounted
- * gate) so framer's off-screen initial stays out of SSR.
- */
-export function EnvelopePreview({
-  className = "",
-  from = "right",
-}: {
-  className?: string;
-  from?: "left" | "right";
-}) {
-  const ll = useLoveLetter();
-  const reduce = useReducedMotion();
-  const mounted = useIsMounted();
-  const [offX, setOffX] = useState(1400); // magnitude only; sign applied via `from` below
-
-  useEffect(() => {
-    if (reduce) return;
-    const measure = () =>
-      setOffX(Math.round((window.innerWidth || 1200) * 1.15));
-    // Refine the off-screen start distance in a rAF (not synchronously in the
-    // effect body) so it never setState-s directly in the effect. The envelope is
-    // hidden until hover, so the one-frame delay is invisible.
-    const raf = requestAnimationFrame(measure);
-    window.addEventListener("resize", measure);
-    return () => {
-      cancelAnimationFrame(raf);
-      window.removeEventListener("resize", measure);
-    };
-  }, [reduce]);
-
-  const shown = ll?.previewShown ?? false;
-  const tilt = ll?.previewTilt ?? 0;
-  // Mirror the off-screen distance AND the entry tilt for a left approach, so it
-  // reads as a coherent swoop from that side rather than the same right-leaning
-  // spin arriving from the opposite direction.
-  const signedOffX = from === "left" ? -offX : offX;
-  const entryRotate = from === "left" ? -20 : 20;
-
-  if (!mounted) return null;
-
-  return (
-    <motion.button
-      type="button"
-      onClick={() => ll?.open()}
-      onMouseEnter={() => ll?.showPreview()}
-      onMouseLeave={() => ll?.hidePreviewSoon()}
-      aria-label="Open the love letter to design"
-      className={`cursor-pointer ${className}`}
-      initial={reduce ? false : { x: signedOffX, rotate: entryRotate, opacity: 0 }}
-      animate={
-        reduce
-          ? { opacity: shown ? 1 : 0 }
-          : shown
-            ? { x: 0, rotate: tilt, opacity: 1 }
-            : { x: signedOffX, rotate: entryRotate, opacity: 0 }
-      }
-      transition={
-        reduce ? { duration: 0 } : { type: "spring", stiffness: 250, damping: 30 }
-      }
-      whileHover={reduce ? undefined : { y: -4 }}
-      whileTap={reduce ? undefined : { scale: 0.94 }}
-    >
-      <EnvelopeGraphic className="drop-shadow-lg" />
-    </motion.button>
-  );
-}
-
-/**
- * Portrait + envelope preview (footer). The envelope is tucked at the portrait's
- * bottom-right corner — see EnvelopePreview for the fly-in behavior itself.
+ * Portrait (footer). The hover envelope is now a single page-wide stage (see
+ * EnvelopeStage), so the portrait is just the image.
  */
 export function LoveLetterPortrait({ className = "" }: { className?: string }) {
   return (
@@ -781,13 +779,12 @@ export function LoveLetterPortrait({ className = "" }: { className?: string }) {
         className="h-full w-full object-cover"
         sizes="240px"
       />
-      <EnvelopePreview className="absolute -bottom-6 right-6" />
     </div>
   );
 }
 
-/** The text "Love letter to design" button (hero + footer). Hovering flies the
- *  envelope in (preview); clicking opens the modal. `arrow` follows the
+/** The text "Love letter to design" button (hero + footer). Hovering RAISES the
+ *  envelope (see EnvelopeStage); clicking opens the letter. `arrow` follows the
  *  LinkButton convention: "up-right" (default, as in the footer) or "right"
  *  (the hero's forward-reading CTA). */
 export function LoveLetterButton({

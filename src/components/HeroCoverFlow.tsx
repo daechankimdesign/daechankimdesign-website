@@ -28,9 +28,12 @@ const SIDE_VEIL = 0.82;
 // (ENTRANCE_OFFSET), NOT a wrapper slide — one continuous motion, no break.
 const APPEAR_DURATION = 0.35;
 // How far RIGHT (in card slots) photo 1 starts before sweeping into focus on appear.
-// Kept SMALL so photo 1 lands focused quickly instead of spending its dwell entering
-// as a tilted side card. 0 = fade in already centered (no from-the-side motion).
-const ENTRANCE_OFFSET = 0.6;
+// 0 = photo 1 fades in ALREADY CENTERED and facing front — no from-the-side sweep.
+// The sweep entrance (any value > 0) spent the front of photo 1's beat rotating in
+// from the side while the deck was also fading in, so photo 1's actual front-facing
+// time came up short vs the later photos; materializing it flat gives it the full
+// beat facing front from the first frame.
+const ENTRANCE_OFFSET = 0;
 
 /**
  * next/image renderer for the deck. App Hosting serves the Firebase Storage URLs

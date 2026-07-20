@@ -63,7 +63,7 @@ export default async function Home({
       {/* Hero — header lines reveal step by step, then the sub text and CTAs,
           with a card flying into the stack per step (see HeroHeadline).
           TODO(i18n): move copy to messages once finalized */}
-      <section className="snap-section container-page flex min-h-[70vh] flex-col items-start pt-16 pb-24 text-left lg:pt-40">
+      <section className="container-page flex min-h-[70vh] flex-col items-start pt-16 pb-24 text-left lg:pt-40">
         <HeroHeadline stack={HERO_STACK} />
       </section>
       {/* Marks the hero's bottom edge — GlobalNav reveals once this scrolls past
@@ -72,11 +72,9 @@ export default async function Home({
 
       {/* Work — the merged project + experiment grid (the same board as /project),
           shown WITHOUT its own "Work" heading since this is the home index.
-          `snap-section` makes it a scroll-snap target so the "View all" button's
-          /#work jump LANDS on the grid (near the top, cleared past the nav by the
-          .snap-section 5rem scroll-margin) instead of the hero — the only other
-          snap point — pulling it back. */}
-      <section id="work" className="snap-section container-page pb-16">
+          `scroll-mt-20` (5rem) keeps the "View all" /#work anchor jump cleared past
+          the fixed nav now that scroll-snap is off. */}
+      <section id="work" className="container-page scroll-mt-20 pb-16">
         <WorkBoard items={boardItems} showHeading={false} />
       </section>
     </>
