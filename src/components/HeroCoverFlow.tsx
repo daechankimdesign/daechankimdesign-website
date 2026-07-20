@@ -20,14 +20,17 @@ const ITEM_H = 360;
 // leads and any side-card bleed all but disappears. A flat veil, NOT a gradient.
 const SIDE_VEIL = 0.82;
 
-// Initial appearance: a gentle fade + slide-in FROM THE RIGHT that lasts EXACTLY
-// until photo 1 is triggered — the window where "Daechan Kim," is alone, before
-// line 2 steps in. So APPEAR_DURATION matches HeroHeadline's STEP (600ms, the line
-// 1 → line 2 gap): the deck finishes arriving just as photo 1 sweeps into focus.
-// Keep the two in sync if STEP changes. APPEAR_SLIDE_X is tunable — bigger = a more
-// pronounced from-the-side arrival.
-const APPEAR_DURATION = 0.6;
-const APPEAR_SLIDE_X = 100;
+// Initial appearance: a QUICK opacity fade — deliberately well under one 600ms text
+// beat, so photo 1 is fully visible EARLY in its beat and gets a clear still moment
+// before photo 2 shifts in, instead of fading the entire beat and being replaced as
+// it finishes (that read as photo 1 being "sandwiched" between its own arrival and
+// photo 2's trigger). The from-the-side MOTION is the cover-flow sweep itself
+// (ENTRANCE_OFFSET), NOT a wrapper slide — one continuous motion, no break.
+const APPEAR_DURATION = 0.35;
+// How far RIGHT (in card slots) photo 1 starts before sweeping into focus on appear.
+// Kept SMALL so photo 1 lands focused quickly instead of spending its dwell entering
+// as a tilted side card. 0 = fade in already centered (no from-the-side motion).
+const ENTRANCE_OFFSET = 0.6;
 
 /**
  * next/image renderer for the deck. App Hosting serves the Firebase Storage URLs
@@ -60,10 +63,10 @@ function renderImage(p: RenderImageProps) {
 
 /**
  * The hero image deck — a horizontal cover-flow that replaces the old fly-in
- * pile. It fades in UNFOCUSED on the first header line (all cards pushed right, no
- * card centered), then photo 1 sweeps into focus from the right on the second line;
- * thereafter the CENTERED photo tracks the
- * hero's text reveal: each line that steps in slides the deck to the next photo,
+ * pile. On the first header line it fades in WHILE photo 1 sweeps into focus from
+ * the side (one continuous motion — no unfocused hold, no break); thereafter the
+ * CENTERED photo tracks the hero's text reveal: each line that steps in slides the
+ * deck to the next photo,
  * so focus changes land on the same beats as the text (`focus`, derived from the
  * reveal counter). `initialIndex` is driven straight from `focus` — CoverFlow
  * springs to it on change, and once the reveal ends `focus` is constant, so the
@@ -87,9 +90,9 @@ export function HeroCoverFlow({
   /** Fade the deck in (tied to the second header line appearing). */
   show: boolean;
   /**
-   * Position the deck centers on, from the hero's text-reveal counter. May be -1:
-   * the "unfocused" hold where the deck is visible but no photo is centered (all
-   * pushed right), before photo 1 (index 0) sweeps into focus.
+   * Which photo (index) the deck centers, from the hero's text-reveal counter.
+   * Photo 1 (index 0) sweeps in from the side on appear; higher indices track the
+   * text as it advances.
    */
   focus: number;
   reduce: boolean;
@@ -109,9 +112,9 @@ export function HeroCoverFlow({
     [items],
   );
 
-  // Reduced motion rests flat on the primary photo (no unfocused hold, no
-  // sequence); otherwise the deck follows the text-reveal focus, including the -1
-  // "unfocused" start. Derived in render — no effect/state sync fights the deck.
+  // Reduced motion rests flat on the primary photo (no sequence); otherwise the
+  // deck follows the text-reveal focus. Derived in render — no effect/state sync
+  // fights the deck.
   const centerIndex = reduce ? 0 : focus;
 
   return (
@@ -119,12 +122,13 @@ export function HeroCoverFlow({
       <motion.div
         className="relative h-[300px] w-full overflow-visible sm:h-[360px] lg:h-[440px]"
         initial={false}
-        // Initial appearance — the deck eases in FROM THE RIGHT (a long fade +
-        // slide over APPEAR_DURATION) UNFOCUSED with the FIRST header line ("Daechan
-        // Kim,"), spanning the window before line 2 appears. It then sweeps photo 1
-        // into focus from the right on line 2 as `focus` goes -1 → 0. The x-slide is
-        // a transform (no layout shift); inert under reduced motion.
-        animate={{ opacity: show ? 1 : 0, x: show ? 0 : APPEAR_SLIDE_X }}
+        // Initial appearance — a plain opacity fade (NO wrapper slide: that read as
+        // a separate rigid motion before the cards re-arranged — the "weird break").
+        // The from-the-side motion is now ONE continuous cover-flow sweep: on appear
+        // the spring is pre-rolled ENTRANCE_OFFSET slots right and eases straight
+        // into photo 1 (see CoverFlow `entranceOffset`) — no gap between arrival and
+        // first focus. Inert under reduced motion.
+        animate={{ opacity: show ? 1 : 0 }}
         transition={
           reduce ? { duration: 0 } : { duration: APPEAR_DURATION, ease: EASE_OUT }
         }
@@ -143,6 +147,7 @@ export function HeroCoverFlow({
           hoverLiftPx={12}
           hoverRevealSides
           appear={show}
+          entranceOffset={ENTRANCE_OFFSET}
           enableClickToSnap
           enableScroll
           reduceMotion={reduce}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, useReducedMotion, type Variants } from "framer-motion";
 import posthog from "posthog-js";
 import { WorkTile } from "./WorkTile";
@@ -35,13 +35,14 @@ export type WorkLabels = {
   disciplines: Record<string, string>;
 };
 
-// ── EXPERIMENT: bottom-sheet filter · EASY REVERT ───────────────────────────
-// When true, the standalone /project board presents its filter as a bottom-fixed
-// "Filters" pill that expands upward (see FilterSheet) instead of the left rail.
-// Flip to FALSE to restore the left rail EXACTLY — the rail markup, all filter
-// logic, labels, and URL sync are untouched; the sheet is purely additive. Never
-// affects the home-board reuse (gated on `syncUrl` = the /project page only).
-const BOTTOM_SHEET = false;
+// ── EXPERIMENT: disciplines as a bottom-LEFT "Filters" button · EASY REVERT ──
+// When true, the discipline filter lives in a pill fixed to the viewport's
+// bottom-left corner (see FilterSheet), on BOTH boards, shown only while the work
+// grid is on screen. The type tabs stay in the side tab either way. Flip to FALSE
+// to move disciplines back INTO the rail as a plain accordion under the tabs — all
+// filter logic, labels, and URL sync are shared and untouched, so the button is
+// purely additive and reverting is one boolean.
+const FILTER_BUTTON = false;
 
 type FilterKey = WorkType | "all";
 
@@ -118,6 +119,10 @@ export function WorkBoardClient({
   // board flips it true after reading the initial URL so the writer below never
   // clobbers a shared link on first paint.
   const [hydrated, setHydrated] = useState(!syncUrl);
+  // The fixed bottom-left pill shows only while the work grid is on screen, so it
+  // never floats over the hero above the board or the footer below it.
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [gridInView, setGridInView] = useState(false);
 
   // Facets: the closed vocabulary, registry order, limited to disciplines
   // actually present — a fixed spine, never reshuffled by locale or data order.
@@ -188,20 +193,29 @@ export function WorkBoardClient({
     .replace("%shown%", String(shown.length))
     .replace("%total%", String(items.length));
 
-  // Bottom sheet only on the standalone /project board (syncUrl), never the home
-  // reuse — a fixed pill there would float over the hero and footer.
-  const useSheet = BOTTOM_SHEET && syncUrl;
+  // Watch the content column so the fixed pill only appears while the grid is in
+  // view. rootMargin insets the trigger ~12% so it settles in once the board is
+  // meaningfully on screen, not the instant its top edge peeks.
+  useEffect(() => {
+    if (!FILTER_BUTTON) return;
+    const el = contentRef.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => setGridInView(entry.isIntersecting),
+      { rootMargin: "-12% 0px -12% 0px" },
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
 
   return (
-    <div
-      className={
-        useSheet ? "pb-28" : "flex flex-col gap-10 lg:flex-row lg:gap-12"
-      }
-    >
-      {/* Left: filters — settle in last, like the About tab. With BOTTOM_SHEET on
-          (/project only) the rail is replaced by the bottom FilterSheet. */}
-      {useSheet ? null : (
+    <div className="flex flex-col gap-10 lg:flex-row lg:gap-12">
+      {/* Left: filters — settle in last, like the About tab. Type tabs always live
+          here; the disciplines move to the bottom-left pill when FILTER_BUTTON. */}
       <aside className="lg:order-first lg:w-48 lg:shrink-0">
+        {/* Viewport-tall sticky column (calc needs the spaces → underscores) so
+            mt-auto can pin the disciplines to the bottom EDGE of the screen and
+            keep them there as you scroll the grid. */}
         <div className="lg:sticky lg:top-24 lg:flex lg:h-[calc(100vh_-_8rem)] lg:flex-col">
           <motion.div
             role="group"
@@ -236,12 +250,11 @@ export function WorkBoardClient({
               })}
             </div>
 
-            {/* Filters — pinned to the BOTTOM of the side tab (lg:mt-auto), with a
-                hairline divider marking its top. The disciplines expand UPWARD
-                (rendered ABOVE the header) so a long list grows toward the type
-                tabs rather than off the bottom of the tab. Chevron points up when
-                collapsed to signal the upward reveal. */}
-            {facets.length > 0 ? (
+            {/* Disciplines accordion IN the rail (when FILTER_BUTTON=false).
+                lg:mt-auto pins it to the BOTTOM EDGE of the viewport-tall column;
+                the list expands UPWARD (rendered above its header) so it grows
+                toward the type tabs, never off the bottom of the screen. */}
+            {!FILTER_BUTTON && facets.length > 0 ? (
               <div className="mt-4 lg:mt-auto lg:pt-8">
                 <hr className="hairline-b mb-4 border-0" />
 
@@ -300,10 +313,9 @@ export function WorkBoardClient({
           </motion.div>
         </div>
       </aside>
-      )}
 
       {/* Right: heading (About-style Reveal) then the grid. */}
-      <div className="min-w-0 flex-1">
+      <div ref={contentRef} className="min-w-0 flex-1">
         {showHeading ? (
           <header className="mb-8">
             <Reveal>
@@ -351,13 +363,14 @@ export function WorkBoardClient({
         )}
       </div>
 
-      {useSheet ? (
+      {FILTER_BUTTON && facets.length > 0 ? (
         <FilterSheet
           active={active}
           facets={facets}
           labels={labels}
-          onSelectType={selectType}
           onSelectDisc={selectDisc}
+          onClear={() => selectType("all")}
+          visible={gridInView}
         />
       ) : null}
     </div>

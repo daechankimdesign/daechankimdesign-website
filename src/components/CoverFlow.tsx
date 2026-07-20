@@ -195,6 +195,13 @@ export interface CoverFlowProps {
    */
   appear?: boolean
   /**
+   * On the appear rising edge, pre-roll the spring this many slots PAST the target
+   * (to the right) so the deck sweeps IN from the side straight into focus — one
+   * continuous motion, no separate slide or unfocused hold. 0 = materialize in
+   * place. Default 0.
+   */
+  entranceOffset?: number
+  /**
    * Hover a card to slide it to center (after a short delay). Guarded so the
    * layout shift it causes never re-triggers itself — only a fresh mouse move
    * arms the next slide.
@@ -245,6 +252,7 @@ export function CoverFlow({
   hoverLiftPx = 0,
   hoverRevealSides = false,
   appear = false,
+  entranceOffset = 0,
   enableHoverSlide = false,
   scrollThreshold = 100,
   reduceMotion,
@@ -348,27 +356,29 @@ export function CoverFlow({
   })
 
   useEffect(() => {
-    // Drive the deck to the RAW position — it may be fractional / negative during
-    // an intro (e.g. a "-1" hold where the deck is visible but UNFOCUSED, all cards
-    // pushed right of center). The ACTIVE card still snaps to a real, clamped index
-    // for veils / clicks. scrollX.set is a MotionValue write, not setState.
+    // Drive the deck to the target position (RAW — a caller may hold it at a
+    // fractional / off-index spot); the ACTIVE card still snaps to a real clamped
+    // index for veils / clicks. The entrance sweep is a transient spring pre-roll
+    // (see `appear` / `entranceOffset`), not a scrollX write here. scrollX.set is a
+    // MotionValue write, not setState.
     scrollX.set(initialIndex)
     const clamped = clampIndex(initialIndex, items.length)
     if (clamped !== activeIndexRef.current) setActiveIndex(clamped)
   }, [initialIndex, items.length, scrollX])
 
-  // On the rising edge of `appear`, snap the SPRING onto the current (possibly
-  // unfocused, e.g. -1) position so the deck MATERIALIZES there instead of gliding
-  // in from a stale mount/re-entry value — then useSpring eases it to each focus
-  // target as the text advances. Reduced motion drives the deck off scrollX (not
-  // springX), so it's skipped. .jump is a MotionValue write (no cascading render).
+  // On the rising edge of `appear`, pre-roll the SPRING to `entranceOffset` slots
+  // RIGHT of the target and let it ease straight into focus — the deck sweeps in
+  // from the side as ONE continuous motion (no separate slide, no unfocused hold /
+  // gap before the first focus). entranceOffset 0 → materialize in place. Reduced
+  // motion drives the deck off scrollX (not springX), so it's skipped. .jump is a
+  // MotionValue write (no cascading render).
   const appearedRef = useRef(false)
   useEffect(() => {
     if (appear && !appearedRef.current && !prefersReducedMotion) {
-      springX.jump(scrollX.get())
+      springX.jump(scrollX.get() - entranceOffset)
     }
     appearedRef.current = appear
-  }, [appear, prefersReducedMotion, springX, scrollX])
+  }, [appear, entranceOffset, prefersReducedMotion, springX, scrollX])
 
   useEffect(() => {
     if (!isMountedForCallbackRef.current) { isMountedForCallbackRef.current = true; return }

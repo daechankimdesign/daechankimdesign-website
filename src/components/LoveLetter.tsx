@@ -508,8 +508,8 @@ function LoveLetterModal({ onClose }: { onClose: () => void }) {
 // bottom of the screen, pauses, then slides back out; only then does the letter
 // slide in. The sequence is attached to the letter's appearance (gated on
 // `open`), so it runs regardless of what triggered it. Reduced motion skips it.
-const INTRO_DURATION = 1.0; // total: slide-in 0.4s + pause 0.2s + slide-out 0.4s
-const PEEK_VH = 20; // how far the envelope's top peeks above the bottom edge
+const INTRO_DURATION = 0.8; // total: slide-in 0.4s + slide-out 0.4s (no hold)
+const PEEK_VH = 40; // how far the envelope's top peeks above the bottom edge
 
 function EnvelopeIntro({ onDone }: { onDone: () => void }) {
   return (
@@ -522,13 +522,18 @@ function EnvelopeIntro({ onDone }: { onDone: () => void }) {
           clipped under the bottom. Significantly narrower than the letter. */}
       <motion.div
         className="w-[45vw] sm:w-[20vw]"
-        initial={{ y: "0vh" }}
-        animate={{ y: ["0vh", `-${PEEK_VH}vh`, `-${PEEK_VH}vh`, "0vh"] }}
+        initial={{ y: "0vh", rotate: 0 }}
+        // Rises straight to the 40vh peek and drops back out (no hold), tilting as
+        // it travels: leans one way on the way up, swings the other on the way down.
+        animate={{
+          y: ["0vh", `-${PEEK_VH}vh`, "0vh"],
+          rotate: [0, -6, 6],
+        }}
         transition={{
           duration: INTRO_DURATION,
-          times: [0, 0.4, 0.6, 1],
+          times: [0, 0.5, 1],
           // springy: overshoot on the way up, anticipate on the way out
-          ease: ["backOut", "linear", "backIn"],
+          ease: ["backOut", "backIn"],
         }}
         onAnimationComplete={onDone}
       >

@@ -3,193 +3,144 @@
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { EASE_OUT } from "@/lib/motion";
-import type { WorkType } from "@/lib/mdx";
 import type { Active, WorkLabels } from "./WorkBoardClient";
 
-// Local copy of the rail's option styling (deliberately NOT imported from
-// WorkBoardClient, which imports this file — a runtime import back would be a
-// cycle). Keep in sync with WorkBoardClient.optionClass.
+// Disciplines read IDENTICALLY to the type tabs: muted, full-opacity + medium
+// weight when active. (Kept local — importing from WorkBoardClient, which imports
+// this file, would be a runtime cycle.)
 const optionClass = (isActive: boolean) =>
   `text-body text-left no-underline transition-colors ${
     isActive ? "font-medium text-fg" : "text-fg-muted hover:text-fg"
   }`;
 
-// Interactive overlay, so it's snappy — NOT the 2s page-reveal duration.
-const SHEET_DURATION = 0.28;
-// Hide the pill this close to the page bottom so it never floats over the
-// reveal-footer (which is `fixed bottom-0`, revealed under the page card).
-const FOOTER_GUARD = 160;
+// Interactive overlay — snappy, NOT the 2s page-reveal duration.
+const DUR = 0.28;
 
 /**
- * BOTTOM-SHEET presentation of the work filter (feature-flagged in
- * WorkBoardClient via BOTTOM_SHEET). A "Filters" pill sticks to the viewport
- * bottom; tapping it expands a panel UPWARD with the same options and the same
- * single-select behavior. Purely a re-presentation — all state and handlers are
- * owned by WorkBoardClient and passed in, so nothing about filtering changes.
+ * The DISCIPLINE filter, as a button fixed to the viewport's BOTTOM-LEFT corner.
+ * The type tabs (All / Project / Experiment) stay in the side tab; this owns only
+ * the disciplines. Clicking the pill expands the list UPWARD (single-select, same
+ * state as the tabs — picking a discipline clears any type, and "All" clears
+ * everything).
  *
- * It renders only fixed chrome (nothing inline). Every AnimatePresence child
- * carries a stable `key` — required by framer, and without it a persistent child
- * won't reconcile prop updates (the pill's selection label would go stale).
+ * `visible` gates the whole thing to when the work grid is on screen (an
+ * IntersectionObserver in WorkBoardClient), so the fixed pill never floats over
+ * the hero above the board or the footer below it. The pill is always MOUNTED so
+ * its selection label reconciles on every render; it just fades/lifts out when
+ * `visible` flips false and drops pointer events so it can't be clicked while gone.
  */
 export function FilterSheet({
   active,
   facets,
   labels,
-  onSelectType,
   onSelectDisc,
+  onClear,
+  visible,
 }: {
   active: Active;
   facets: string[];
   labels: WorkLabels;
-  onSelectType: (key: "all" | WorkType) => void;
   onSelectDisc: (d: string) => void;
+  /** Clear back to "All" (deselects a discipline OR a type). */
+  onClear: () => void;
+  /** Show the pill (work grid is on screen). */
+  visible: boolean;
 }) {
   const reduce = useReducedMotion();
   const [open, setOpen] = useState(false);
-  const [nearBottom, setNearBottom] = useState(false);
 
-  // Hide the pill near the footer so the two `fixed bottom` elements never clash
-  // — but ONLY when the page is tall enough to actually scroll there. On a short
-  // page (e.g. filtered to one result) the whole page is within the guard, so
-  // guarding unconditionally would hide the pill with no way to change filters.
+  // Close when the pill hides (scrolled out of the grid).
   useEffect(() => {
-    const onScroll = () => {
-      const doc = document.documentElement;
-      const scrollable = doc.scrollHeight - window.innerHeight > FOOTER_GUARD * 2;
-      const atBottom =
-        scrollable &&
-        window.innerHeight + window.scrollY >= doc.scrollHeight - FOOTER_GUARD;
-      setNearBottom(atBottom);
-      if (atBottom) setOpen(false);
-    };
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll, { passive: true });
-    return () => {
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onScroll);
-    };
-  }, []);
+    if (!visible) setOpen(false);
+  }, [visible]);
 
   // Escape closes the panel.
   useEffect(() => {
     if (!open) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
-    };
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [open]);
 
-  const typeLabelFor = (key: "all" | WorkType) =>
-    key === "all"
-      ? labels.all
-      : key === "projects"
-        ? labels.caseStudy
-        : labels.play;
-
-  const selectionLabel =
-    active.kind === "all"
-      ? null
-      : active.kind === "type"
-        ? typeLabelFor(active.value)
-        : (labels.disciplines[active.value] ?? active.value);
-
-  const pick = (fn: () => void) => {
-    fn();
-    setOpen(false);
-  };
-
-  const dur = reduce ? 0 : SHEET_DURATION;
+  const activeDisc = active.kind === "disc" ? active.value : null;
+  const selectionLabel = activeDisc
+    ? (labels.disciplines[activeDisc] ?? activeDisc)
+    : null;
+  const dur = reduce ? 0 : DUR;
 
   return (
     <>
       <AnimatePresence>
-        {open ? (
-          <motion.div
-            key="filter-scrim"
-            className="fixed inset-0 z-40 bg-fg/10"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: dur }}
-            onClick={() => setOpen(false)}
-          />
-        ) : null}
-        {open ? (
-          <motion.div
-            key="filter-panel"
-            role="dialog"
-            aria-modal="true"
-            aria-label={labels.filterBy}
-            className="fixed bottom-24 left-1/2 z-50 max-h-[70vh] w-[calc(100%-2rem)] max-w-sm -translate-x-1/2 overflow-y-auto rounded-2xl border border-hairline bg-canvas p-5 shadow-[0_12px_40px_-12px_rgba(0,0,0,0.35)]"
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 16 }}
-            transition={{ duration: dur, ease: EASE_OUT }}
-          >
-            <div className="flex flex-col items-start gap-3">
-              {(["all", "projects", "sandbox"] as const).map((key) => {
-                const isActive =
-                  key === "all"
-                    ? active.kind === "all"
-                    : active.kind === "type" && active.value === key;
-                return (
-                  <button
-                    key={key}
-                    type="button"
-                    aria-pressed={isActive}
-                    onClick={() => pick(() => onSelectType(key))}
-                    className={optionClass(isActive)}
-                  >
-                    {typeLabelFor(key)}
-                  </button>
-                );
-              })}
-            </div>
-
-            {facets.length > 0 ? (
-              <>
-                <hr className="hairline-b my-4 border-0" />
-                <p className="text-caption mb-3 text-fg-muted uppercase">
-                  {labels.filterBy}
-                </p>
-                <div className="flex flex-col items-start gap-3">
-                  {facets.map((d) => {
-                    const isActive =
-                      active.kind === "disc" && active.value === d;
-                    return (
-                      <button
-                        key={d}
-                        type="button"
-                        aria-pressed={isActive}
-                        onClick={() => pick(() => onSelectDisc(d))}
-                        className={optionClass(isActive)}
-                      >
-                        {labels.disciplines[d] ?? d}
-                      </button>
-                    );
-                  })}
-                </div>
-              </>
-            ) : null}
-          </motion.div>
+        {open && visible ? (
+          <>
+            {/* Transparent click-catcher — tap outside to close, no page dim. */}
+            <motion.div
+              key="disc-catch"
+              className="fixed inset-0 z-30"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: dur }}
+              onClick={() => setOpen(false)}
+            />
+            {/* Panel — expands UPWARD from just above the pill. */}
+            <motion.div
+              key="disc-panel"
+              role="dialog"
+              aria-modal="true"
+              aria-label={labels.filterBy}
+              className="fixed bottom-20 left-6 z-50 max-h-[70vh] w-60 max-w-[calc(100vw-3rem)] overflow-y-auto rounded-2xl border border-hairline bg-canvas p-5 shadow-[0_12px_40px_-12px_rgba(0,0,0,0.35)]"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 12 }}
+              transition={{ duration: dur, ease: EASE_OUT }}
+            >
+              <div className="flex flex-col items-start gap-3">
+                <button
+                  type="button"
+                  aria-pressed={active.kind !== "disc"}
+                  onClick={() => {
+                    onClear();
+                    setOpen(false);
+                  }}
+                  className={optionClass(active.kind !== "disc")}
+                >
+                  {labels.all}
+                </button>
+                {facets.map((d) => {
+                  const isActive = activeDisc === d;
+                  return (
+                    <button
+                      key={d}
+                      type="button"
+                      aria-pressed={isActive}
+                      onClick={() => {
+                        onSelectDisc(d);
+                        setOpen(false);
+                      }}
+                      className={optionClass(isActive)}
+                    >
+                      {labels.disciplines[d] ?? d}
+                    </button>
+                  );
+                })}
+              </div>
+            </motion.div>
+          </>
         ) : null}
       </AnimatePresence>
 
-      {/* The sticky pill — always mounted (NOT wrapped in AnimatePresence) so its
-          selection label reconciles on every render; it fades/lifts out near the
-          footer instead of unmounting, and drops pointer events while hidden. */}
+      {/* The fixed bottom-left pill. Always mounted; fades/lifts with `visible`. */}
       <motion.div
-        className="fixed bottom-6 left-1/2 z-40 -translate-x-1/2"
+        className="fixed bottom-6 left-6 z-40"
         initial={reduce ? false : { opacity: 0, y: 12 }}
         animate={
           reduce
-            ? { opacity: nearBottom ? 0 : 1 }
-            : { opacity: nearBottom ? 0 : 1, y: nearBottom ? 12 : 0 }
+            ? { opacity: visible ? 1 : 0 }
+            : { opacity: visible ? 1 : 0, y: visible ? 0 : 12 }
         }
         transition={{ duration: dur, ease: EASE_OUT }}
-        style={{ pointerEvents: nearBottom ? "none" : "auto" }}
+        style={{ pointerEvents: visible ? "auto" : "none" }}
       >
         <button
           type="button"
