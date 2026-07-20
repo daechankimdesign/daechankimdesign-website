@@ -19,6 +19,12 @@ import posthog from "posthog-js";
 const STEP = 600;
 const LEDE_DELAY = 600;
 
+// The deck runs its OWN even cadence: each photo holds DECK_DWELL ms then advances,
+// so all four get a similar on-screen time. Decoupled from the exact text lines (the
+// 5 uneven beats can't give 4 photos an equal dwell), but the deck still appears
+// with the hero and plays once — it's not a separate looping animation. Tunable.
+const DECK_DWELL = 900;
+
 // Mobile has no hover, so the envelope preview can't wait for one: it flies in on
 // its own, this long after the CTA row appears. Same mobile threshold as
 // UniversalNav (max-width: 767px).
@@ -99,6 +105,9 @@ export function HeroHeadline({ stack }: { stack: HeroStackItem[] }) {
   const [count, setCount] = useState(0);
   // How many of the four annotation marks have drawn in (0..4).
   const [markStep, setMarkStep] = useState(0);
+  // The deck advances its own photo every DECK_DWELL (see the effect below), so the
+  // four photos share a similar dwell instead of riding the uneven text beats.
+  const [deckStep, setDeckStep] = useState(0);
 
   useEffect(() => {
     if (reduce) {
@@ -161,14 +170,32 @@ export function HeroHeadline({ stack }: { stack: HeroStackItem[] }) {
 
   const ledeShown = count > HEADLINE.length;
   const buttonsShown = count > HEADLINE.length + 1;
-  // The cover-flow deck appears WITH the first header line ("Daechan Kim,") — but
-  // UNFOCUSED (see `focus`: -1 = no card centered, all pushed right). Photo 1 pulls
-  // into focus on line 2.
+  // The cover-flow deck appears WITH the first header line ("Daechan Kim,"): photo
+  // 1 sweeps in from the side as it fades in — ONE motion, no unfocused hold, so no
+  // gap before the first focus (see HeroCoverFlow / CoverFlow `entranceOffset`).
   const deckShown = count > 0;
-  // Which photo the deck centers, from the SAME reveal counter as the text. The
-  // low bound is -1 (NOT 0): line 1 → -1 (visible but UNFOCUSED, no card centered);
-  // line 2 → photo 1; line 3 → photo 2; sub text → photo 3; CTAs → photo 4.
-  const focus = Math.min(Math.max(count - 2, -1), stack.length - 1);
+  // Which photo the deck centers — driven by the deck's OWN even timer (deckStep),
+  // not the text counter, so every photo gets a similar on-screen dwell instead of
+  // one lingering or flashing by (the text beats are uneven / one short of the
+  // photos, which is what distorted the durations).
+  const focus = deckStep;
+
+  // Deck cadence: once the deck is shown (with line 1), step through the photos one
+  // DECK_DWELL apart, then rest on the last. The deck still appears WITH the hero
+  // and plays once — only the per-photo advance is on this even timer, not the exact
+  // text lines. Reset when the hero leaves so a re-entry replays it; reduced motion
+  // just rests on photo 1.
+  useEffect(() => {
+    if (!deckShown || reduce) {
+      setDeckStep(0);
+      return;
+    }
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    for (let i = 1; i < stack.length; i++) {
+      timers.push(setTimeout(() => setDeckStep(i), i * DECK_DWELL));
+    }
+    return () => timers.forEach(clearTimeout);
+  }, [deckShown, reduce, stack.length]);
 
   // Mobile has no hover to reveal the envelope preview, so once the CTA row
   // appears, fly it in on its own after MOBILE_AUTO_DELAY — no interaction

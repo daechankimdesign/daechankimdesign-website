@@ -72,7 +72,7 @@ export function ProfileStack({
   images,
   width = 1447,
   height = 1446,
-  sizes = "(max-width: 1024px) 20rem, 14rem",
+  sizes = "(max-width: 1024px) 10rem, 14rem",
 }: Props) {
   const reduce = useReducedMotion();
   const compact = useSyncExternalStore(
