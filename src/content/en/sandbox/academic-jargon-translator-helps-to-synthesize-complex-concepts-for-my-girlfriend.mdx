@@ -15,7 +15,7 @@ embed: ""
 org: Personal
 ---
 
-Sucholary is a Chrome extension that helps you read hard academic papers. Highlight a passage you are stuck on and it reworks the text into plainer language, right there on the page, without hopping to another tab. I built it for Suyeon, my girlfriend, whose hobby is reading research papers.
+Sucholary is a Chrome extension for reading hard academic papers. Highlight a passage that is not clicking and it reworks the text into plainer language, right there on the page, without hopping to another tab. I built it for Suyeon, my girlfriend, whose hobby is reading research papers.
 
 <MacbookFrame
   src="https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fsandbox%2Facademic-jargon-translator-helps-to-synthesize-complex-concepts-for-my-girlfriend%2Fhighlight-pill.jpg?alt=media"
@@ -32,7 +32,7 @@ Suyeon reads research papers for fun, in her field and well beyond it, and takes
 
 <Dek>Highlight a passage, pick translate or explore, and read a reworded version anchored to the paper.</Dek>
 
-The trigger is drag and highlight. It is what people already do when they hit a passage they cannot parse, and it tells the tool exactly which text to work on. Highlight a line and a small pill appears next to it with two options, translate and explore. Pick one and a bottom sheet slides up over the page, showing the original passage and a reworded version of it. It also reads the text just before and after the highlight, so the rewrite stays anchored to the paper's actual subject rather than guessing at the concept in isolation. You can copy the result straight out of the sheet.
+The trigger is drag and highlight. It is what people already do when they hit a passage they cannot parse, and it tells the tool exactly which text to work on. Highlight a line and a small pill appears next to it with two options, translate and explore. Pick one and a bottom sheet slides up over the page, showing the original passage and a reworded version of it. It also reads the text just before and after the highlight, so the rewrite stays anchored to the paper's actual subject rather than guessing at the concept in isolation. The result copies straight out of the sheet.
 
 <VideoPlayer
   type="video"
@@ -52,7 +52,7 @@ The trigger is drag and highlight. It is what people already do when they hit a 
   caption="Explore turns a dense passage into a structured, skimmable outline."
 />
 
-To match the reader instead of a generic reading level, you can upload your own writing, a doc, pdf, or txt, and Gemini uses it to gauge your language and perspective and personalize how it explains things.
+To match the reader instead of a generic reading level, it accepts a sample of their own writing, a doc, pdf, or txt, and uses it to gauge their language and perspective and personalize how it explains things.
 
 <ImageFrame
   background={{
@@ -79,6 +79,6 @@ Gemini 2.5 Flash does the rewriting, chosen for fast, text-only responses; the w
 
 <Dek>Personalizing 'explain it at my level' from almost no signal is harder than it looks.</Dek>
 
-Honestly, it did not land. I tested it a few times and liked the idea, and Suyeon tried it a handful of times, but the explanations kept missing her level. The fallback would simplify too far, explaining a concept the way you would to a three-year-old cousin, and she did not want to be treated like a baby. I reworked the fallback prompt to lean harder on the reader's own writing to infer their level and perspective, but a short note is thin evidence to model someone from, and it never really got there.
+Honestly, it did not land. I tested it a few times and liked the idea, and Suyeon tried it a handful of times, but the explanations kept missing her level. The fallback would simplify too far, explaining a concept as if to a three-year-old cousin, and she did not want to be treated like a baby. I reworked the fallback prompt to lean harder on the reader's own writing to infer their level and perspective, but a short note is thin evidence to model someone from, and it never really got there.
 
 That is the honest lesson of this one: personalizing "explain it at my level" from almost no signal is harder than it looks, and over-simplifying is its own kind of condescension. A sandbox piece, rough edges left visible.

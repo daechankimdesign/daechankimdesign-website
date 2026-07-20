@@ -2,6 +2,7 @@ import type { MDXComponents } from "next-mdx-remote-client/rsc";
 import { VideoPlayer } from "./VideoPlayer";
 import { MDXImage } from "./MDXImage";
 import { ImageFrame } from "./ImageFrame";
+import { ScrollImage } from "./ScrollImage";
 import { PhotoGrid } from "./PhotoGrid";
 import { MacbookFrame } from "./MacbookFrame";
 import { QuoteCarousel } from "./QuoteCarousel";
@@ -35,6 +36,9 @@ export const mdxComponents: MDXComponents = {
   // entrance direction — turning a "slide right" into a diagonal. The panel is
   // the stage and stays put; the cards animate into it.
   ImageFrame: (props) => <ImageFrame {...props} />,
+  // NOT wrapped in RevealBlock: ScrollImage owns its own scroll-linked pan, and a
+  // transformed ancestor (RevealBlock) would offset the useScroll measurement.
+  ScrollImage: (props) => <ScrollImage {...props} />,
   // NOT wrapped in RevealBlock: QuoteCarousel pins with position: sticky, and a
   // transformed ancestor (which RevealBlock is) breaks sticky's viewport anchor.
   QuoteCarousel: (props) => <QuoteCarousel {...props} />,

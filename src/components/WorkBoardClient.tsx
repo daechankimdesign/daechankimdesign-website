@@ -212,7 +212,10 @@ export function WorkBoardClient({
     <div className="flex flex-col gap-10 lg:flex-row lg:gap-12">
       {/* Left: filters — settle in last, like the About tab. Type tabs always live
           here; the disciplines move to the bottom-left pill when FILTER_BUTTON. */}
-      <aside className="lg:order-first lg:w-48 lg:shrink-0">
+      {/* Mobile: pin the filter rail just below the fixed top nav (~54px) so the
+          type tabs stay reachable while the grid scrolls. Desktop uses the inner
+          sticky column instead. */}
+      <aside className="sticky top-16 z-20 pb-2 lg:static lg:top-auto lg:z-auto lg:pb-0 lg:order-first lg:w-48 lg:shrink-0">
         {/* Viewport-tall sticky column (calc needs the spaces → underscores) so
             mt-auto can pin the disciplines to the bottom EDGE of the screen and
             keep them there as you scroll the grid. */}
@@ -256,7 +259,10 @@ export function WorkBoardClient({
                 toward the type tabs, never off the bottom of the screen. */}
             {!FILTER_BUTTON && facets.length > 0 ? (
               <div className="mt-4 lg:mt-auto lg:pt-8">
-                <hr className="hairline-b mb-4 border-0" />
+                {/* Divider only at lg, where the tabs have no border and the
+                    disciplines are pinned far below. On mobile the tabs' own
+                    border-b already separates them, so this would double the line. */}
+                <hr className="hidden hairline-b mb-4 border-0 lg:block" />
 
                 {discOpen ? (
                   <motion.div
