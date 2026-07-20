@@ -5,6 +5,7 @@ import { ImageFrame } from "./ImageFrame";
 import { PhotoGrid } from "./PhotoGrid";
 import { MacbookFrame } from "./MacbookFrame";
 import { QuoteCarousel } from "./QuoteCarousel";
+import { Highlighter } from "./Highlighter";
 import { ProjectMeta } from "./ProjectMeta";
 import { Gallery } from "./Gallery";
 import { ExperienceItem } from "./ExperienceItem";
@@ -112,5 +113,19 @@ export const mdxComponents: MDXComponents = {
     />
   ),
   a: (props) => <a className="link" {...props} />,
+  // Explicit inline highlighter, if ever wanted in place of **…** for one phrase.
+  Highlighter: (props) => <Highlighter {...props} />,
   hr: () => <RevealBlock as="hr" className="hairline-b my-12 border-0" />,
+};
+
+/**
+ * Component set for long-form WORK documents (case studies). Identical to the
+ * base, except every **bold** (`strong`) renders with the scroll-triggered
+ * highlighter behind it — the same mark as the work-tile hover. Non-work pages
+ * (About) keep `mdxComponents`, so a bold NAME in the endorsement stays a plain
+ * <strong> and isn't marked.
+ */
+export const workMdxComponents: MDXComponents = {
+  ...mdxComponents,
+  strong: ({ children }) => <Highlighter>{children}</Highlighter>,
 };

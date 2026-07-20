@@ -226,7 +226,7 @@ function LetterBody() {
 // grows to full screen once the reader scrolls past GROW_AT_PX. The letter's
 // lines cascade in on open (RevealP). No dim overlay; text fills width.
 const PARTIAL_VW = 60; // partial-sheet width on desktop (answer: 40vw x1.5)
-const MOBILE_VW = 90; // ...and 90vw on mobile (answer)
+const MOBILE_VW = 100; // ...and full-width on mobile (answer)
 const PARTIAL_VH = 36; // partial-sheet height
 const GROW_AT_PX = 40; // scroll before it expands to full screen (answer: 40px)
 const CLOSE_AT_PX = 320; // over-scroll "pull down" past the top to close

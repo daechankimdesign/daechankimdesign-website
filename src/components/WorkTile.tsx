@@ -3,8 +3,8 @@
 import { useEffect, useRef } from "react";
 import { useReducedMotion } from "framer-motion";
 import { Link } from "@/i18n/navigation";
+import { Bookmark, FlaskSolid } from "iconoir-react";
 import { ProgressiveImage } from "./ProgressiveImage";
-import { StatusBadge } from "./StatusBadge";
 import { drawHighlight } from "@/lib/highlight";
 import type { BoardItem, Span } from "@/lib/mdx";
 import posthog from "posthog-js";
@@ -84,7 +84,11 @@ export function WorkTile({
   // monochrome palette (no new hues): case study reads stronger (inverted dark),
   // play softer (light surface), so the two feel like one set.
   const typeBadge =
-    type === "projects" ? "bg-fg text-canvas" : "bg-surface text-fg";
+    type === "projects"
+      ? "bg-fg text-canvas"
+      : "border border-hairline text-fg";
+  // Leading glyph keyed to type: bookmark = Project, flask = Experiment.
+  const TypeIcon = type === "projects" ? Bookmark : FlaskSolid;
   const ratio = `${tier.w} / ${tier.h}`;
 
   // Resolve media: the first still is the poster/image; the first .mp4 (if any,
@@ -152,16 +156,14 @@ export function WorkTile({
         />
       </div>
 
-      {/* Eyebrow — type badge (filled) + status badge (outline). */}
+      {/* Eyebrow — type badge (filled). */}
       <div className="flex flex-wrap items-center gap-2">
         <span
-          className={`text-caption inline-flex items-center px-2.5 py-1 ${typeBadge}`}
+          className={`text-caption inline-flex items-center gap-1.5 px-2.5 py-1 ${typeBadge}`}
         >
+          <TypeIcon aria-hidden width={14} height={14} strokeWidth={1.5} />
           {typeLabel}
         </span>
-        {item.status && statusLabel ? (
-          <StatusBadge status={item.status} label={statusLabel} />
-        ) : null}
       </div>
 
       {/* Title — hand-drawn highlighter on hover (see ExperienceItem), not a dim.
@@ -175,12 +177,20 @@ export function WorkTile({
         </span>
       </h3>
 
-      {/* Meta — year + tools (disciplines live in the filter rail, not here). */}
-      {item.year || item.tools.length > 0 ? (
-        <p className="text-caption mt-3 text-fg-muted uppercase">
-          {[item.year, ...item.tools].filter(Boolean).join("  ·  ")}
-        </p>
-      ) : null}
+      {/* Meta — status (Shipped/Concept) + tools + year, in that order.
+          (disciplines live in the filter rail, not here). */}
+      {(() => {
+        const meta = [
+          item.status && statusLabel ? statusLabel : null,
+          ...item.tools,
+          item.year,
+        ].filter(Boolean);
+        return meta.length > 0 ? (
+          <p className="text-caption mt-3 text-fg-muted uppercase">
+            {meta.join("  ·  ")}
+          </p>
+        ) : null;
+      })()}
     </Link>
   );
 }

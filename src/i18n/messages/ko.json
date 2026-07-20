@@ -35,7 +35,7 @@
   "WorkTags": {
     "shipped": "출시",
     "concept": "컨셉",
-    "filterBy": "분야",
+    "filterBy": "필터",
     "clear": "초기화",
     "empty": "조건에 맞는 작업이 없습니다.",
     "showing": "전체 %total%개 중 %shown%개"

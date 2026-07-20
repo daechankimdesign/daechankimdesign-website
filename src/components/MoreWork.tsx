@@ -66,9 +66,10 @@ export async function MoreWork({
 
   return (
     <>
-      {/* The rule that used to lead this component now belongs to Colophon, which
-          renders it directly above — it closes the STORY out, so it has to draw
-          even when this grid does not. Don't add one back here. */}
+      {/* Full-width hairline directly above the heading — the divider that
+          introduces "More work". Lives here (not in Colophon) so it sits right
+          above the section rather than under the colophon's meta line. */}
+      <hr className="hairline-b mb-12 border-0" />
       <section aria-labelledby="more-work">
         {/* RevealOnView (scroll-triggered), never Reveal (mount-triggered) — this
             sits at the foot of a long page and would otherwise animate unseen.

@@ -96,14 +96,12 @@ export function HeroHeadline({ stack }: { stack: HeroStackItem[] }) {
   const containerRef = useRef<HTMLDivElement>(null);
   // Reveal steps: one per header line, then the sub text, then the buttons.
   const total = HEADLINE.length + 2;
-  const [entered, setEntered] = useState(false);
   const [count, setCount] = useState(0);
   // How many of the four annotation marks have drawn in (0..4).
   const [markStep, setMarkStep] = useState(0);
 
   useEffect(() => {
     if (reduce) {
-      setEntered(true);
       setCount(total);
       return;
     }
@@ -126,14 +124,12 @@ export function HeroHeadline({ stack }: { stack: HeroStackItem[] }) {
       // First line shows immediately so the hero never starts blank; the rest
       // step in on the timer.
       n = 1;
-      setEntered(true);
       setCount(1);
       t = setTimeout(build, STEP);
     };
     const reset = () => {
       clearTimeout(t);
       n = 0;
-      setEntered(false);
       setCount(0);
     };
 
@@ -165,6 +161,14 @@ export function HeroHeadline({ stack }: { stack: HeroStackItem[] }) {
 
   const ledeShown = count > HEADLINE.length;
   const buttonsShown = count > HEADLINE.length + 1;
+  // The cover-flow deck appears WITH the first header line ("Daechan Kim,") — but
+  // UNFOCUSED (see `focus`: -1 = no card centered, all pushed right). Photo 1 pulls
+  // into focus on line 2.
+  const deckShown = count > 0;
+  // Which photo the deck centers, from the SAME reveal counter as the text. The
+  // low bound is -1 (NOT 0): line 1 → -1 (visible but UNFOCUSED, no card centered);
+  // line 2 → photo 1; line 3 → photo 2; sub text → photo 3; CTAs → photo 4.
+  const focus = Math.min(Math.max(count - 2, -1), stack.length - 1);
 
   // Mobile has no hover to reveal the envelope preview, so once the CTA row
   // appears, fly it in on its own after MOBILE_AUTO_DELAY — no interaction
@@ -202,7 +206,7 @@ export function HeroHeadline({ stack }: { stack: HeroStackItem[] }) {
   return (
     <div
       ref={containerRef}
-      className="flex w-full flex-col gap-12 lg:flex-row lg:items-start lg:gap-16"
+      className="flex w-full flex-col gap-6 lg:flex-row lg:items-start lg:gap-16"
     >
       <div className="flex flex-1 flex-col items-start min-w-0">
         <h1 className="text-display relative hl-behind">
@@ -324,8 +328,8 @@ export function HeroHeadline({ stack }: { stack: HeroStackItem[] }) {
           lightbox. */}
       <HeroCoverFlow
         items={stack}
-        show={entered}
-        flourish={buttonsShown}
+        show={deckShown}
+        focus={focus}
         reduce={!!reduce}
       />
     </div>

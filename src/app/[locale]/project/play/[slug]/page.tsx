@@ -1,11 +1,11 @@
 import { notFound } from "next/navigation";
+import { FlaskSolid } from "iconoir-react";
 import { setRequestLocale, getTranslations } from "next-intl/server";
 import { getCompiled, getSlugs, getWorkMeta } from "@/lib/mdx";
 import { routing } from "@/i18n/routing";
 import { Reveal, RevealItem } from "@/components/Reveal";
 import { SandboxEmbed } from "@/components/SandboxEmbed";
 import { SideDocumentTab } from "@/components/SideDocumentTab";
-import { StatusBadge } from "@/components/StatusBadge";
 import { MoreWork } from "@/components/MoreWork";
 import { Colophon } from "@/components/Colophon";
 
@@ -101,12 +101,10 @@ export default async function PlayDetailPage({
             <Reveal>
               <RevealItem as="p" className="mb-4">
                 <span className="inline-flex flex-wrap items-center gap-2">
-                  <span className="text-caption inline-flex items-center bg-surface px-2.5 py-1 text-fg">
+                  <span className="text-caption inline-flex items-center gap-1.5 border border-hairline px-2.5 py-1 text-fg">
+                    <FlaskSolid aria-hidden width={14} height={14} strokeWidth={1.5} />
                     {typeLabel}
                   </span>
-                  {meta.status ? (
-                    <StatusBadge status={meta.status} label={wt(meta.status)} />
-                  ) : null}
                 </span>
               </RevealItem>
               <RevealItem as="h1" className="text-display">
@@ -115,12 +113,20 @@ export default async function PlayDetailPage({
               {/* `summary` is intentionally NOT rendered here: it's kept in the
                   MDX frontmatter (still used for the board tiles / metadata) but
                   hidden from the detail page header. Disciplines (tags) live in
-                  the board filter, not here — the header shows year + tools. */}
-              {meta.year || meta.tools.length > 0 ? (
-                <RevealItem as="p" className="text-caption mt-3 text-fg-muted uppercase">
-                  {[meta.year, ...meta.tools].filter(Boolean).join("  ·  ")}
-                </RevealItem>
-              ) : null}
+                  the board filter, not here — the header shows status + tools +
+                  year, in that order. */}
+              {(() => {
+                const metaLine = [
+                  meta.status ? wt(meta.status) : null,
+                  ...meta.tools,
+                  meta.year,
+                ].filter(Boolean);
+                return metaLine.length > 0 ? (
+                  <RevealItem as="p" className="text-caption mt-3 text-fg-muted uppercase">
+                    {metaLine.join("  ·  ")}
+                  </RevealItem>
+                ) : null;
+              })()}
             </Reveal>
           </header>
 

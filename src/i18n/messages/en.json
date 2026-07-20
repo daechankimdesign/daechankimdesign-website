@@ -35,7 +35,7 @@
   "WorkTags": {
     "shipped": "Shipped",
     "concept": "Concept",
-    "filterBy": "Discipline",
+    "filterBy": "Filters",
     "clear": "Clear",
     "empty": "No work matches these filters.",
     "showing": "Showing %shown% of %total%",

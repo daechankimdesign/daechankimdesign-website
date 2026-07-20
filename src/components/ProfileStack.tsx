@@ -28,7 +28,8 @@ const RANGE_END = 0.9;
 // The scroll-driven deal only makes sense while the portrait is PINNED, which
 // happens at `lg`+ (the About aside is `lg:sticky`). Below that the portrait
 // scrolls away with the page, so the cards would fly in off-screen — there we
-// render the settled pile instead, exactly like reduced motion.
+// hide the gallery entirely and show only the base portrait. `reduce` on lg+
+// still renders the settled pile (staticPile), just without animation.
 // Module-scope store fns keep useSyncExternalStore's args stable, and this stays
 // lint-clean (no setState-in-effect). SSR reports desktop; the client corrects
 // on hydration.
@@ -60,9 +61,10 @@ type Props = {
  * Scrolling back up sends them away again.
  *
  * The deal is DESKTOP-ONLY: it needs the portrait pinned (`lg:sticky` on the
- * About aside). Below `lg` — and for reduced motion — the settled pile renders
- * static with no animation, since the stack would otherwise scroll out of view
- * mid-deal.
+ * About aside). Below `lg` (mobile/tablet) the gallery is hidden entirely and
+ * ONLY the base portrait shows — the stack would otherwise scroll out of view
+ * mid-deal, and a settled pile would just cover the portrait with its top card.
+ * On `lg`+ under reduced motion the pile renders static (no animation).
  */
 export function ProfileStack({
   portrait,
@@ -118,9 +120,13 @@ export function ProfileStack({
         sizes={sizes}
       />
 
-      {/* Gallery cards — each flies up from below and settles into the pile as
-          scroll deals it in. */}
-      {images.map((src, i) => {
+      {/* Gallery cards — DESKTOP ONLY. On compact (< lg: mobile/tablet) the deal
+          is disabled AND the stack is hidden entirely, so ONLY the base portrait
+          shows (no settled pile — its top card would otherwise cover the
+          portrait). On lg+ each flies up from below and settles into the pile as
+          scroll deals it in (or a static pile under reduced motion). */}
+      {!compact &&
+        images.map((src, i) => {
         const shown = staticPile ? true : i < revealed;
         return (
           <motion.div
