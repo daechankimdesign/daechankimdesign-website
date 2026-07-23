@@ -111,7 +111,11 @@ export function SettingsModal({
       <button
         type="button"
         aria-label="Close settings"
-        className="absolute inset-0 bg-fg/20"
+        // bg-black/20, NOT bg-fg/20: fg inverts to near-white in dark mode,
+        // which would BRIGHTEN the page behind the modal (a scrim lighter than
+        // the dialog). Black dims in both themes; in light it renders the same
+        // as the old fg-based scrim (fg is near-black).
+        className="absolute inset-0 bg-black/20"
         onClick={onClose}
       />
       <div className="relative mx-5 mt-24 w-full max-w-sm rounded-lg border border-hairline bg-canvas p-6">

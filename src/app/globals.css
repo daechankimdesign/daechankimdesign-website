@@ -6,6 +6,11 @@
    Turbopack panics ("Operation timed out"). All class usage lives in src/. */
 @import "tailwindcss" source("../");
 
+/* `dark:` utilities key off <html data-theme="dark"> (stamped before first paint
+   by the head script — see src/lib/theme.ts), NOT prefers-color-scheme, so they
+   respect an explicit choice in the theme toggle. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
 /* ============================================================================
    Design tokens — "Figma Simple Design System" (monochrome neutral palette).
    Spacing is intentionally left at Tailwind's default --spacing (0.25rem = 4px
@@ -18,6 +23,7 @@
   --color-fg-muted: #757575; /* secondary text, inactive nav, meta values */
   --color-fg-subtle: #b3b3b3; /* tertiary / disabled */
   --color-hairline: #d9d9d9; /* hairline borders */
+  --color-hairline-faint: #ececec; /* barely-there edge on floating pills */
   --color-surface: #e3e3e3; /* active pill / raised surface */
   --color-surface-subtle: #f5f5f5; /* subtle background blocks */
   --color-canvas: #ffffff; /* page background */
@@ -37,6 +43,67 @@
    `font-serif` utility) so no serif family can ever be applied. */
 @theme {
   --font-serif: initial;
+}
+
+/* ============================================================================
+   Theme scopes. The @theme block above IS the light theme; the block below
+   re-scopes the same custom properties for dark, keyed off
+   <html data-theme="dark"> (stamped pre-paint by the head script, see
+   src/lib/theme.ts). Utilities read var(--color-*) at runtime — the
+   .surface-invert footer has always proven this works — so every token-driven
+   bg-* / text-* / border-* adapts with zero component changes. Per
+   STACK-NOTES-2026 §5: overrides live in a regular selector, NEVER a nested
+   @theme.
+
+   Dark is deliberately NOT pure black: a warm near-black canvas with warm
+   off-white ink, keeping the monochrome system's hierarchy (fg 12.9:1 and
+   fg-muted 5.4:1 against the canvas).
+
+   --hl is the hand-drawn marker colour (every rough-notation stroke + the hero
+   circle). It lives in CSS, not the JS HL_COLOR constant, so marks recolour
+   live on theme change — rough-notation writes its colour as an SVG
+   presentation attribute, which any CSS rule overrides (see the stroke rules
+   by .hl-circle). Dark swaps the translucent yellow for a deeper, quieter gold
+   so marks read as marker on dark paper, not neon glow.
+   ============================================================================ */
+:root {
+  color-scheme: light;
+  --hl: rgba(253, 231, 105, 0.55);
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --color-fg: #e8e6e3;
+  --color-fg-muted: #a5a29d;
+  --color-fg-subtle: #6b6863;
+  --color-hairline: #383633;
+  --color-hairline-faint: #2c2a28;
+  --color-surface: #2e2c29;
+  --color-surface-subtle: #232120;
+  --color-canvas: #1b1a19;
+  --color-foreground: #e8e6e3;
+  --color-background: #1b1a19;
+  /* 0.28, not more: rough-notation draws 2 overlapping strokes and the overlap
+     compounds toward alpha ~0.48 — at 0.28 even that stays >= 4.5:1 (AA) behind
+     the #e8e6e3 ink, since the marker sits under 16px MDX body text. */
+  --hl: rgba(228, 179, 76, 0.28);
+}
+/* No-JS fallback: nothing stamps data-theme without scripting, so follow the
+   device preference directly. Mirrors the block above — keep in sync. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    color-scheme: dark;
+    --color-fg: #e8e6e3;
+    --color-fg-muted: #a5a29d;
+    --color-fg-subtle: #6b6863;
+    --color-hairline: #383633;
+    --color-hairline-faint: #2c2a28;
+    --color-surface: #2e2c29;
+    --color-surface-subtle: #232120;
+    --color-canvas: #1b1a19;
+    --color-foreground: #e8e6e3;
+    --color-background: #1b1a19;
+    --hl: rgba(228, 179, 76, 0.28);
+  }
 }
 
 /* ============================================================================
@@ -326,23 +393,24 @@ body::before {
   z-index: 25; /* above content, below GlobalNav (z-30) and UniversalNav (z-40) */
   pointer-events: none;
 }
-/* rgba(255,255,255,…) === var(--color-canvas) (#ffffff). Keep in sync if the
-   page background ever changes. */
+/* Each stop is the CANVAS token at the curve's alpha (color-mix percentage ==
+   the old rgba alpha), so the fade dissolves into whichever canvas the active
+   theme renders — white in light, warm near-black in dark. */
 body::before {
   top: 0;
   height: 20svh; /* taller than the bottom (10svh) so the fade spans the sticky top nav */
   background: linear-gradient(
     to bottom,
-    rgba(255, 255, 255, 1) 0%,
-    rgba(255, 255, 255, 0.729) 3%,
-    rgba(255, 255, 255, 0.566) 6%,
-    rgba(255, 255, 255, 0.429) 10%,
-    rgba(255, 255, 255, 0.321) 15%,
-    rgba(255, 255, 255, 0.25) 20%,
-    rgba(255, 255, 255, 0.163) 30%,
-    rgba(255, 255, 255, 0.092) 45%,
-    rgba(255, 255, 255, 0.043) 65%,
-    rgba(255, 255, 255, 0) 100%
+    var(--color-canvas) 0%,
+    color-mix(in srgb, var(--color-canvas) 72.9%, transparent) 3%,
+    color-mix(in srgb, var(--color-canvas) 56.6%, transparent) 6%,
+    color-mix(in srgb, var(--color-canvas) 42.9%, transparent) 10%,
+    color-mix(in srgb, var(--color-canvas) 32.1%, transparent) 15%,
+    color-mix(in srgb, var(--color-canvas) 25%, transparent) 20%,
+    color-mix(in srgb, var(--color-canvas) 16.3%, transparent) 30%,
+    color-mix(in srgb, var(--color-canvas) 9.2%, transparent) 45%,
+    color-mix(in srgb, var(--color-canvas) 4.3%, transparent) 65%,
+    transparent 100%
   );
 }
 /* Mobile: no top fade. Below 768px the UniversalNav docks to the BOTTOM (see
@@ -408,6 +476,26 @@ body::before {
   --color-fg-subtle: #6b6b6b;
   background-color: var(--color-canvas);
   color: var(--color-fg);
+}
+/* In dark mode the footer's canvas MATCHES the page canvas exactly (a
+   near-but-not-equal dark read as an accident, not an elevation): the page and
+   footer become one continuous dark surface, and the footer's crisp hairline-t
+   divider (dark hairline token) carries the separation instead. Element-level
+   custom properties beat the inherited :root[data-theme] values, so this stays
+   self-contained. Keep --color-canvas equal to the page canvas above. */
+:root[data-theme="dark"] .surface-invert {
+  --color-canvas: #1b1a19;
+  --color-fg: #e8e6e3;
+  --color-fg-muted: #a5a29d;
+  --color-fg-subtle: #6b6863;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) .surface-invert {
+    --color-canvas: #1b1a19;
+    --color-fg: #e8e6e3;
+    --color-fg-muted: #a5a29d;
+    --color-fg-subtle: #6b6863;
+  }
 }
 
 .container-page {
@@ -508,7 +596,17 @@ body::before {
   overflow: visible;
   pointer-events: none;
 }
+/* Marker colour — the theme-scoped --hl variable (see the theme blocks at the
+   top). rough-notation writes its colour as an SVG PRESENTATION attribute
+   (setAttribute('stroke', …)), which any CSS rule overrides, so this one rule
+   recolours every mark live on theme change. Every mark on the site shares the
+   one marker colour, so a global override is by design; the JS HL_COLOR
+   constant remains only as the pre-CSS fallback rough-notation requires. */
+svg.rough-annotation path {
+  stroke: var(--hl);
+}
 .hl-circle path {
+  stroke: var(--hl);
   fill: none;
   stroke-width: 5;
   stroke-linecap: round;

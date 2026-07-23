@@ -1,10 +1,12 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import { notFound } from "next/navigation";
 import { NextIntlClientProvider, hasLocale } from "next-intl";
 import { setRequestLocale } from "next-intl/server";
 import { notoSans } from "../fonts";
 import { routing } from "@/i18n/routing";
+import { THEME_INIT_SCRIPT } from "@/lib/theme";
+import { ThemeProvider } from "@/components/ThemeProvider";
 import { GlobalNav } from "@/components/GlobalNav";
 import { UniversalNav } from "@/components/UniversalNav";
 import { PageTransition } from "@/components/PageTransition";
@@ -31,6 +33,16 @@ export const metadata: Metadata = {
   },
 };
 
+// Browser chrome (address bar / status bar) colour per scheme. Keys off the
+// DEVICE preference — the closest the metadata API gets to the toggle's choice,
+// and correct for the device-default majority.
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#1b1a19" },
+  ],
+};
+
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
 }
@@ -54,7 +66,15 @@ export default async function LocaleLayout({
       className={`${notoSans.variable} h-full antialiased`}
       suppressHydrationWarning
     >
+      <head>
+        {/* Blocking theme init (Next 16 preventing-flash recipe): resolves the
+            stored/device theme and stamps <html data-theme> BEFORE first paint,
+            so arriving in dark never flashes white. suppressHydrationWarning on
+            <html> covers the attribute this adds pre-hydration. */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+      </head>
       <body className="flex min-h-full flex-col font-sans" suppressHydrationWarning>
+        <ThemeProvider>
         <NextIntlClientProvider>
           {/* PageFadeProvider hosts the transition curtain (z-20) and wraps
               everything that navigates, so the transition-aware Link/useRouter
@@ -76,6 +96,7 @@ export default async function LocaleLayout({
             </LoveLetterProvider>
           </PageFadeProvider>
         </NextIntlClientProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

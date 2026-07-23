@@ -8,6 +8,7 @@ import { Settings as SettingsIcon } from "iconoir-react";
 import { Link, usePathname, useRouter } from "@/i18n/navigation";
 import { RESUME_URL } from "@/lib/links";
 import { SettingsModal } from "./SettingsModal";
+import { ThemeToggle } from "./ThemeToggle";
 import { navHoverEnter, navHoverLeave } from "@/lib/navHover";
 
 // Apply the corrected visibility BEFORE the browser paints on the client (so a
@@ -155,8 +156,12 @@ export function GlobalNav() {
           Daechan Kim
         </Link>
 
-        {/* Right — resume, contact, settings. Primary nav lives in UniversalNav. */}
+        {/* Right — theme, resume, contact, settings. Primary nav lives in
+            UniversalNav. The theme toggle sits FIRST (leftmost): the group is
+            right-anchored, so its hover-expansion grows leftward into the bar's
+            empty middle and never shifts the Resume/Contact links. */}
         <div className="flex shrink-0 items-center gap-4">
+          <ThemeToggle />
           <a
             href={RESUME_URL}
             target="_blank"

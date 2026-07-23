@@ -16,7 +16,11 @@
     "back": "Back",
     "stackedView": "Stacked view",
     "tileView": "Tile view",
-    "viewOptions": "View options"
+    "viewOptions": "View options",
+    "theme": "Theme",
+    "themeDevice": "Device theme",
+    "themeLight": "Light theme",
+    "themeDark": "Dark theme"
   },
   "Settings": {
     "title": "Settings",

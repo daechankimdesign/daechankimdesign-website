@@ -16,7 +16,11 @@
     "back": "Atrás",
     "stackedView": "Vista apilada",
     "tileView": "Vista de mosaico",
-    "viewOptions": "Opciones de vista"
+    "viewOptions": "Opciones de vista",
+    "theme": "Tema",
+    "themeDevice": "Tema del dispositivo",
+    "themeLight": "Tema claro",
+    "themeDark": "Tema oscuro"
   },
   "Settings": {
     "title": "Ajustes",

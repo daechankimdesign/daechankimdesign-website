@@ -90,9 +90,10 @@ const DEFAULT_FOREGROUND_WIDTH = 340;
 
 // How far the panel travels down from the top in `background` mode (px).
 const PANEL_DROP = 40;
-// The backdrop scrim — a translucent near-white over the blurred screenshot so it
-// recedes and the foreground reads.
-const SCRIM = "rgb(250 250 250 / 0.38)";
+// The backdrop scrim — a translucent wash of the CANVAS token over the blurred
+// screenshot so it recedes into the page (theme-aware: near-white in light,
+// warm near-black in dark) and the foreground reads.
+const SCRIM = "color-mix(in srgb, var(--color-canvas) 38%, transparent)";
 // The blur the screenshot settles to (also the static value under reduced motion).
 const BG_BLUR = "blur(12px)";
 // Scale the backdrop past its clip so the blur has no hard edge.

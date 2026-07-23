@@ -56,6 +56,62 @@ build; roadmap Phase 5 is the runtime translation (`4348eec`).
 
 ## Log
 
+### 2026-07-22: Dark mode (device default, three-way toggle, dark marker)
+
+- **Theme engine** (`src/lib/theme.ts`, `src/components/ThemeProvider.tsx`):
+  mode is `device | light | dark`; only explicit light/dark persists in
+  `localStorage("theme")`, absence means follow the device. A blocking head
+  script (Next 16 preventing-flash recipe) stamps `<html data-theme>` plus
+  `color-scheme` before first paint. Mode state is a module store consumed via
+  `useSyncExternalStore` (navHover pattern), hydration safe with no
+  setState-in-effect. Device mode tracks live OS changes.
+- **Tokens** (`globals.css`): the `@theme` block stays the light theme; a
+  `:root[data-theme="dark"]` block re-scopes every token. Dark canvas is a warm
+  near-black `#1b1a19` (deliberately not pure black), ink `#e8e6e3`, plus dark
+  values for muted/subtle/hairline/surface and the shadcn bridge pair. A
+  `prefers-color-scheme` block covers no-JS. New `--color-hairline-faint`
+  token (`#ececec` light / `#2c2a28` dark) replaces the UniversalNav pill's
+  hardcoded border hex. `@custom-variant dark` keys `dark:` utilities off the
+  attribute. The footer's `.surface-invert` re-scopes in dark to MATCH the
+  page canvas exactly (`#1b1a19`); the hairline-t divider carries the
+  separation, since a near-but-not-equal dark read as an accident.
+- **Marker recolor**: the highlight is now the CSS variable `--hl`
+  (translucent yellow in light, quieter gold `rgba(228,179,76,0.28)` in dark;
+  0.28 keeps even rough-notation's double-stroke overlaps AA behind body text).
+  rough-notation writes stroke as a presentation attribute, so one global CSS
+  rule (`svg.rough-annotation path`) recolors every mark live; `.hl-circle`
+  reads the same variable. JS `HL_COLOR` remains only as the library fallback.
+- **Toggle** (`src/components/ThemeToggle.tsx`, mounted first in GlobalNav's
+  right group): collapsed shows the active mode's icon; hover or focus springs
+  the row open to all three (Computer / SunLight / HalfMoon, iconoir), each
+  icon with its own hover animation (sun rotates, moon tilts, monitor nods).
+  Bare icon row in the difference-safe grays because the header is
+  mix-blend-difference; placed leftmost so expansion never shifts
+  Resume/Contact. Radiogroup semantics, i18n labels (en/ko/es), PostHog
+  `theme_changed`.
+- **Hardcoded color fixes** for dark: CoverFlow card backing + side veil
+  `bg-white` to `bg-canvas`, and its reflection fade used `hsl(var(--background))`,
+  a variable that never existed (broken in both themes), now
+  `var(--color-canvas)` + `color-mix`. ImageFrame scrim and WorkTile hover veil
+  now `color-mix` off tokens. SandboxEmbed bezel pinned `#1e1e1e` (device
+  hardware, like MacbookMockUp); in dark it lifts to the surface token with a
+  hairline ring so the demo frame stays distinguished from the dark canvas
+  (a ring, not a border: the p-3 == BEZEL width math must not change). `body::before` top fade rebuilt from
+  `color-mix` canvas stops. `viewport.themeColor` added per scheme.
+- Verified on the dev server: token flip, marker recolor, veils, pill,
+  footer, toggle state machine (light / dark / device with storage), light
+  mode pixel-identical to before.
+- **Post-review hardening** (multi-agent adversarial review, 10 confirmed
+  findings fixed): cross-tab storage sync (a second tab now follows a toggle
+  made elsewhere); toggle hover/focus coordination (a pending hover-collapse
+  can no longer hide a keyboard-focused radio, and blur respects a hovering
+  pointer); init script splits its storage read so blocked-storage contexts
+  still get the data-theme stamp; `applyResolvedTheme` also rewrites the
+  `theme-color` metas so mobile browser chrome follows explicit choices, with
+  a ThemeProvider mount sync for stored preferences; SettingsModal scrim
+  `bg-black/20` (fg-based scrim inverted to a bright wash in dark);
+  styleguide and design-rules color tables now caption light and dark hex.
+
 ### 2026-07-14: "More work" section on project detail pages
 
 Every case-study / play detail page now ends with a **More work** grid: three

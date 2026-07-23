@@ -18,14 +18,16 @@ const TYPE_LEVELS = [
   { cls: "text-note", name: "Note", spec: "12px / Regular · sentence case · figcaptions, notices, dates" },
 ] as const;
 
+// Hex labels list light then dark (the swatches themselves render the ACTIVE
+// theme's token, so the pair keeps the caption truthful in both themes).
 const COLORS = [
-  { name: "fg", hex: "#1E1E1E", use: "Primary text / ink", swatch: "bg-fg" },
-  { name: "fg-muted", hex: "#757575", use: "Secondary text, inactive nav, meta values", swatch: "bg-fg-muted" },
-  { name: "fg-subtle", hex: "#B3B3B3", use: "Tertiary / disabled", swatch: "bg-fg-subtle" },
-  { name: "hairline", hex: "#D9D9D9", use: "Hairline borders", swatch: "bg-hairline" },
-  { name: "surface", hex: "#E3E3E3", use: "Active pill / raised surface", swatch: "bg-surface" },
-  { name: "surface-subtle", hex: "#F5F5F5", use: "Subtle background blocks", swatch: "bg-surface-subtle" },
-  { name: "canvas", hex: "#FFFFFF", use: "Page background", swatch: "bg-canvas" },
+  { name: "fg", hex: "#1E1E1E · dark #E8E6E3", use: "Primary text / ink", swatch: "bg-fg" },
+  { name: "fg-muted", hex: "#757575 · dark #A5A29D", use: "Secondary text, inactive nav, meta values", swatch: "bg-fg-muted" },
+  { name: "fg-subtle", hex: "#B3B3B3 · dark #6B6863", use: "Tertiary / disabled", swatch: "bg-fg-subtle" },
+  { name: "hairline", hex: "#D9D9D9 · dark #383633", use: "Hairline borders", swatch: "bg-hairline" },
+  { name: "surface", hex: "#E3E3E3 · dark #2E2C29", use: "Active pill / raised surface", swatch: "bg-surface" },
+  { name: "surface-subtle", hex: "#F5F5F5 · dark #232120", use: "Subtle background blocks", swatch: "bg-surface-subtle" },
+  { name: "canvas", hex: "#FFFFFF · dark #1B1A19", use: "Page background", swatch: "bg-canvas" },
 ] as const;
 
 const SPACING = [
