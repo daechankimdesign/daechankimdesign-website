@@ -73,7 +73,14 @@ export function SandboxEmbed({
     <div className="mt-0 mb-8">
       {/* Device frame — thick, deep-dark, rounded bezel; width tracks the ratio */}
       <div
-        className={`mx-auto box-border max-w-full bg-fg p-3 shadow-[0_20px_50px_-24px_rgba(0,0,0,0.45)] transition-[width,border-radius] duration-300 ease-out ${current.frame}`}
+        // bg-[#1e1e1e], NOT bg-fg: this is device hardware (like MacbookMockUp's
+        // fixed aluminum), so the bezel stays deep-dark in dark mode instead of
+        // inverting to a glowing white frame. On the dark canvas that deep-dark
+        // bezel would vanish (its black drop shadow does nothing there), so dark
+        // lifts it to the surface token and rings it with the hairline — clearly
+        // separated device chrome. A RING, not a border: the bezel width math
+        // (p-3 == BEZEL) must stay untouched, and a ring adds no layout size.
+        className={`mx-auto box-border max-w-full bg-[#1e1e1e] dark:bg-surface dark:ring-1 dark:ring-hairline p-3 shadow-[0_20px_50px_-24px_rgba(0,0,0,0.45)] transition-[width,border-radius] duration-300 ease-out ${current.frame}`}
         style={{ width: screenW ? screenW + BEZEL * 2 : "100%" }}
       >
         {/* Screen */}

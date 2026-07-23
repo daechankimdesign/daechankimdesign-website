@@ -151,7 +151,12 @@ export function WorkTile({
         )}
         <span
           aria-hidden
-          style={{ backgroundColor: "rgb(0 0 0 / 0.02)" }}
+          // 2% of the INK token, not literal black, so the resting veil stays a
+          // visible hover affordance on the dark canvas too.
+          style={{
+            backgroundColor:
+              "color-mix(in srgb, var(--color-fg) 2%, transparent)",
+          }}
           className="pointer-events-none absolute inset-0 transition-opacity duration-300 group-hover:opacity-0"
         />
       </div>

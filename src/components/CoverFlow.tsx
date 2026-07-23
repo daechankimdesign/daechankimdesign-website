@@ -710,8 +710,9 @@ const CoverFlowItemCard = memo(function CoverFlowItemCard({
 
   const zIndex = useTransform(scrollX, (value) => 1000 - Math.abs(index - value) * 10)
 
-  // Off-centre cards fade toward WHITE (a #ffffff veil), not darkened, so the
-  // deck reads cleanly on the light canvas; the centred card stays fully opaque.
+  // Off-centre cards fade toward the CANVAS token (white in light, warm
+  // near-black in dark), not darkened, so the deck reads cleanly on either
+  // canvas; the centred card stays fully opaque.
   const veilOpacity = useTransform(
     [scrollX, veil] as MotionValue<number>[],
     (latest: number[]) => (Math.abs(index - latest[0]) < 0.5 ? 0 : latest[1]),
@@ -748,10 +749,11 @@ const CoverFlowItemCard = memo(function CoverFlowItemCard({
       onClick={() => onCardClick(item, index)}
       onMouseMove={() => onCardHover(index)}
     >
-      <div className="relative w-full h-full shadow-2xl bg-white">
-        {/* #ffffff veil — fades off-centre cards toward the canvas, not to black. */}
+      <div className="relative w-full h-full shadow-2xl bg-canvas">
+        {/* Canvas veil — fades off-centre cards toward the page background
+            (theme-aware token), not to black. */}
         <motion.div
-          className="absolute inset-0 bg-white pointer-events-none z-30"
+          className="absolute inset-0 bg-canvas pointer-events-none z-30"
           style={{ opacity: veilOpacity }}
         />
         <div className="relative w-full h-full overflow-hidden">
@@ -812,7 +814,11 @@ const CoverFlowItemCard = memo(function CoverFlowItemCard({
           <div
             className="absolute inset-0 pointer-events-none"
             style={{
-              background: 'linear-gradient(to top, hsl(var(--background)) 0%, hsl(var(--background) / 0.7) 40%, transparent 100%)',
+              // var(--color-canvas), not the registry's hsl(var(--background)):
+              // that variable never existed here (and hsl() around a hex is
+              // invalid regardless), so the fade rendered nothing. The canvas
+              // token also keeps it theme-aware.
+              background: 'linear-gradient(to top, var(--color-canvas) 0%, color-mix(in srgb, var(--color-canvas) 70%, transparent) 40%, transparent 100%)',
             }}
           />
         </div>
