@@ -13,7 +13,7 @@ Translate ONLY:
 - the VALUES of the frontmatter keys "title" and "summary".
 
 NEVER translate or alter:
-- frontmatter keys themselves, or the values of "slug", "thumbnail", "date", "updated", "org", "tags";
+- frontmatter keys themselves, or the values of "slug", "thumbnail", "date", "updated", "org", "tags", "protected";
 - URLs, file paths, email addresses;
 - code inside fenced code blocks or inline backticks;
 - JSX/HTML tag names, attribute/prop names, attribute/prop values, and {expressions}.

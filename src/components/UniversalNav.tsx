@@ -9,7 +9,10 @@ import {
 } from "react";
 import { useTranslations } from "next-intl";
 import { AnimatePresence, motion } from "framer-motion";
+import posthog from "posthog-js";
 import { Link, usePathname } from "@/i18n/navigation";
+import { RESUME_URL } from "@/lib/links";
+import { ThemeToggle } from "./ThemeToggle";
 import {
   getNavHovered,
   navHoverEnter,
@@ -76,6 +79,8 @@ function NavItem({
   highlighted,
   scope,
   onMouseEnter,
+  external,
+  onClick,
 }: {
   href: string;
   label: string;
@@ -84,6 +89,10 @@ function NavItem({
   highlighted: boolean;
   scope: string;
   onMouseEnter: () => void;
+  // External items (Resume) render an <a target="_blank"> instead of a Link and
+  // are never "active"; they still collapse to a dot and take the hover-slide.
+  external?: boolean;
+  onClick?: () => void;
 }) {
   const measureRef = useRef<HTMLSpanElement>(null);
   // null until first measured → the very first render uses "auto" (correct width,
@@ -96,78 +105,99 @@ function NavItem({
       setLabelWidth(Math.ceil(measureRef.current.getBoundingClientRect().width));
   }, [label]);
 
+  const linkClass = `relative flex items-center justify-center rounded-full px-3 py-1.5 no-underline transition-colors ${
+    // The item UNDER the dark highlight reads white; every other item is muted on
+    // the light pill container. Keyed to `highlighted` (not active/hover) so the
+    // color tracks the sliding pill exactly.
+    highlighted ? "text-canvas" : "text-fg-muted"
+  }`;
+
+  const content = (
+    <>
+      {/* One shared highlight pill — z-0, BEHIND every label — that rests on the
+          active tab and slides to the hovered tab. */}
+      {highlighted ? (
+        <motion.span
+          layoutId={`nav-highlight-${scope}`}
+          className="absolute inset-0 z-0 rounded-full bg-fg"
+          transition={{ type: "spring", stiffness: 500, damping: 38 }}
+        />
+      ) : null}
+      {/* Dot: absolutely centered in the padding box (inset-0 + m-auto), so it
+          never adds width — the label alone drives the box. Fades in FAST (no
+          scale pop) so it's already present as the label collapses INTO it. */}
+      <motion.span
+        aria-hidden
+        className="pointer-events-none absolute inset-0 z-10 m-auto h-2 w-2 rounded-full bg-surface"
+        initial={false}
+        animate={{ opacity: asDot ? 1 : 0 }}
+        transition={{ duration: 0.1, ease: "linear" }}
+      />
+      {/* Label window: width animates (never scale) to the measured natural
+          width, 0 when collapsed. overflow-hidden clips both the width reveal AND
+          the vertical roll of the label swap below. */}
+      <motion.span
+        className="relative z-10 block overflow-hidden text-nav"
+        initial={false}
+        animate={{ width: asDot ? 0 : labelWidth ?? "auto", opacity: asDot ? 0 : 1 }}
+        transition={{
+          width: { duration: asDot ? 0.26 : GROW, ease: EASE },
+          opacity: asDot ? { duration: 0.12 } : { duration: 0.2, delay: GROW },
+        }}
+      >
+        {/* popLayout pops the exiting label to absolute so the entering one can
+            take its place immediately — the two roll past each other (old up +
+            out, new up + in) instead of waiting. initial={false} keeps the first
+            label from rolling in on mount. */}
+        <AnimatePresence mode="popLayout" initial={false}>
+          <motion.span
+            key={label}
+            className="block whitespace-nowrap"
+            initial={{ opacity: 0, y: "100%" }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: "-100%" }}
+            transition={{ duration: 0.3, ease: EASE }}
+          >
+            {label}
+          </motion.span>
+        </AnimatePresence>
+      </motion.span>
+      {/* Off-screen measurer — the label at its natural width, feeding the width
+          animation above. Never animated; invisible + absolute so it adds no
+          layout. */}
+      <span
+        ref={measureRef}
+        aria-hidden
+        className="pointer-events-none invisible absolute whitespace-nowrap text-nav"
+      >
+        {label}
+      </span>
+    </>
+  );
+
   return (
     <div onMouseEnter={onMouseEnter}>
-      <Link
-        href={href}
-        aria-current={active ? "page" : undefined}
-        aria-label={label}
-        className={`relative flex items-center justify-center rounded-full px-3 py-1.5 no-underline transition-colors ${
-          // The item UNDER the dark highlight reads white; every other item is
-          // muted on the light pill container. Keyed to `highlighted` (not
-          // active/hover) so the color tracks the sliding pill exactly.
-          highlighted ? "text-canvas" : "text-fg-muted"
-        }`}
-      >
-        {/* One shared highlight pill — z-0, BEHIND every label — that rests on the
-            active tab and slides to the hovered tab. */}
-        {highlighted ? (
-          <motion.span
-            layoutId={`nav-highlight-${scope}`}
-            className="absolute inset-0 z-0 rounded-full bg-fg"
-            transition={{ type: "spring", stiffness: 500, damping: 38 }}
-          />
-        ) : null}
-        {/* Dot: absolutely centered in the Link's padding box (inset-0 + m-auto),
-            so it never adds width — the label alone drives the box. Fades in FAST
-            (no scale pop) so it's already present as the label collapses INTO it. */}
-        <motion.span
-          aria-hidden
-          className="pointer-events-none absolute inset-0 z-10 m-auto h-2 w-2 rounded-full bg-surface"
-          initial={false}
-          animate={{ opacity: asDot ? 1 : 0 }}
-          transition={{ duration: 0.1, ease: "linear" }}
-        />
-        {/* Label window: width animates (never scale) to the measured natural
-            width, 0 when collapsed. overflow-hidden clips both the width reveal
-            AND the vertical roll of the label swap below. */}
-        <motion.span
-          className="relative z-10 block overflow-hidden text-nav"
-          initial={false}
-          animate={{ width: asDot ? 0 : labelWidth ?? "auto", opacity: asDot ? 0 : 1 }}
-          transition={{
-            width: { duration: asDot ? 0.26 : GROW, ease: EASE },
-            opacity: asDot ? { duration: 0.12 } : { duration: 0.2, delay: GROW },
-          }}
+      {external ? (
+        <a
+          href={href}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label={label}
+          onClick={onClick}
+          className={linkClass}
         >
-          {/* popLayout pops the exiting label to absolute so the entering one can
-              take its place immediately — the two roll past each other (old up +
-              out, new up + in) instead of waiting. initial={false} keeps the first
-              label from rolling in on mount. */}
-          <AnimatePresence mode="popLayout" initial={false}>
-            <motion.span
-              key={label}
-              className="block whitespace-nowrap"
-              initial={{ opacity: 0, y: "100%" }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: "-100%" }}
-              transition={{ duration: 0.3, ease: EASE }}
-            >
-              {label}
-            </motion.span>
-          </AnimatePresence>
-        </motion.span>
-        {/* Off-screen measurer — the label at its natural width, feeding the width
-            animation above. Never animated; invisible + absolute so it adds no
-            layout. */}
-        <span
-          ref={measureRef}
-          aria-hidden
-          className="pointer-events-none invisible absolute whitespace-nowrap text-nav"
+          {content}
+        </a>
+      ) : (
+        <Link
+          href={href}
+          aria-current={active ? "page" : undefined}
+          aria-label={label}
+          className={linkClass}
         >
-          {label}
-        </span>
-      </Link>
+          {content}
+        </Link>
+      )}
     </div>
   );
 }
@@ -245,6 +275,24 @@ function NavPill({
           />
         );
       })}
+      {/* Resume — external; never active, so it collapses to a dot whenever the
+          pill collapses (like About), and takes the hover-slide highlight. */}
+      <NavItem
+        href={RESUME_URL}
+        label={t("resume")}
+        active={false}
+        asDot={collapsed}
+        highlighted={RESUME_URL === highlightedHref}
+        scope={scope}
+        external
+        onClick={() => posthog.capture("resume_downloaded")}
+        onMouseEnter={() => setHoveredItem(RESUME_URL)}
+      />
+      {/* Theme toggle — rightmost, after Resume. NOT a NavItem, so it's never a
+          dot; when the pill collapses to dots it HIDES entirely (width 0) and
+          returns when the pill expands. Owns its own hover-expand otherwise (see
+          ThemeToggle). */}
+      <ThemeToggle collapsed={collapsed} />
     </nav>
   );
 }

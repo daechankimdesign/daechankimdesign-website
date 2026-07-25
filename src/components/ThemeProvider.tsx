@@ -9,6 +9,7 @@ import {
   resolveMode,
   subscribeThemeMode,
   syncThemeFromStorage,
+  type ResolvedTheme,
 } from "@/lib/theme";
 
 /**
@@ -23,6 +24,33 @@ export function useThemeMode() {
     subscribeThemeMode,
     getThemeModeSnapshot,
     getServerThemeMode,
+  );
+}
+
+// The theme ACTUALLY rendering, tracked straight off <html data-theme> via a
+// MutationObserver — so it updates for ANY cause, including a device-mode OS
+// flip that leaves the mode 'device'. Decoupled from the mode store.
+function subscribeResolvedTheme(onChange: () => void) {
+  const obs = new MutationObserver(onChange);
+  obs.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ["data-theme"],
+  });
+  return () => obs.disconnect();
+}
+function getResolvedThemeSnapshot(): ResolvedTheme {
+  return document.documentElement.dataset.theme === "dark" ? "dark" : "light";
+}
+function getResolvedThemeServer(): ResolvedTheme {
+  return "light"; // pre-hydration cosmetic on the collapsed toggle icon only
+}
+
+/** The resolved theme ('light' | 'dark') the page is currently rendering. */
+export function useResolvedTheme(): ResolvedTheme {
+  return useSyncExternalStore(
+    subscribeResolvedTheme,
+    getResolvedThemeSnapshot,
+    getResolvedThemeServer,
   );
 }
 
