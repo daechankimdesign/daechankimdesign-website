@@ -43,5 +43,12 @@
     "clear": "Limpiar",
     "empty": "Ningún trabajo coincide con estos filtros.",
     "showing": "Mostrando %shown% de %total%"
+  },
+  "Gate": {
+    "title": "Proyecto protegido",
+    "subtitle": "Introduzca la contraseña para ver este proyecto.",
+    "placeholder": "Contraseña",
+    "unlock": "Desbloquear",
+    "error": "La contraseña no es correcta."
   }
 }

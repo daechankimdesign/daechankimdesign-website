@@ -56,6 +56,58 @@ build; roadmap Phase 5 is the runtime translation (`4348eec`).
 
 ## Log
 
+### 2026-07-24: Replay the page entrance on a theme change; toggle refinements
+
+- **Content re-reveal** (`src/components/ContentReveal.tsx`, wired in
+  `PageTransition.tsx`): changing the resolved theme now replays the page's
+  on-load entrance (the `Reveal` cascade, the hero card flights, cover-flow, the
+  rough-notation highlight) over the newly themed background, the way a reload
+  does. Mechanism: a `key` bound to a replay counter wraps the content inside the
+  page card; a theme change bumps the counter, remounting the subtree so every
+  child's `initial -> animate` runs again. The wrapper is `display: contents`, so
+  layout is unchanged and only the card's content (not the card bg / seam /
+  shadow) remounts. It fires only on a genuine change, not the post-hydration
+  settle (the first effect adopts the theme already stamped on `<html>`), and opts
+  out under reduced motion (the theme swaps with no remount). A remount is
+  reload-like, so any live embeds / iframes on project pages reload on a theme
+  toggle.
+- **Toggle now rightmost** (`UniversalNav.tsx`): pill order is
+  **Work · About · Resume · [theme]** (moved from leftmost). The collapse
+  gap-cancel margin flipped from `marginRight` to `marginLeft`, so Resume sits
+  flush to the pill's right edge when the toggle hides.
+- **Toggle icon + behavior** (`ThemeToggle.tsx`): the device option uses the iMac
+  icon (`AppleImac2021`, was `Computer`); selecting any option now commits AND
+  collapses the expanded row; the dark option's hover rotation reversed.
+- Verified on the dev server: a `data-theme` flip remounts the content subtree
+  (old nodes detached, fresh nodes mounted), dark tokens applied (`bodyBg`
+  `#1b1a19`, `fg` `#e8e6e3`), and a light-return frame caught the cascade
+  mid-replay (headline in, sub-text and CTAs not yet revealed). tsc + eslint clean.
+
+### 2026-07-24: Move Resume + theme toggle into the UniversalNav pill
+
+- **Pill layout** (`UniversalNav.tsx`) is now **[theme] · Work · About · Resume**.
+  `NavItem` gained an `external` variant (renders `<a target="_blank">` + the
+  `resume_downloaded` PostHog event) so Resume rides the same collapse/dot,
+  hover-slide, and label-measure machinery as the route items — it collapses to
+  a dot like About (never "active").
+- **Theme toggle moved** from the top bar (`GlobalNav`) into the pill, leftmost.
+  It is NOT a `NavItem`, so the pill's scroll-collapse never turns it into a dot;
+  instead a `collapsed` prop **hides it entirely** (width 0) in the dots state and
+  it returns when the pill expands (hover / top / footer). Colors switched from
+  the header's difference-safe grays to pill tokens (`text-fg-muted` → `text-fg`),
+  since the pill isn't `mix-blend`.
+- **Collapsed icon = resolved theme** (sun/moon), even in device mode — the
+  desktop (`Computer`) icon only appears when the toggle hover-expands to its
+  three options (Desktop / Light / Dark). Added `useResolvedTheme()`
+  (`ThemeProvider.tsx`) — a `useSyncExternalStore` over a `MutationObserver` on
+  `<html data-theme>` — so the collapsed icon tracks a device-mode OS flip too.
+- **GlobalNav** trimmed to logo + Contact (theme + Resume removed, unused imports
+  dropped).
+- Verified: pill renders theme(sun) · Work · About · Resume(external), GlobalNav
+  right group = Contact only, tsc clean. (The scroll-collapse hide is a boolean
+  gate mirroring the proven dot system; the preview pane wouldn't trigger the
+  collapse for a live capture.)
+
 ### 2026-07-22: Dark mode (device default, three-way toggle, dark marker)
 
 - **Theme engine** (`src/lib/theme.ts`, `src/components/ThemeProvider.tsx`):

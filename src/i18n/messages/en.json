@@ -49,5 +49,12 @@
     "aiExperience": "AI Experience",
     "designResearch": "Design Research",
     "aiDevelopment": "AI Development"
+  },
+  "Gate": {
+    "title": "This project is protected",
+    "subtitle": "Enter the password to view this project.",
+    "placeholder": "Password",
+    "unlock": "Unlock",
+    "error": "That password is not correct."
   }
 }

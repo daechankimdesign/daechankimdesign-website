@@ -8,6 +8,8 @@ import { SandboxEmbed } from "@/components/SandboxEmbed";
 import { SideDocumentTab } from "@/components/SideDocumentTab";
 import { MoreWork } from "@/components/MoreWork";
 import { Colophon } from "@/components/Colophon";
+import { ProtectedContent } from "@/components/ProtectedContent";
+import { getProtectedHash } from "@/lib/protected";
 
 // Pre-render only the canonical English combos; ko/es render on first request
 // (dynamicParams defaults to true) so a freshly-translated locale appears
@@ -49,6 +51,9 @@ export default async function PlayDetailPage({
   const typeLabel = (await getTranslations("Nav"))("play");
   const wt = await getTranslations("WorkTags");
   const meta = await getWorkMeta("sandbox", slug);
+  // Soft password gate: only the article is wrapped, so the demo frame + title
+  // above stay open. Null unless this slug opts in via `protected: true`.
+  const protectedHash = frontmatter.protected ? getProtectedHash(slug) : null;
 
   return (
     <main className="container-page pt-32 pb-16">
@@ -130,7 +135,13 @@ export default async function PlayDetailPage({
             </Reveal>
           </header>
 
-          <article>{content}</article>
+          {protectedHash ? (
+            <ProtectedContent slug={slug} hash={protectedHash}>
+              <article>{content}</article>
+            </ProtectedContent>
+          ) : (
+            <article>{content}</article>
+          )}
 
           {/* Closes the story out — updated date + @org over the rule. Renders
               the rule even when MoreWork below has nothing to show. */}

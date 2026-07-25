@@ -18,6 +18,7 @@ export const PRESERVED_KEYS = [
   "updated",
   "org",
   "tags",
+  "protected",
 ] as const;
 export const TRANSLATED_KEYS = ["title", "summary"] as const;
 

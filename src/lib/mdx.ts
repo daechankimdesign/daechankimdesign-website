@@ -61,6 +61,10 @@ export type Frontmatter = {
   /** Optional explicit tile aspect ratio (e.g. "4/3"); falls back to the span
       tier default. EN-only, like `span`. */
   aspect?: string;
+  /** When true, the project body is behind a soft password gate (see
+      src/lib/protected.ts + ProtectedContent). Language-agnostic boolean —
+      preserved across translations, never translated. */
+  protected?: boolean;
   [key: string]: unknown;
 };
 
