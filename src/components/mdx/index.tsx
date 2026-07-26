@@ -2,6 +2,7 @@ import type { MDXComponents } from "next-mdx-remote-client/rsc";
 import { VideoPlayer } from "./VideoPlayer";
 import { MDXImage } from "./MDXImage";
 import { ImageFrame } from "./ImageFrame";
+import { TrustTiers } from "./TrustTiers";
 import { ScrollImage } from "./ScrollImage";
 import { PhotoGrid } from "./PhotoGrid";
 import { MacbookFrame } from "./MacbookFrame";
@@ -36,6 +37,9 @@ export const mdxComponents: MDXComponents = {
   // entrance direction — turning a "slide right" into a diagonal. The panel is
   // the stage and stays put; the cards animate into it.
   ImageFrame: (props) => <ImageFrame {...props} />,
+  // NOT wrapped in RevealBlock (like ImageFrame): runs its own staggered card
+  // reveal, so a RevealBlock y-rise would compound with each card's entrance.
+  TrustTiers: (props) => <TrustTiers {...props} />,
   // NOT wrapped in RevealBlock: ScrollImage owns its own scroll-linked pan, and a
   // transformed ancestor (RevealBlock) would offset the useScroll measurement.
   ScrollImage: (props) => <ScrollImage {...props} />,

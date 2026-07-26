@@ -12,6 +12,7 @@ import { UniversalNav } from "@/components/UniversalNav";
 import { PageTransition } from "@/components/PageTransition";
 import { PageFadeProvider } from "@/components/PageFade";
 import { LoveLetterProvider } from "@/components/LoveLetter";
+import { ResumeProvider } from "@/components/ResumeModal";
 import { Footer } from "@/components/Footer";
 import { FooterReveal } from "@/components/FooterReveal";
 import "../globals.css";
@@ -38,8 +39,8 @@ export const metadata: Metadata = {
 // and correct for the device-default majority.
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
-    { media: "(prefers-color-scheme: dark)", color: "#1b1a19" },
+    { media: "(prefers-color-scheme: light)", color: "#f8fafc" },
+    { media: "(prefers-color-scheme: dark)", color: "#161b22" },
   ],
 };
 
@@ -83,6 +84,9 @@ export default async function LocaleLayout({
             {/* LoveLetterProvider hosts the letter modal (portal, z-50) and the
                 open()/close() bridge for the footer button + envelope. */}
             <LoveLetterProvider>
+            {/* ResumeProvider hosts the resume PDF modal (portal, z-50) for the
+                nav pill + hero CTA. */}
+            <ResumeProvider>
             <GlobalNav />
             <UniversalNav />
             {/* The opaque page card: z-10 above the fixed reveal footer (z-0), and
@@ -93,6 +97,7 @@ export default async function LocaleLayout({
             </div>
             <Footer />
             <FooterReveal />
+            </ResumeProvider>
             </LoveLetterProvider>
           </PageFadeProvider>
         </NextIntlClientProvider>

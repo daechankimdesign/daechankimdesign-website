@@ -9,10 +9,10 @@ import {
 } from "react";
 import { useTranslations } from "next-intl";
 import { AnimatePresence, motion } from "framer-motion";
-import posthog from "posthog-js";
 import { Link, usePathname } from "@/i18n/navigation";
 import { RESUME_URL } from "@/lib/links";
 import { ThemeToggle } from "./ThemeToggle";
+import { useResume } from "./ResumeModal";
 import {
   getNavHovered,
   navHoverEnter,
@@ -92,7 +92,9 @@ function NavItem({
   // External items (Resume) render an <a target="_blank"> instead of a Link and
   // are never "active"; they still collapse to a dot and take the hover-slide.
   external?: boolean;
-  onClick?: () => void;
+  // Receives the event so a handler can intercept a plain click (Resume opens a
+  // modal) while leaving modifier / middle clicks to the browser.
+  onClick?: (e: React.MouseEvent<HTMLAnchorElement>) => void;
 }) {
   const measureRef = useRef<HTMLSpanElement>(null);
   // null until first measured → the very first render uses "auto" (correct width,
@@ -221,6 +223,7 @@ function NavPill({
 }) {
   const t = useTranslations("Nav");
   const pathname = usePathname();
+  const resume = useResume();
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
 
   // pathname from next-intl is locale-stripped (e.g. "/project/foo").
@@ -275,8 +278,11 @@ function NavPill({
           />
         );
       })}
-      {/* Resume — external; never active, so it collapses to a dot whenever the
-          pill collapses (like About), and takes the hover-slide highlight. */}
+      {/* Resume — never active, so it collapses to a dot whenever the pill
+          collapses (like About), and takes the hover-slide highlight. It stays a
+          real <a href> to the PDF (so modifier / middle click, "copy link", and
+          a no-JS visit all still reach the file); a plain click is intercepted
+          and opens the viewer modal instead. */}
       <NavItem
         href={RESUME_URL}
         label={t("resume")}
@@ -285,7 +291,11 @@ function NavPill({
         highlighted={RESUME_URL === highlightedHref}
         scope={scope}
         external
-        onClick={() => posthog.capture("resume_downloaded")}
+        onClick={(e) => {
+          if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+          e.preventDefault();
+          resume?.open("nav");
+        }}
         onMouseEnter={() => setHoveredItem(RESUME_URL)}
       />
       {/* Theme toggle — rightmost, after Resume. NOT a NavItem, so it's never a

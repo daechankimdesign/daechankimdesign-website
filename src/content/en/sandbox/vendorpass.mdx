@@ -1,5 +1,5 @@
 ---
-title: Vendor marketplace for property managers to find verified contractors in seconds.
+title: A marketplace of verified contractors for property managers
 summary: The hard part is not finding a contractor, it is trusting that the paperwork behind them is real and current. Google Document AI parses each license and insurance certificate into an admin-gated, three-tier trust status, built in 54 hours at Techstars Startup Weekend with React and Firebase.
 thumbnail: https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fsandbox%2Fvendorpass%2Fthumbnail.jpg?alt=media
 date: 2026-05-03
@@ -22,16 +22,10 @@ VendorPass came out of two days at the [Boston Tech Week 2026](https://www.tech-
 The idea was a two-sided marketplace. On one side, help property managers find local contractors (vendors), such as plumbers, electricians, and landscapers, who are licensed and qualified for the job; on the other, give those contractors a new promotional channel. For the property managers, the hard part is not finding a contractor. It is trusting that the paperwork behind them is real and still current.
 
 ## The problem
-
-<Dek>Managers never lack contractors. They lack a fast way to trust them.</Dek>
-
-The idea sprang from one team member's observation. A property manager juggles vendors across many buildings, and compliance is a liability minefield. An expired certificate of insurance or a lapsed business license can turn a routine repair into a lawsuit. Today that verification lives in email threads, loose PDFs, and spreadsheets that go stale the moment they are saved. Our research over the weekend kept surfacing the same thing: managers do not lack contractors, they lack a fast way to trust them. **VendorPass turns that scatter into a single source of truth**, where a vendor's standing is a status to read at a glance, not a folder to audit.
+The idea sprang from one team member's observation. A property manager juggles vendors across many buildings, and compliance is a liability minefield. An expired certificate of insurance or a lapsed business license can turn a routine repair into a lawsuit. Today that verification lives in email threads, loose PDFs, and spreadsheets that go stale the moment they are saved. Our research over the weekend kept surfacing the same thing: **managers do not lack contractors, they lack a fast way to trust them**. **VendorPass turns that scatter into a single source of truth**, where a vendor's standing is a status to read at a glance, not a folder to audit.
 
 ## How it works
-
-<Dek>Anyone can browse the supply, but a vendor's contact stays private until they're invited.</Dek>
-
-Search comes first. A property manager can browse the marketplace through natural language (parking lot snow plow in watertown, or hotel restroom plumbing in back bay, etc.) for specific trade and zip code before creating an account, so they can size up the local supply before committing to anything. Discovery is the product; the account waits until they actually want to invite a vendor to a project. Public search only ever reads a vendor's public-safe fields, so nobody's contact details leak into a browse.
+Search comes first. **A property manager can browse the marketplace through natural language** (parking lot snow plow in watertown, or hotel restroom plumbing in back bay, etc.) for specific trade and zip code before creating an account, so they can size up the local supply before committing to anything. Discovery is the product; the account waits until they actually want to invite a vendor to a project. Public search only ever reads a vendor's public-safe fields, so nobody's contact details leak into a browse.
 
 <VideoPlayer
   type="gif"
@@ -42,45 +36,47 @@ Search comes first. A property manager can browse the marketplace through natura
 Inviting a vendor is what unlocks their private contact info and creates the working relationship. An existing vendor receives a project invite; a new one gets a signup link, completes onboarding, and accepts or declines from their own dashboard. Contact details stay locked behind that accepted invite, never exposed to every property manager who happens to search.
 
 ## Verification tiers
-
-<Dek>Every vendor document sits at one of three trust levels, shown right in the interface.</Dek>
-
 This is the core idea, and the part I designed the whole interface around. Every vendor document, a business license, a W-9, a certificate of insurance, moves through three tiers of trust, and the whole interface is colored by that status.
 
-- **Tier 1, Unverified:** nothing on file yet.
-- **Tier 2, Self-Verified:** the vendor uploaded the document and confirmed the fields pulled from it. 
-- **Tier 3, Verified:** the platform reviewed using Google Document AI and promoted it.
+<TrustTiers
+  items={[
+    { level: 1, name: "Unverified", note: "A basic profile only. Nothing on file yet." },
+    { level: 2, name: "Self-Verified", note: "The vendor uploaded the documents and confirmed the fields, awaiting admin review." },
+    { level: 3, name: "Verified", note: "Reviewed with Google Document AI and promoted by an admin." },
+  ]}
+  caption="Three tiers of trust, carried by icon and color rather than a screenshot. An empty shield for unverified, a pending clock for self-verified, and a solid blue check for admin-verified, so weight tracks compliance at a glance."
+/>
 
 The hierarchies and visual cues make the weight of an element track its compliance status directly. A roster reads like a blueprint where the trustworthy things are literally bolder, so a manager scanning a list feels the risk before they read a single field.
 
 <ImageFrame
   items={[
     {
-      src: "https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fsandbox%2Fvendorpass%2Fmodal-unverified.jpg?alt=media",
-      alt: "The vendor detail modal at Tier 1: Fresh Coat Painting badged Unverified in gray, with business license, W-9, and certificate of insurance all Not uploaded",
-      width: 1800,
-      height: 1125,
+      src: "https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fsandbox%2Fvendorpass%2Fmodal-unverified.jpg?alt=media&v=2",
+      alt: "The vendor detail modal at Tier 1: Fresh Coat Painting badged Unverified, with business license, W-9, and certificate of insurance all Not uploaded",
+      width: 548,
+      height: 650,
     },
     {
-      src: "https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fsandbox%2Fvendorpass%2Fmodal-verified.jpg?alt=media",
-      alt: "The same modal at Tier 3: a verified vendor with business license, W-9, and certificate of insurance each badged Verified in saturated blue",
-      width: 1800,
-      height: 1125,
+      src: "https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fsandbox%2Fvendorpass%2Fmodal-self-verified.jpg?alt=media&v=2",
+      alt: "The same modal at Tier 2: Volt Logic Electric badged Self-Verified, with each document submitted and pending admin review",
+      width: 551,
+      height: 638,
+    },
+    {
+      src: "https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fsandbox%2Fvendorpass%2Fmodal-verified.jpg?alt=media&v=2",
+      alt: "The same modal at Tier 3: GreenScapes Landscaping badged Verified in saturated blue, with business license, W-9, and certificate of insurance each Verified",
+      width: 551,
+      height: 642,
     },
   ]}
-  caption="One modal, two trust levels. Unverified reads gray with every document Not uploaded; Tier 3 Verified reads in saturated blue with each certificate confirmed, so visual weight tracks compliance at a glance."
+  caption="One modal across all three tiers. Unverified reads gray with every document Not uploaded, Self-Verified shows each document submitted and pending review, and Verified reads in saturated blue with every certificate confirmed, so visual weight tracks compliance at a glance."
 />
 
 ## The build
-
-<Dek>Document AI reads the fields, server functions gate every promotion, and vendor data stays split public and private.</Dek>
-
-Uploads flow into Google Document AI, one processor per document type, which extracts the fields that matter, policy numbers, expiration dates, license IDs, so the vendor confirms what was read rather than retyping it. Every verification-changing write is a server-owned Cloud Function, so a vendor can never mark themselves Tier 3; promotion is admin-gated on purpose, because a trust signal is only worth anything if it cannot be self-issued.
+Uploads flow into **Google Document AI**, one processor per document type, which extracts the fields that matter, policy numbers, expiration dates, license IDs, so the vendor confirms what was read rather than retyping it. Every verification-changing write is a server-owned Cloud Function, so a vendor can never mark themselves Tier 3; promotion is admin-gated on purpose, because a trust signal is only worth anything if it cannot be self-issued.
 
 Vendor data is split public and private at the database level: search reads only name, zip, and categories, while contact details sit in a locked subdocument opened only on invite acceptance. The front end is React, Vite, and Tailwind; the back end is Firebase across Auth, Firestore, Storage, and Functions, with a Trigger Email extension queuing the invite mail. Ambitious for 54 hours, which is exactly the point of the format.
 
 ## How it landed
-
-<Dek>A weekend proved the model; getting real vendors to upload is the next problem.</Dek>
-
-By Sunday we had a live marketplace, a real document-to-tier pipeline, and a design system that made the trust model legible at a glance, which is more than most weekends produce. The piece I am proudest of is that verification model, the way three tiers turn a compliance chore into something that reads instantly. The honest open question is everything downstream of a real vendor base: the tiers only mean something once enough vendors have uploaded real documents and enough admins have done the promoting, and that chicken-and-egg problem is not something a weekend, or design alone, can solve. What the weekend did prove is the shape of the answer.
+By Sunday we had a **live marketplace, a real document-to-tier pipeline, and a design system** that made the trust model legible at a glance, which is more than most weekends produce. The piece I am proudest of is that verification model, the way three tiers turn a compliance chore into something that reads instantly. The honest open question is everything downstream of a real vendor base: the tiers only mean something once enough vendors have uploaded real documents and enough admins have done the promoting, and that chicken-and-egg problem is not something a weekend, or design alone, can solve. What the weekend did prove is the shape of the answer.

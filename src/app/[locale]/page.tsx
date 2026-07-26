@@ -16,18 +16,19 @@ const HERO_STACK = [
     w: 480,
     h: 364,
     headline:
-      "If I'm financially stable and settle in one place, I will definitely buy better furniture.",
+      "“If I'm financially stable and settle in one place, I will definitely buy better furniture.”",
     caption:
-      "My design research starts with stakeholder interviews. It is a crucial part of the project to listen and understand people's pain beyond their surface language.",
+      "Research begins with stakeholder interviews. What people say is rarely the whole problem, so I listen for what sits beneath it.",
   },
   {
-    // Design exhibition — presenting the work to a visitor at the showcase (square).
+    // With Josh Owen (President, Josh Owen LLC) — the industrial-design mentorship (square).
     src: "https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fhome%2Fhero%2Fstack-5-480.jpg?alt=media",
     full: "https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fhome%2Fhero%2Fstack-5.jpg?alt=media",
     w: 480,
     h: 480,
-    headline: "",
-    caption: "At a design exhibition, walking a visitor through the work.",
+    headline: "With Josh Owen, President of Josh Owen LLC.",
+    caption:
+      "Working under Josh Owen, I learned to study how people behave and what they need, and to carry that attention from physical objects into interface design.",
   },
   {
     // The critique photo (landscape) — reviewing the work pinned to the wall.
@@ -35,17 +36,19 @@ const HERO_STACK = [
     full: "https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fhome%2Fhero%2Fcritique.jpg?alt=media",
     w: 480,
     h: 356,
-    headline: "",
-    caption: "A design critique, working through the board pinned to the wall.",
+    headline: "Studio critique at Other Tomorrows.",
+    caption:
+      "Moving between screens, printed boards, and sticky-note sketches is the part of the work I enjoy most.",
   },
   {
-    // The lede — the team photo ("the last photo", square).
+    // The lede — portrait, a parking lot in Providence, RI, summer 2026 (square).
     src: "https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fhome%2Fhero%2Fimpact-480.jpg?alt=media",
     full: "https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fhome%2Fhero%2Fimpact.jpeg?alt=media",
     w: 480,
     h: 480,
-    headline: "",
-    caption: "The team behind the work.",
+    headline: "Hi, nice to meet you.",
+    caption:
+      "A corner of a parking lot in Providence, Rhode Island, in the summer of 2026. Photograph by Tim, Other Tomorrows.",
   },
 ];
 

@@ -10,7 +10,9 @@ type LinkButtonProps = {
   /** Arrow glyph: "up-right" (external/nav feel, default) or "right" (in-app forward). */
   arrow?: "up-right" | "right";
   className?: string;
-  onClick?: () => void;
+  // Receives the event so a handler can intercept a plain click (the hero's
+  // Resume opens a modal) while leaving modifier / middle clicks to the browser.
+  onClick?: (e: React.MouseEvent<HTMLAnchorElement>) => void;
 };
 
 /**

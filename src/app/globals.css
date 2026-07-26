@@ -20,18 +20,23 @@
 @theme {
   /* Neutral palette (extends Tailwind defaults; we use only these by convention) */
   --color-fg: #1e1e1e; /* primary text / ink */
-  --color-fg-muted: #757575; /* secondary text, inactive nav, meta values */
+  --color-fg-muted: #6f6f6f; /* secondary text, inactive nav, meta values */
   --color-fg-subtle: #b3b3b3; /* tertiary / disabled */
   --color-hairline: #d9d9d9; /* hairline borders */
   --color-hairline-faint: #ececec; /* barely-there edge on floating pills */
   --color-surface: #e3e3e3; /* active pill / raised surface */
   --color-surface-subtle: #f5f5f5; /* subtle background blocks */
-  --color-canvas: #ffffff; /* page background */
+  /* Recessed panel behind content media (MDX ImageFrame). Light: identical to
+     surface-subtle. Dark: drops to the FOOTER colour, so framed screenshots sit
+     in the same well the footer does — see the dark scope below, where the
+     footer derives its canvas from this token so the two cannot drift. */
+  --color-surface-sunken: #f5f5f5;
+  --color-canvas: #f8fafc; /* page background */
   /* shadcn-registry bridge: components pulled from a shadcn registry (e.g. the
      CoverFlow carousel) reference `foreground`/`background`. Map them onto the
      project's own tokens so no shadcn theme is needed. */
   --color-foreground: #1e1e1e; /* == --color-fg */
-  --color-background: #ffffff; /* == --color-canvas */
+  --color-background: #f8fafc; /* == --color-canvas */
 }
 
 /* next/font CSS variables resolve via `inline` (var-referencing-var) */
@@ -55,54 +60,81 @@
    STACK-NOTES-2026 §5: overrides live in a regular selector, NEVER a nested
    @theme.
 
-   Dark is deliberately NOT pure black: a warm near-black canvas with warm
-   off-white ink, keeping the monochrome system's hierarchy (fg 12.9:1 and
-   fg-muted 5.4:1 against the canvas).
+   Dark is deliberately NOT pure black: a cool blue-grey canvas (#161B22) with
+   off-white ink, keeping the system's hierarchy (fg 13.9:1 and fg-muted 6.8:1
+   against the canvas). The footer RECEDES to a darker #0D1117.
 
    --hl is the hand-drawn marker colour (every rough-notation stroke + the hero
    circle). It lives in CSS, not the JS HL_COLOR constant, so marks recolour
    live on theme change — rough-notation writes its colour as an SVG
    presentation attribute, which any CSS rule overrides (see the stroke rules
-   by .hl-circle). Dark swaps the translucent yellow for a deeper, quieter gold
-   so marks read as marker on dark paper, not neon glow.
+   by .hl-circle). Dark swaps the translucent yellow for a green that holds its
+   hue against the cool canvas, where yellow goes muddy.
    ============================================================================ */
 :root {
   color-scheme: light;
   --hl: rgba(253, 231, 105, 0.55);
+
+  /* ── The dark palette's VALUES, written exactly once ──────────────────────
+     The two dark scopes below only MAP these onto the --color-* tokens, so a
+     colour is changed in one line here and both scopes follow. Private by
+     convention: nothing outside those two blocks reads --dark-*, and Tailwind
+     emits no utilities for them (they are not in @theme).
+     Anything that needs a dark value at runtime should read the RESOLVED
+     --color-* token off <html> rather than these (see src/lib/theme.ts). */
+  --dark-fg: #e8e6e3;
+  --dark-fg-muted: #a5a29d;
+  --dark-fg-subtle: #6b6863;
+  --dark-hairline: #383633;
+  --dark-hairline-faint: #2c2a28;
+  --dark-surface: #2e2c29;
+  --dark-surface-subtle: #232120;
+  /* The footer's colour. .surface-invert and the MDX ImageFrame panel both
+     resolve to it, so they are the same well by construction. */
+  --dark-surface-sunken: #0d1117;
+  --dark-canvas: #161b22;
+  /* 0.26, not more: rough-notation draws 2 overlapping strokes and the overlap
+     compounds toward alpha ~0.45 — at 0.26 even that keeps 4.58:1 (AA) behind
+     the #e8e6e3 ink, since the marker sits under 16px MDX body text. 0.28
+     already drops to 4.25. (#4ADE80 is softer than a pure neon green, so it
+     affords more alpha than one would.) */
+  --dark-hl: rgba(74, 222, 128, 0.26);
 }
+
+/* Mapping only — no literals. Keep these two blocks structurally identical;
+   because they carry no values, editing a colour never touches them. */
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --color-fg: #e8e6e3;
-  --color-fg-muted: #a5a29d;
-  --color-fg-subtle: #6b6863;
-  --color-hairline: #383633;
-  --color-hairline-faint: #2c2a28;
-  --color-surface: #2e2c29;
-  --color-surface-subtle: #232120;
-  --color-canvas: #1b1a19;
-  --color-foreground: #e8e6e3;
-  --color-background: #1b1a19;
-  /* 0.28, not more: rough-notation draws 2 overlapping strokes and the overlap
-     compounds toward alpha ~0.48 — at 0.28 even that stays >= 4.5:1 (AA) behind
-     the #e8e6e3 ink, since the marker sits under 16px MDX body text. */
-  --hl: rgba(228, 179, 76, 0.28);
+  --color-fg: var(--dark-fg);
+  --color-fg-muted: var(--dark-fg-muted);
+  --color-fg-subtle: var(--dark-fg-subtle);
+  --color-hairline: var(--dark-hairline);
+  --color-hairline-faint: var(--dark-hairline-faint);
+  --color-surface: var(--dark-surface);
+  --color-surface-subtle: var(--dark-surface-subtle);
+  --color-surface-sunken: var(--dark-surface-sunken);
+  --color-canvas: var(--dark-canvas);
+  --color-foreground: var(--dark-fg);
+  --color-background: var(--dark-canvas);
+  --hl: var(--dark-hl);
 }
 /* No-JS fallback: nothing stamps data-theme without scripting, so follow the
-   device preference directly. Mirrors the block above — keep in sync. */
+   device preference directly. Mirrors the block above. */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme]) {
     color-scheme: dark;
-    --color-fg: #e8e6e3;
-    --color-fg-muted: #a5a29d;
-    --color-fg-subtle: #6b6863;
-    --color-hairline: #383633;
-    --color-hairline-faint: #2c2a28;
-    --color-surface: #2e2c29;
-    --color-surface-subtle: #232120;
-    --color-canvas: #1b1a19;
-    --color-foreground: #e8e6e3;
-    --color-background: #1b1a19;
-    --hl: rgba(228, 179, 76, 0.28);
+    --color-fg: var(--dark-fg);
+    --color-fg-muted: var(--dark-fg-muted);
+    --color-fg-subtle: var(--dark-fg-subtle);
+    --color-hairline: var(--dark-hairline);
+    --color-hairline-faint: var(--dark-hairline-faint);
+    --color-surface: var(--dark-surface);
+    --color-surface-subtle: var(--dark-surface-subtle);
+    --color-surface-sunken: var(--dark-surface-sunken);
+    --color-canvas: var(--dark-canvas);
+    --color-foreground: var(--dark-fg);
+    --color-background: var(--dark-canvas);
+    --hl: var(--dark-hl);
   }
 }
 
@@ -477,24 +509,26 @@ body::before {
   background-color: var(--color-canvas);
   color: var(--color-fg);
 }
-/* In dark mode the footer's canvas MATCHES the page canvas exactly (a
-   near-but-not-equal dark read as an accident, not an elevation): the page and
-   footer become one continuous dark surface, and the footer's crisp hairline-t
-   divider (dark hairline token) carries the separation instead. Element-level
-   custom properties beat the inherited :root[data-theme] values, so this stays
-   self-contained. Keep --color-canvas equal to the page canvas above. */
+/* In dark mode the footer RECEDES below the page canvas (#0D1117 under the
+   page's #161B22), so the page card reads as the lit surface and the footer as
+   the well behind it. The step is subtle by design (1.09:1), so the hairline-t
+   divider still carries the seam. Element-level custom properties beat the
+   inherited :root[data-theme] values, so this stays self-contained. The colour
+   itself comes from --color-surface-sunken, which the MDX ImageFrame panel also
+   uses, so footer and frames match by construction rather than by two hexes kept
+   in sync by hand. Mapping only, like the dark scopes at the top of the file. */
 :root[data-theme="dark"] .surface-invert {
-  --color-canvas: #1b1a19;
-  --color-fg: #e8e6e3;
-  --color-fg-muted: #a5a29d;
-  --color-fg-subtle: #6b6863;
+  --color-canvas: var(--color-surface-sunken);
+  --color-fg: var(--dark-fg);
+  --color-fg-muted: var(--dark-fg-muted);
+  --color-fg-subtle: var(--dark-fg-subtle);
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme]) .surface-invert {
-    --color-canvas: #1b1a19;
-    --color-fg: #e8e6e3;
-    --color-fg-muted: #a5a29d;
-    --color-fg-subtle: #6b6863;
+    --color-canvas: var(--color-surface-sunken);
+    --color-fg: var(--dark-fg);
+    --color-fg-muted: var(--dark-fg-muted);
+    --color-fg-subtle: var(--dark-fg-subtle);
   }
 }
 

@@ -4,9 +4,10 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import posthog from "posthog-js";
 import { motion, useReducedMotion } from "framer-motion";
 import { useTranslations } from "next-intl";
-import { Settings as SettingsIcon } from "iconoir-react";
-import { Link, usePathname, useRouter } from "@/i18n/navigation";
+import { Settings as SettingsIcon, Linkedin } from "iconoir-react";
+import { Link, usePathname } from "@/i18n/navigation";
 import { SettingsModal } from "./SettingsModal";
+import { GithubNavMenu } from "./GithubNavMenu";
 import { navHoverEnter, navHoverLeave } from "@/lib/navHover";
 
 // Apply the corrected visibility BEFORE the browser paints on the client (so a
@@ -19,24 +20,8 @@ const useIsoLayoutEffect =
 // bring the gear — and its SettingsModal — back into the top bar's right group.
 const SHOW_SETTINGS: boolean = false;
 
-// Scroll the About page's #contact section to the VERTICAL CENTRE of the viewport
-// — the same treatment the side document tab gives a clicked section (block:
-// "center"). Polls for the element (rAF, ~3s cap) so it also lands correctly
-// right after a cross-page navigation to /about, before that page has rendered.
-// Module scope so its DOM/time reads aren't analysed as component render.
-function centerOnContact(smooth: boolean) {
-  const startedAt = performance.now();
-  const step = () => {
-    const el = document.getElementById("contact");
-    if (el) {
-      el.scrollIntoView({ behavior: smooth ? "smooth" : "auto", block: "center" });
-      window.history.replaceState(window.history.state, "", "#contact");
-      return;
-    }
-    if (performance.now() - startedAt < 3000) requestAnimationFrame(step);
-  };
-  requestAnimationFrame(step);
-}
+// Daechan's LinkedIn profile — the top-nav LinkedIn icon links straight here.
+const LINKEDIN_URL = "https://www.linkedin.com/in/daechankimdesign/";
 
 /**
  * Top bar. On the Home page it stays HIDDEN over the hero and slides DOWN from
@@ -57,7 +42,6 @@ export function GlobalNav() {
   const t = useTranslations("Nav");
   const reduce = useReducedMotion();
   const pathname = usePathname();
-  const router = useRouter();
   const isHome = pathname === "/";
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [shown, setShown] = useState(!isHome);
@@ -154,31 +138,22 @@ export function GlobalNav() {
           Daechan Kim
         </Link>
 
-        {/* Right — contact (+ hidden settings gear). The theme toggle and Resume
-            now live in the UniversalNav pill; primary nav lives there too. */}
+        {/* Right — social icons (LinkedIn + GitHub) and the hidden settings gear.
+            The theme toggle and Resume live in the UniversalNav pill. */}
         <div className="flex shrink-0 items-center gap-4">
-          <Link
-            href="/about#contact"
-            className="text-nav uppercase tracking-[0.04em] no-underline transition-opacity hover:opacity-60 text-[#e1e1e1]"
-            onClick={(e) => {
-              posthog.capture("contact_clicked", { location: "nav" });
-              // Modified / non-primary clicks keep native behaviour (new tab, etc.).
-              if (
-                e.button !== 0 ||
-                e.metaKey ||
-                e.ctrlKey ||
-                e.shiftKey ||
-                e.altKey
-              )
-                return;
-              e.preventDefault();
-              // Navigate to /about first if we're elsewhere; then centre #contact.
-              if (pathname !== "/about") router.push("/about");
-              centerOnContact(!reduce);
-            }}
+          <a
+            href={LINKEDIN_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="LinkedIn"
+            className="flex items-center text-[#e1e1e1] transition-opacity hover:opacity-60"
+            onClick={() =>
+              posthog.capture("linkedin_clicked", { location: "nav" })
+            }
           >
-            {t("contact")}
-          </Link>
+            <Linkedin width={20} height={20} />
+          </a>
+          <GithubNavMenu />
           {SHOW_SETTINGS ? (
             <button
               type="button"

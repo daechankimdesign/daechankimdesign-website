@@ -22,18 +22,21 @@ export function resolveMode(mode: ThemeMode): ResolvedTheme {
   return mode;
 }
 
-// Browser-chrome (address/status bar) colour per resolved theme. Keep the dark
-// value equal to the dark --color-canvas in globals.css.
-const THEME_META_COLORS: Record<ResolvedTheme, string> = {
-  light: "#ffffff",
-  dark: "#1b1a19",
-};
-
 /** Stamp the resolved theme on <html>. Client-only. */
 export function applyResolvedTheme(theme: ResolvedTheme) {
   const el = document.documentElement;
   el.dataset.theme = theme;
   el.style.colorScheme = theme;
+  // Browser-chrome colour is READ BACK from the token we just stamped rather
+  // than kept as a duplicate hex here: --color-canvas is already the page
+  // background for whichever theme is now active, and getComputedStyle resolves
+  // its var() chain (globals.css maps it from the private --dark-* layer). One
+  // source of truth; changing the palette in CSS moves the address bar with it.
+  const canvas = getComputedStyle(el).getPropertyValue("--color-canvas").trim();
+  // Empty only if the stylesheet has not applied yet (this runs post-mount, so
+  // in practice never). Leave the SSR-rendered tags alone rather than blanking
+  // them — a wrong-but-valid colour beats an empty content attribute.
+  if (!canvas) return;
   // The SSR viewport export emits per-scheme <meta name="theme-color"> tags,
   // which can only follow the DEVICE preference. Override BOTH tags' content on
   // every stamp so mobile browser chrome also follows an explicit toggle choice
@@ -41,7 +44,7 @@ export function applyResolvedTheme(theme: ResolvedTheme) {
   // the dark page). Device-mode OS changes re-run this via ThemeProvider.
   document
     .querySelectorAll('meta[name="theme-color"]')
-    .forEach((m) => m.setAttribute("content", THEME_META_COLORS[theme]));
+    .forEach((m) => m.setAttribute("content", canvas));
 }
 
 /**

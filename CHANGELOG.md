@@ -56,6 +56,187 @@ build; roadmap Phase 5 is the runtime translation (`4348eec`).
 
 ## Log
 
+### 2026-07-26: Resume opens in a PDF viewer modal
+
+- **New `src/components/ResumeModal.tsx`** — `ResumeProvider` + `useResume()`,
+  mounted in the locale layout inside `LoveLetterProvider`. Same modal grammar as
+  the love letter (portal to `<body>` at z-50, canvas panel, Xmark + Escape +
+  click-outside, `documentElement` scroll lock because this site scrolls on
+  `<html>`), minus the envelope choreography: a document should arrive at full
+  size, not peek and grow.
+- **It IS the love letter's sheet.** First attempt was a centred floating panel
+  and looked wrong: the browser PDF viewer's own toolbar sat on top and the frame
+  was far taller than the page, leaving a big dark letterboxed void. Rebuilt as a
+  mirror of `LoveLetterModal` — same constants (`PARTIAL_VW` 60 / `MOBILE_VW` 100
+  / `PARTIAL_VH` 36 / `GROW_AT_PX` 40 / `CLOSE_AT_PX` 320 / `PEEK_DROP_PX` 44),
+  same 3° tilted peek rising from the bottom edge, same click-or-scroll to grow
+  full, same wheel/touch gestures and pull-to-close, same sticky Xmark, same
+  bottom fade, no dim overlay.
+- **The page renders NATIVELY, not in an iframe.** `react-pdf` 10.4.1 (pdf.js
+  5.4.296) draws the single US Letter page (verified: `/Count 1`, `MediaBox
+  [0 0 612 792]`) into a `<canvas>` in the sheet's own content column, plus a
+  TEXT layer and an ANNOTATION layer. That removes the browser PDF viewer's
+  toolbar and dark backdrop at the root — the first iframe attempt showed both,
+  which is what made it look wrong. Being real DOM, wheel/touch bubble to the
+  scroller, so the peek-to-grow gesture works while the text stays selectable and
+  the resume's links stay clickable.
+  - The wrapper was chosen over raw `pdfjs-dist` for three things this document
+    actually needs: RenderTask cancellation (the sheet resizes at the 640px
+    breakpoint and StrictMode double-mounts), the text layer, and the annotation
+    layer — the resume carries a real DOI link that a bare canvas would render as
+    dead pixels, a regression from the iframe. Weight was NOT the reason: the
+    wrapper is 309KB over a `pdfjs-dist` install of 35.8MB either way.
+  - Loaded via `next/dynamic` + `ssr:false` (`ResumeDocument.tsx`), so pdf.js is
+    fetched on FIRST OPEN, never on first paint.
+  - `pdf.worker.min.mjs` is referenced as `new URL(..., import.meta.url)`;
+    Turbopack emits and resolves it with **no `next.config` entry** and no
+    `public/` copy (which App Hosting would not serve anyway).
+- **NEW `src/app/api/resume/route.ts` — a same-origin proxy, and it is load-bearing.**
+  pdf.js FETCHES the bytes, unlike the iframe which merely navigated a frame, so
+  CORS suddenly applied. The Storage endpoint answers the OPTIONS preflight with
+  `access-control-allow-origin: *` but sends **no such header on the actual GET**,
+  so the browser blocked the read and pdf.js reported
+  `UnknownErrorException: Failed to fetch`. Confirmed with
+  `curl -sD - -H "Origin: http://localhost:3000" "<RESUME_URL>"`. Fixing it at the
+  bucket needs gsutil/gcloud (unavailable — see docs/MEDIA-PIPELINE.md), so the
+  route streams the file from our own origin instead. Only the VIEWER uses it;
+  the nav/hero anchors and "Open in new tab" still point straight at Storage,
+  since plain navigations never needed CORS.
+- **Presentation pass:** sheet width 60vw -> **80vw**; the content column is
+  UNPADDED so the page runs flush to the sheet's edges (the action row carries its
+  own padding instead); the page's drop shadow is gone, since a flush page has no
+  edge for a shadow to describe.
+- **Dark mode inverts the page** (`dark:[&_canvas]:invert dark:[&_canvas]:hue-rotate-180`),
+  so the resume reads light-on-dark with the rest of the site instead of glaring
+  white — in the peek AND the full view. `hue-rotate(180)` puts hues back after
+  `invert` flips lightness, so it is a dark page with light text rather than a
+  colour negative. Scoped to the CANVAS: the text and annotation layers sit above
+  it and are transparent, so inverting them would flip the selection highlight for
+  nothing. react-pdf writes `background-color: white` INLINE on `.react-pdf__Page`,
+  which a class cannot beat, hence `dark:!bg-[#0d1117]`.
+- **Download button added**, pointing at `/api/resume?download=1`; the route sets
+  `Content-Disposition: attachment` for that param and `inline` otherwise. This is
+  the only reliable way to offer a download — the `download` attribute on an `<a>`
+  is IGNORED cross-origin, so a link straight to Storage can never force a save.
+  (The eslint `no-html-link-for-pages` rule is disabled on that one line with a
+  reason: it is a file download from a route handler, not a page navigation.)
+- The column width is measured in a **callback ref, not an effect**: ResizeObserver
+  delivery is tied to the browser's rendering steps, which a backgrounded tab
+  never gets, so waiting on its first callback left the page unrendered until the
+  tab was looked at (observed directly). The observer now only handles later
+  resizes. Same shape as LoveLetter's `ref={setScrollerEl}`, and lint-clean.
+- Verified live: worker `200`, `/api/resume` `200` (63,122 bytes), canvas bitmap
+  1280x1656 for a 640px column (2x DPR, crisp on retina), `.react-pdf__Page`
+  width 640 = the column exactly, text layer populated with the resume's text,
+  annotation layer carrying 1 live link (`https://doi.org/10.5281/zenodo.8292270`),
+  no iframe, and no console errors.
+- The sheet mechanics are DUPLICATED from `LoveLetterModal`, not shared: the
+  letter's sheet is entangled with its highlight-timing contexts
+  (`LetterFullContext` / `SettledContext`), so extracting a common `<BottomSheet>`
+  is a worthwhile follow-up rather than a change to make without being able to
+  watch the letter afterwards. Both files say so; if one changes, change both.
+- **Triggers stay real links.** The nav pill and hero CTA remain
+  `<a href={RESUME_URL} target="_blank">`; only a plain left-click is intercepted
+  (`e.preventDefault()`), and modifier-clicks fall through. So middle-click,
+  cmd-click, "copy link address", and a no-JS visit all still reach the file.
+  `NavItem.onClick` / `LinkButton.onClick` were widened to receive the event.
+- **iOS caveat:** Safari and some in-app webviews refuse to render a PDF inside
+  an iframe and leave it blank, so the modal is never the only route to the file
+  — an "Open in new tab" link sits under the sheet at all times.
+- Analytics: `resume_opened` with a `source` ("nav" / "hero") replaces the old
+  `resume_downloaded` / `hero_resume_cta_clicked` click events;
+  `resume_downloaded` now fires from the modal's open-in-new-tab link, where it
+  is actually accurate.
+- Verified live: clicking nav Resume mounts the dialog (navigation cancelled),
+  `iframe src` carries `#view=FitH`, `<html>` overflow locks to `hidden` on open
+  and releases on Escape. NOT verified: the rendered PDF and its on-screen size —
+  the Browser pane reported `document.hidden: true` / viewport 0x0, so `dvh`
+  resolves to 0 and the iframe never fetched. Worth an eyeball in a real window.
+
+### 2026-07-24: Light canvas to cool slate #F8FAFC
+
+- **Light `--color-canvas` / `--color-background` `#FFFFFF` -> `#F8FAFC`** in the
+  `@theme` block, plus `viewport.themeColor` (light) in the locale layout and the
+  styleguide / design-rules swatch captions. Dark mode untouched.
+- `src/lib/theme.ts` needed NO edit: `applyResolvedTheme` already reads
+  `--color-canvas` back off `<html>`, so the browser-chrome colour followed the
+  new value automatically (verified meta `#f8fafc` light / `#161b22` dark).
+- Verified live: body `rgb(248, 250, 252)`; ink 15.93:1; the light marker still
+  reads 13.78:1 under `#1E1E1E`.
+- **Both modes are now COOL** (slate light, GitHub-blue dark), so the neutral
+  greys (`surface` `#E3E3E3`, `hairline` `#D9D9D9`, `surface-subtle` `#F5F5F5`)
+  sit correctly in light again — the warm/cool mismatch flagged for the earlier
+  cream and blush canvases is resolved on the light side. The DARK neutrals are
+  still warm greys (see the dark entry below); that one is open.
+- **`fg-muted` darkened `#757575` -> `#6F6F6F` to restore AA.** On the lighter
+  white canvas `#757575` cleared 4.5:1; on `#F8FAFC` it fell to 4.40:1, under the
+  floor for 16px body text, and it carries real copy (secondary text, meta values,
+  inactive nav). `#6F6F6F` restores **4.80:1** on the canvas and **4.61:1** on
+  `surface-subtle` (the slug notice boxes, SettingsModal hover) — the only two
+  light surfaces muted text actually sits on. Dark `fg-muted` (`#A5A29D`) is
+  unchanged; the swatch captions were updated.
+  - Checked and NOT an issue: muted-on-`surface` (`#E3E3E3`, 3.92:1) and
+    muted-on-`hairline-faint` (`#ECECEC`, 4.25:1) fail numerically but are
+    unreachable — `bg-surface` in light is only the 8px nav dot (no text) and
+    SettingsModal's selected row (which uses `text-fg`), and `hairline-faint` is
+    border-only.
+  - Verified live after a reload (CSS HMR had served a stale value): all 22
+    `text-fg-muted` nodes compute `rgb(111, 111, 111)`.
+
+### 2026-07-24: Dark palette re-based on GitHub-style blues; green marker
+
+Replaces dark mode's warm near-black neutrals with a cool blue-grey set. Light
+mode is untouched throughout.
+
+- **Canvas `#1B1A19` -> `#161B22`** and **footer `#1B1A19` -> `#0D1117`**, in the
+  `[data-theme="dark"]` block, the no-JS `prefers-color-scheme` fallback, the
+  browser-chrome colour (`THEME_META_COLORS` in `src/lib/theme.ts` +
+  `viewport.themeColor` in the locale layout), and the styleguide / design-rules
+  swatch captions.
+- **The footer now RECEDES** (`#0D1117` under the page's `#161B22`) instead of
+  matching the page exactly, so the page card reads as the lit surface. The step
+  is subtle by design (1.09:1); the `hairline-t` divider still carries the seam.
+- **New `--color-surface-sunken` token.** Light `#F5F5F5` (identical to
+  surface-subtle, so nothing shifts); dark `#0D1117`. The MDX `ImageFrame`
+  default panel switched from `bg-surface-subtle` to `bg-surface-sunken`, and
+  `.surface-invert` now derives its dark canvas from the SAME token
+  (`--color-canvas: var(--color-surface-sunken)`) — so framed screenshots on
+  project slug pages and the footer match by construction, not by two hexes kept
+  in sync by hand. `bg-surface-subtle` was deliberately NOT repointed: WorkTile,
+  HeroImageStack, SandboxEmbed and the slug notice boxes all share it.
+- **Dark `--hl` is now `rgba(74, 222, 128, 0.26)`** (#4ADE80), replacing the gold
+  `rgba(228, 179, 76, 0.28)`. rough-notation's 2 overlapping strokes compound to
+  ~0.45 effective, keeping the `#e8e6e3` ink at **4.58:1** over the mark (AA needs
+  4.5). 0.28 drops to 4.25, so 0.26 is the ceiling. Text on the new canvas:
+  fg 13.9:1, fg-muted 6.8:1.
+- **Single-sourced the dark palette.** Every dark value is now declared exactly
+  once, as a private `--dark-*` custom property on `:root`; the
+  `[data-theme="dark"]` block, the no-JS `prefers-color-scheme` mirror, and both
+  `.surface-invert` dark scopes only MAP those onto `--color-*` (no literals).
+  Changing a dark colour is a one-line edit and the mirror can no longer drift.
+  `--dark-*` is private by convention (not in `@theme`, so Tailwind emits no
+  utilities for it); anything needing a dark value at runtime reads the resolved
+  `--color-*` off `<html>` instead.
+- **`THEME_META_COLORS` deleted** (`src/lib/theme.ts`). `applyResolvedTheme` now
+  reads `--color-canvas` back off `<html>` AFTER stamping `data-theme`, so the
+  browser-chrome colour follows the CSS palette automatically instead of being a
+  duplicated hex pair. `getComputedStyle` resolves the `var()` chain to a literal
+  (verified: `#161b22` dark / `#fff` light). Guarded: if the value reads empty
+  (stylesheet not applied), the SSR-rendered tags are left alone rather than
+  blanked. `viewport.themeColor` in the locale layout necessarily stays a literal
+  — it is static metadata evaluated at build time.
+- `HL_COLOR` (`src/lib/highlight.ts`) is unchanged: it is only the pre-CSS
+  fallback and must stay equal to the LIGHT theme's `--hl`.
+- Verified live (computed values): body `rgb(22,27,34)`, footer `rgb(13,17,23)`,
+  ImageFrame panel `rgb(13,17,23)` — panel and footer compare EQUAL; light panel
+  still `rgb(245,245,245)`; `--hl` `#4ade8042` in dark / `#fde7698c` in light with
+  all 6 marks plus the hero circle painting `rgba(74,222,128,0.26)`; theme-color
+  metas `#161b22`.
+- **Open item:** the dark neutrals (fg `#E8E6E3`, hairline `#383633`, surface
+  `#2E2C29`) are still the WARM greys from the near-black palette and now sit
+  against cool blue-greys. Contrast is fine; the hue mismatch is cosmetic. Slate
+  companions (e.g. `#E6EDF3` / `#30363D` / `#21262D`) would complete the re-base.
+
 ### 2026-07-24: Replay the page entrance on a theme change; toggle refinements
 
 - **Content re-reveal** (`src/components/ContentReveal.tsx`, wired in

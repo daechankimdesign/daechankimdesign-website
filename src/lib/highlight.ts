@@ -12,7 +12,7 @@ import { annotate } from "rough-notation";
  * overlapping strokes compound to a denser marker where they cross.
  *
  * THEME NOTE: the RENDERED colour is the CSS variable --hl (globals.css theme
- * blocks; a quieter gold in dark mode). A global stroke rule overrides the
+ * blocks; a neon green in dark mode). A global stroke rule overrides the
  * presentation attribute rough-notation writes, so marks recolour live on
  * theme change. This constant is only the pre-CSS fallback the library
  * requires; keep it equal to the light theme's --hl.

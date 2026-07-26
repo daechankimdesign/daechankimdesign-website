@@ -1,7 +1,7 @@
 "use client";
 
-import type { CSSProperties } from "react";
-import { motion, useReducedMotion, type Variants } from "framer-motion";
+import { useRef, type CSSProperties } from "react";
+import { motion, useInView, useReducedMotion, type Variants } from "framer-motion";
 import { ProgressiveImage } from "../ProgressiveImage";
 import { EASE_OUT, DURATION } from "@/lib/motion";
 
@@ -27,7 +27,8 @@ type Background = { src: string; alt?: string };
  * and native aspect; nothing is baked into a composite.
  *
  * Two panel treatments:
- *  - DEFAULT (Oria): a flat `bg-surface-subtle` seamless. Cards lie side by side
+ *  - DEFAULT (Oria): a flat `bg-surface-sunken` seamless (in dark this is the
+ *    FOOTER colour, so framed screenshots sit in the same well). Cards lie side by side
  *    and `flex-grow` by aspect against `flex-basis: 0`, so every card resolves to
  *    the SAME height even from slightly different source ratios. Below `sm` they
  *    stack full-width and the ratio is inert. Each card reveals once on scroll-in.
@@ -146,6 +147,12 @@ export function ImageFrame({
   foregroundWidth?: number;
 }) {
   const reduce = useReducedMotion();
+  // Default-mode reveal: ONE trigger on the frame. `useInView` fires once when the
+  // figure scrolls into view; each card then animates with a per-card delay, so
+  // they cascade left→right (top→bottom when stacked). Ref is attached only in
+  // default mode; harmless (stays false) in background mode.
+  const frameRef = useRef<HTMLElement>(null);
+  const frameInView = useInView(frameRef, VIEWPORT);
   if (!items.length) return null;
 
   const captionEl = caption ? (
@@ -250,34 +257,33 @@ export function ImageFrame({
     );
   }
 
-  // ── Default mode: flat tinted seamless, each card reveals once ───────────────
-  const cards = items.map((item, i) => {
-    if (reduce) {
-      return (
-        <div key={item.src} style={growStyle(item)} className={CARD_CLASS}>
-          {progressive(item)}
-        </div>
-      );
-    }
-    return (
-      <motion.div
-        key={item.src}
-        style={growStyle(item)}
-        className={CARD_CLASS}
-        initial={{ opacity: 0, ...OFFSET[item.from ?? "bottom"] }}
-        whileInView={{ opacity: 1, x: 0, y: 0 }}
-        viewport={VIEWPORT}
-        transition={{ duration: DURATION, ease: EASE_OUT, delay: i * BEAT }}
-      >
-        {progressive(item)}
-      </motion.div>
-    );
-  });
+  // ── Default mode: flat tinted seamless. ONE trigger on the figure — as the
+  // frame scrolls into view (frameInView), each card animates with delay i*BEAT,
+  // so they cascade left→right in a row (top→bottom when stacked). ─────────────
+  const panelClass =
+    "flex flex-col gap-6 bg-surface-sunken p-6 sm:flex-row sm:items-start sm:gap-10 sm:p-10";
 
   return (
-    <figure className="my-8">
-      <div className="flex flex-col gap-6 bg-surface-subtle p-6 sm:flex-row sm:items-start sm:gap-10 sm:p-10">
-        {cards}
+    <figure ref={frameRef} className="my-8">
+      <div className={panelClass}>
+        {items.map((item, i) =>
+          reduce ? (
+            <div key={item.src} style={growStyle(item)} className={CARD_CLASS}>
+              {progressive(item)}
+            </div>
+          ) : (
+            <motion.div
+              key={item.src}
+              style={growStyle(item)}
+              className={CARD_CLASS}
+              initial={{ opacity: 0, ...OFFSET[item.from ?? "bottom"] }}
+              animate={frameInView ? { opacity: 1, x: 0, y: 0 } : undefined}
+              transition={{ duration: DURATION, ease: EASE_OUT, delay: i * BEAT }}
+            >
+              {progressive(item)}
+            </motion.div>
+          ),
+        )}
       </div>
       {captionEl}
     </figure>
