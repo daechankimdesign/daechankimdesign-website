@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 type DeviceKey = "desktop" | "tablet" | "mobile";
 
@@ -13,7 +13,7 @@ type SandboxEmbedProps = {
   posters?: Partial<Record<DeviceKey, string>>;
   /** Single facade screenshot fallback when a device has no `posters` entry. */
   poster?: string;
-  /** Constant frame (screen) height in px — shared by every device. Default 720. */
+  /** Constant frame (screen) height in px, shared by every device. Default 680. */
   height?: number;
 };
 
@@ -39,7 +39,7 @@ export function SandboxEmbed({
   title = "Interactive demo",
   posters,
   poster,
-  height = 720,
+  height = 680,
 }: SandboxEmbedProps) {
   const [live, setLive] = useState(false);
   const [device, setDevice] = useState<DeviceKey>("desktop");
@@ -49,6 +49,12 @@ export function SandboxEmbed({
   // HTTP cache (and any exact-URL service-worker precache) → always the latest.
   const [launchCb, setLaunchCb] = useState(0);
 
+  // On a phone the device toggle is hidden, so default to the mobile frame there;
+  // the fixed-width 16:10 desktop frame would otherwise become a sideways scroll.
+  useEffect(() => {
+    if (window.matchMedia("(max-width: 639px)").matches) setDevice("mobile");
+  }, []);
+
   // No live demo to run → render nothing at all.
   if (!src) return null;
 
@@ -57,20 +63,23 @@ export function SandboxEmbed({
     ? `${src}${src.includes("?") ? "&" : "?"}cb=${launchCb}`
     : src;
 
-  // Same height for all; width = height × device aspect ratio (desktop fills).
+  // Same height for all; width = height × device aspect ratio. Desktop is 16:10.
   const DEVICES = [
-    { key: "desktop", label: "Desktop", ratio: null, Icon: MonitorIcon, frame: "rounded-2xl", screen: "rounded-lg" },
+    { key: "desktop", label: "Desktop", ratio: 1.6, Icon: MonitorIcon, frame: "rounded-2xl", screen: "rounded-lg" },
     { key: "tablet", label: "Tablet", ratio: 0.75, Icon: TabletIcon, frame: "rounded-[1.75rem]", screen: "rounded-xl" },
     { key: "mobile", label: "Mobile", ratio: 0.5, Icon: PhoneIcon, frame: "rounded-[2.5rem]", screen: "rounded-[1.6rem]" },
   ] as const;
 
   const current = DEVICES.find((d) => d.key === device) ?? DEVICES[0];
-  const screenW = current.ratio ? Math.round(height * current.ratio) : null;
+  const screenW = Math.round(height * current.ratio);
   // The capture taken at this device's viewport (falls back to the single shot).
   const shot = posters?.[device] ?? poster;
 
+  // Scroll wrapper: the fixed-width 16:10 desktop frame breaks out of the
+  // content column and centers here when it fits; on a narrower window it
+  // scrolls sideways instead of shrinking or clipping.
   return (
-    <div className="mt-0 mb-8">
+    <div className="mt-0 mb-8 overflow-x-auto">
       {/* Device frame — thick, deep-dark, rounded bezel; width tracks the ratio */}
       <div
         // bg-[#1e1e1e], NOT bg-fg: this is device hardware (like MacbookMockUp's
@@ -80,8 +89,8 @@ export function SandboxEmbed({
         // lifts it to the surface token and rings it with the hairline — clearly
         // separated device chrome. A RING, not a border: the bezel width math
         // (p-3 == BEZEL) must stay untouched, and a ring adds no layout size.
-        className={`mx-auto box-border max-w-full bg-[#1e1e1e] dark:bg-surface dark:ring-1 dark:ring-hairline p-3 shadow-[0_20px_50px_-24px_rgba(0,0,0,0.45)] transition-[width,border-radius] duration-300 ease-out ${current.frame}`}
-        style={{ width: screenW ? screenW + BEZEL * 2 : "100%" }}
+        className={`mx-auto box-border bg-[#1e1e1e] dark:bg-surface dark:ring-1 dark:ring-hairline p-3 shadow-[0_20px_50px_-24px_rgba(0,0,0,0.45)] transition-[width,border-radius] duration-300 ease-out ${current.frame}`}
+        style={{ width: screenW + BEZEL * 2 }}
       >
         {/* Screen */}
         <div
@@ -144,8 +153,8 @@ export function SandboxEmbed({
           toggle is icon-only; selected / hover / default read purely through opacity
           (no pill, no background). Hidden on mobile (you're already on a phone). */}
       <div
-        className="mx-auto mt-3 flex max-w-full items-center justify-center transition-[width] duration-300 ease-out sm:justify-between"
-        style={{ width: screenW ? screenW + BEZEL * 2 : "100%" }}
+        className="mx-auto mt-3 flex items-center justify-center transition-[width] duration-300 ease-out sm:justify-between"
+        style={{ width: screenW + BEZEL * 2 }}
       >
         <div
           role="group"

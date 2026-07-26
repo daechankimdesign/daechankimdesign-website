@@ -63,6 +63,35 @@ export default async function PlayDetailPage({
         </p>
       ) : null}
 
+      {/* Interactive project embed, hoisted OUT of the 768px reading column so the
+          wide 16:10 desktop frame can break out and center in the full page
+          container. Pieces without a live demo (`embed`) render no frame. */}
+      {frontmatter.embed ? (
+        <SandboxEmbed
+          src={frontmatter.embed}
+          title={frontmatter.title}
+          posters={{
+            desktop:
+              frontmatter.embedPosterDesktop ??
+              frontmatter.embedPoster ??
+              frontmatter.thumbnail,
+            tablet:
+              frontmatter.embedPosterTablet ??
+              frontmatter.embedPoster ??
+              frontmatter.thumbnail,
+            mobile:
+              frontmatter.embedPosterMobile ??
+              frontmatter.embedPoster ??
+              frontmatter.thumbnail,
+          }}
+          height={
+            frontmatter.embedHeight
+              ? Number(frontmatter.embedHeight)
+              : undefined
+          }
+        />
+      ) : null}
+
       <div className="flex flex-col lg:flex-row gap-12 lg:gap-16">
         {/* Left Side: Sticky Side Document Tab */}
         <aside className="hidden lg:block lg:w-48 lg:shrink-0">
@@ -73,35 +102,6 @@ export default async function PlayDetailPage({
 
         {/* Right Side: Main Content */}
         <div className="flex-1 min-w-0 content-column-narrow">
-          {/* Interactive project embed — sits above the title/header when the
-              piece has a live demo (`embed` in frontmatter). Pieces without one
-              (e.g. a Chrome extension) render no frame at all. */}
-          {frontmatter.embed ? (
-            <SandboxEmbed
-              src={frontmatter.embed}
-              title={frontmatter.title}
-              posters={{
-                desktop:
-                  frontmatter.embedPosterDesktop ??
-                  frontmatter.embedPoster ??
-                  frontmatter.thumbnail,
-                tablet:
-                  frontmatter.embedPosterTablet ??
-                  frontmatter.embedPoster ??
-                  frontmatter.thumbnail,
-                mobile:
-                  frontmatter.embedPosterMobile ??
-                  frontmatter.embedPoster ??
-                  frontmatter.thumbnail,
-              }}
-              height={
-                frontmatter.embedHeight
-                  ? Number(frontmatter.embedHeight)
-                  : undefined
-              }
-            />
-          ) : null}
-
           <header className="mb-8 measure">
             <Reveal>
               <RevealItem as="p" className="mb-4">

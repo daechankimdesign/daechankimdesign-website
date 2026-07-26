@@ -10,7 +10,7 @@ import { LoveLetterButton } from "./LoveLetter";
 import { EASE_OUT } from "@/lib/motion";
 import { HL_COLOR } from "@/lib/highlight";
 import { RESUME_URL } from "@/lib/links";
-import posthog from "posthog-js";
+import { useResume } from "./ResumeModal";
 
 // Reveal cadence: one header line every STEP ms, then the sub text and the CTA
 // buttons each follow after LEDE_DELAY. Plays ONCE per viewport visit (no loop);
@@ -85,6 +85,7 @@ function MarkCircle({
  */
 export function HeroHeadline({ stack }: { stack: HeroStackItem[] }) {
   const reduce = useReducedMotion();
+  const resume = useResume();
   const containerRef = useRef<HTMLDivElement>(null);
   // Reveal steps: one per header line, then the sub text, then the buttons.
   const total = HEADLINE.length + 2;
@@ -257,7 +258,7 @@ export function HeroHeadline({ stack }: { stack: HeroStackItem[] }) {
           animate={{ opacity: ledeShown ? 1 : 0 }}
           transition={{ duration: 0.7, ease: EASE_OUT }}
         >
-          <p className="text-sub-display text-fg-muted">
+          <p className="text-sub-display text-fg-muted dark:text-fg">
             I&apos;m a designer, researcher, and builder with{" "}
             <MarkCircle active={markStep > 1}>3+</MarkCircle> years experience
             across a{" "}
@@ -282,7 +283,7 @@ export function HeroHeadline({ stack }: { stack: HeroStackItem[] }) {
             </Highlighter>
             .
           </p>
-          <p className="text-sub-display mt-4 text-fg-muted">
+          <p className="text-sub-display mt-4 text-fg-muted dark:text-fg">
             I&apos;d love to talk about opportunities where I can grow and
             contribute to connecting humanity with AI to improve our daily
             experiences.
@@ -301,11 +302,18 @@ export function HeroHeadline({ stack }: { stack: HeroStackItem[] }) {
               EnvelopeStage); clicking it continues the intro and opens the letter. */}
           <LoveLetterButton arrow="right" />
           {/* Resume lives on Firebase Storage (media/about/), not public/ —
-              App Hosting serves no public/ paths. See docs/MEDIA-PIPELINE.md. */}
+              App Hosting serves no public/ paths. See docs/MEDIA-PIPELINE.md.
+              Stays a real <a href> to the PDF so modifier / middle click and a
+              no-JS visit still reach the file; a plain click opens the viewer
+              modal instead (same as the nav pill's Resume). */}
           <LinkButton
             href={RESUME_URL}
             external
-            onClick={() => posthog.capture("hero_resume_cta_clicked")}
+            onClick={(e) => {
+              if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+              e.preventDefault();
+              resume?.open("hero");
+            }}
           >
             Resume
           </LinkButton>

@@ -1,6 +1,6 @@
 ---
-title: Interactive maps for local residents to learn and discover the parks.
-summary: Built for the Emerald Necklace Conservancy so eight parks read as one connected system. One React component dropped into their rebranded Framer site, rendering Mapbox GL over a custom tileset, with Airtable content pulled through a Cloudflare Worker so no keys reach the browser.
+title: An interactive map of the Emerald Necklace park system
+summary: A custom interactive map for the Emerald Necklace Conservancy, built so eight separate parks read as one continuous system. The work here is the interaction layer. The whole necklace shows at once, a focused park fills with green, and any place opens to its details, so exploring feels closer to wandering than to searching. The live Mapbox map lazy-loads on the first interaction, keeping the client's API costs down.
 thumbnail: https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fsandbox%2Finteractive-maps-for-local-residents-to-learn-and-discover-the-parks%2Fthumbnail.gif?alt=media
 date: 2026-07-15
 tags:
@@ -43,7 +43,7 @@ A custom interactive map I built at Other Tomorrows for the **Emerald Necklace C
   caption="The same point of interest on mobile and desktop, over the map it belongs to."
 />
 
-I joined after the first round of design and took over the map. The interaction is the part I own. I reworked it around one problem: how to let someone move across the whole system, cross from one park to the next, and open the details of any place without getting lost. Most of my work lives in that layer: the movement, the states, and the moment-to-moment feel of exploring.
+The core visuals, a system connecting Mapbox and Airtable, and a first build of the feature were established before I joined. My focus was the interaction layer. I made the user flow intuitive across mobile, tablet, and desktop, grounded in a universal set of rules and in close attention to how people behave and what they input on each device, so anyone can navigate the park maps freely.
 
 <VideoPlayer
   type="video"
@@ -51,14 +51,11 @@ I joined after the first round of design and took over the map. The interaction 
   poster="https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fsandbox%2Finteractive-maps-for-local-residents-to-learn-and-discover-the-parks%2Fcome-alive-poster.jpg?alt=media"
   width={1440}
   height={1002}
-  caption="It opens as a still image of the necklace, and the first touch loads the live map."
+  caption="It opens as a static image of the necklace. The live Mapbox map is lazy-loaded, its API call firing only on the first interaction, so it initializes when someone actually uses it and keeps the client's API costs down."
 />
 
 ## How it works
-
-<Dek>The whole system shows at once, so finding a place feels like exploring, not searching.</Dek>
-
-The map opens on the full necklace, so the whole system is visible at once. Panning and zooming moves across it, tapping a park focuses it, and tapping a point of interest opens its details: the photo, hours, accessibility, and the story of the place. A filter panel narrows by park, facility, or activity. Smaller touches keep it closer to exploring than searching: a focused park fills with green, overlapping pins fan apart so none get buried, and the loading state reads _finding a sun-basking painted turtle_, one of the critters that actually live along the Necklace.
+The map opens on the full necklace, so **the whole system is visible at once**. Panning and zooming moves across it, tapping a park focuses it, and tapping a point of interest opens the place. A focused park fills with green and its points of interest gather into a carousel along the bottom, so moving from the whole to a single park stays legible. Overlapping pins fan apart so none get buried, and the loading state reads _finding a sun-basking painted turtle_, one of the critters that actually live along the Necklace.
 
 <VideoPlayer
   type="video"
@@ -69,28 +66,8 @@ The map opens on the full necklace, so the whole system is visible at once. Pann
   caption="A focused park fills with green and its points of interest gather into the carousel; opening a place shows its details."
 />
 
-<MDXImage
-  src="https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fsandbox%2Finteractive-maps-for-local-residents-to-learn-and-discover-the-parks%2Fmap-live.jpg?alt=media"
-  alt="The whole Emerald Necklace on the live map, points of interest across every park, with the photo carousel along the bottom"
-  width={1800}
-  height={1252}
-/>
-
-## The build
-
-<Dek>One React component for Framer, wiring Mapbox, Airtable, and the team's design together.</Dek>
-
-It is a custom React component that drops straight into the Conservancy's Framer site. Mapbox GL renders a style over a custom Emerald Necklace tileset, and the content lives in Airtable, pulled through a small Cloudflare Worker so no keys ever reach the browser. It is data-driven by convention: add a field named `Filter--Activities` in Airtable and an "Activities" filter appears, with no code change. To keep it fast and cheap, the billable Mapbox map does not load until the first interaction; before that it is a static image of the necklace. Built with Claude Code, matched to the design screen by screen.
-
-<MDXImage
-  src="https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fsandbox%2Finteractive-maps-for-local-residents-to-learn-and-discover-the-parks%2Ffilters.jpg?alt=media"
-  alt="The filter panel: every category (parks, iconic views, facilities, activities) is generated from Airtable fields"
-  width={1800}
-  height={1125}
-/>
+## Opening a place
+Opening a point of interest keeps it in context. On a phone it rises as a bottom sheet over the map; on desktop it floats as a card beside its pin. Both stay tied to the place they describe, with the photo, hours, accessibility, and story of the spot. A filter panel narrows the map by park, facility, or activity, so a specific interest can thin the field without ever losing the whole from view.
 
 ## How it landed
-
-<Dek>Live for the Conservancy now: fun to move through, and the necklace reads as one system.</Dek>
-
-What I care about most is that it stays genuinely fun to move through while still landing the one idea that matters: the Emerald Necklace is a single, continuous system, not a scatter of parks. It is live for the Conservancy now, and the version here is my own.
+What I care about most is that it stays **genuinely fun to move through** while landing the idea that matters most. The Emerald Necklace is a single, continuous system, not a scatter of parks. It is live for the Conservancy now, and the version here is my own.
