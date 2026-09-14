@@ -1,0 +1,201 @@
+---
+title: A credit card assistant that prices a payment before it is made
+summary: A concept for a proactive finance assistant that watches how a credit card is used, raises a rising balance before the statement closes, and puts the cost of each payment option in front of the person choosing.
+thumbnail: https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fprojects%2Fzeto-proactive-ai-for-credit-card-decisions%2Fhero.jpg?alt=media
+cover:
+  - https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fprojects%2Fzeto-proactive-ai-for-credit-card-decisions%2Fhero.jpg?alt=media
+  - https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fprojects%2Fzeto-proactive-ai-for-credit-card-decisions%2Fpayment-phone.jpg?alt=media
+  - https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fprojects%2Fzeto-proactive-ai-for-credit-card-decisions%2Fhome-phone.jpg?alt=media
+date: 2026-08-14
+tags:
+  - Product Design
+  - Design Research
+  - AI Experience
+tools:
+  - Figma
+status: concept
+org: BJAK Design Challenge
+---
+<ProjectMeta
+  items={[
+    { label: "Role", value: "Product Designer, sole" },
+    { label: "Platform", value: "iOS" },
+    { label: "Timeline", value: "August 2026" },
+  ]}
+/>
+
+## About
+
+A mobile finance assistant that watches how a credit card is actually being used, raises a problem while the month is still open, and states what each payment option costs at the moment of the decision.
+
+## Outcome
+
+A self-directed response to the BJAK AI Human Interaction Design Challenge, delivered as secondary and primary research, a problem definition, a full user journey, and a set of high-fidelity screens for an app named Zeto. It is a concept, not a shipped product. What it demonstrates is a specific position on artificial intelligence in personal finance: the system carries the monitoring and the arithmetic, and the person keeps the decision.
+
+<MDXImage
+  src="https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fprojects%2Fzeto-proactive-ai-for-credit-card-decisions%2Fhero.jpg?alt=media"
+  alt="The Zeto home screen on a phone, showing a monthly spending forecast and an AI alert about a card approaching its limit"
+  width={864}
+  height={832}
+  caption="Zeto opens on what the month is heading toward rather than on what has already been spent."
+/>
+
+## The Problem
+
+The brief asked for a real user problem in everyday finance. The work started with secondary research, reading online communities where people discuss their financial lives openly. Sorting those posts by what people said, what they wanted, and what they valued surfaced one difficulty underneath all of them: it is hard to know which financial decision is the right one, whether the question is investing, planning ahead, or paying down debt.
+
+The recurring gap was not the next action. Most people knew roughly what to do. The gap was between being informed and being able to act efficiently, and it held regardless of how much money anyone had.
+
+<ImageFrame
+  items={[
+    {
+      src: "https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fprojects%2Fzeto-proactive-ai-for-credit-card-decisions%2Fresearch-board.jpg?alt=media",
+      alt: "A research board sorting community posts into what they say, what they want, and what they value",
+      width: 739,
+      height: 464,
+    },
+    {
+      src: "https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fprojects%2Fzeto-proactive-ai-for-credit-card-decisions%2Fresearch-affinity.jpg?alt=media",
+      alt: "Four observations converging on a single statement about the difficulty of identifying efficient financial decisions",
+      width: 745,
+      height: 340,
+    },
+  ]}
+  caption="Community posts sorted by what people say, want, and value, then converged into one statement: identifying the most efficient financial decision is the hard part, whether the question is investing, future planning, or debt."
+/>
+
+## Research
+
+To turn that into something specific enough to design against, I ran four customer discovery interviews with young adults in South Korea, California, Massachusetts, and Maryland. The geographic spread was deliberate, to separate the structural problem from any one market's products.
+
+<MDXImage
+  src="https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fprojects%2Fzeto-proactive-ai-for-credit-card-decisions%2Fresearch-interviews.jpg?alt=media"
+  alt="Video call recordings from the customer discovery interviews, with coded observations below them"
+  width={864}
+  height={670}
+  caption="Four interviews across South Korea, California, Massachusetts, and Maryland, coded into observations about how young adults actually handle their finances."
+/>
+
+The interviews pointed at one issue a participant was living through: credit card debt. Credit cards are issued to students and young adults readily, and the education about how they work is largely absent, so people fall into serious debt without having understood the mechanism. That participant did not know what a credit card minimum payment actually does, and struggled to clear the balance as a result.
+
+<Dek>"I wish I just had a financial advisor that actually had my best interest in heart." Interviewee 02</Dek>
+
+That sentence reframed the opportunity. The missing thing was not information, which is public and abundant. It was that nothing was watching this particular account and saying, at the moment it mattered, what a given choice would cost. The problem statement narrowed accordingly: how might we help young adults manage their credit card usage with confidence, through well-informed, personalized support?
+
+## The Approach
+
+The core idea is proactive support rather than answers on request. The assistant monitors the account continuously, flags issues as they emerge, and supplies the information needed to work through them, while authorship over the money stays with the person.
+
+Keeping the flow conventional mattered as much as the intelligence behind it. Anyone already used to a banking app should be able to onboard and start exploring without relearning anything, so the unfamiliar part is the system's behavior, not the navigation.
+
+## The Journey
+
+The journey runs in four parts. Setup collects information, preferences, and card connections, so nobody arrives at an empty application, and the service can be explored before any commitment. Home surfaces the financial vitals and is where the proactive behavior becomes visible. Payment is where the idea has to hold up. Profile carries the streaks, badges, and levels that make slow progress legible, since improvements to financial health are otherwise too small to notice month to month.
+
+<ScrollImage
+  src="https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fprojects%2Fzeto-proactive-ai-for-credit-card-decisions%2Fjourney-full.jpg?alt=media"
+  alt="The full user journey, from onboarding through the home page, the payment decision, and the profile"
+  width={1891}
+  height={810}
+  caption="The full journey. Onboarding in grey, the home page in green, the payment decision in purple, and retention through the profile in orange."
+/>
+
+## The Product
+
+**Home opens on a forecast, not a balance.** The first thing on the screen is what the month is heading toward, set against the two months before it, so the number arrives while there is still time to act on it. Below that sit the payment streak, the forecasted credit score, and the categorized budget the assistant proposed during onboarding.
+
+<ImageFrame
+  items={[
+    {
+      src: "https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fprojects%2Fzeto-proactive-ai-for-credit-card-decisions%2Fhome-phone.jpg?alt=media",
+      alt: "The home screen showing a projected monthly spend, a trend chart, and an AI trend alert about high utilization",
+      width: 429,
+      height: 883,
+    },
+    {
+      src: "https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fprojects%2Fzeto-proactive-ai-for-credit-card-decisions%2Fhome-cards.jpg?alt=media",
+      alt: "Home cards showing a five-month payment streak, a credit score of 712, and a categorized spending breakdown",
+      width: 509,
+      height: 540,
+    },
+  ]}
+  caption="The forecast leads, and the alert sits directly under it. Streak, score, and category breakdown follow, so the state of the account reads in one screen."
+/>
+
+**The card detail page makes the monitoring concrete.** It holds the full record of how the card is being used, from individual transactions to the utilization rate over time. Every entry is categorized automatically, so the picture of where the money goes requires no tagging. The projection is the point of the page: the assistant reads the pace so far, calculates the end-of-month balance, and raises it while the month is still open rather than reporting on it once the statement closes.
+
+<ImageFrame
+  items={[
+    {
+      src: "https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fprojects%2Fzeto-proactive-ai-for-credit-card-decisions%2Fcard-phone.jpg?alt=media",
+      alt: "The card detail page showing a balance of 3,587.70 dollars and an alert projecting 95 percent utilization by month-end",
+      width: 429,
+      height: 883,
+    },
+    {
+      src: "https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fprojects%2Fzeto-proactive-ai-for-credit-card-decisions%2Fcard-transactions.jpg?alt=media",
+      alt: "The transaction list, each entry automatically categorized",
+      width: 432,
+      height: 346,
+    },
+  ]}
+  caption="A projection of 95 percent utilization by month-end, with the transactions that produced it categorized underneath."
+/>
+
+**The payment screen prices each option.** The amount is set with a slider that stops at four fixed points: the minimum payment, the assistant's suggestion, the full payment, and the current statement balance. Each stop changes the message beneath it, so the trade-off appears at the moment of the decision instead of on a later statement. Paying only the minimum is stated as costing 1,262.77 dollars more. A 400 dollar payment is stated as saving 873.87 dollars against that.
+
+The minimum payment path is deliberately the most supported one, since that is where the original interview insight came from. It would have been easier to discourage the minimum and move on. Explaining it is the harder and more useful thing.
+
+<ImageFrame
+  items={[
+    {
+      src: "https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fprojects%2Fzeto-proactive-ai-for-credit-card-decisions%2Fpayment-phone.jpg?alt=media",
+      alt: "The payment screen with a slider at the minimum payment, showing a warning about paying 1,262.77 dollars more and advice about saving 873.87 dollars",
+      width: 429,
+      height: 883,
+    },
+    {
+      src: "https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fprojects%2Fzeto-proactive-ai-for-credit-card-decisions%2Fmodal-phone.jpg?alt=media",
+      alt: "A full-screen explanation of minimum payments with cited sources and a follow-up question",
+      width: 429,
+      height: 883,
+    },
+  ]}
+  caption="Each stop on the slider carries its own consequence. Tapping a warning opens the explanation behind it, with the sources it was drawn from attached."
+/>
+
+**The explanation is one tap away, and it is sourced.** Tapping a warning opens a full-screen view that explains the underlying mechanism, drawn from existing documentation with the sources attached, so the reasoning can be checked rather than taken on trust. Follow-up questions are asked in the same view.
+
+**The chat can act, not only answer.** Asking what happens at 48.50 dollars returns the arithmetic in full: 101 months to clear the balance, 1,262.77 dollars in interest, against 10 months and 388.90 dollars at a fixed 400 dollars a month. The response ends in a button that updates the payment to 400 dollars, so the decision is made without leaving the flow. The suggestion stays a suggestion, and the slider stays under the user's hand.
+
+<ImageFrame
+  items={[
+    {
+      src: "https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fprojects%2Fzeto-proactive-ai-for-credit-card-decisions%2Fchat-phone.jpg?alt=media",
+      alt: "The AI chat comparing a minimum payment against a fixed 400 dollar payment, ending in an update payment button",
+      width: 429,
+      height: 883,
+    },
+    {
+      src: "https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fprojects%2Fzeto-proactive-ai-for-credit-card-decisions%2Freceived-phone.jpg?alt=media",
+      alt: "A payment confirmation showing the interest saved, a forecast credit score gain, and the continued streak",
+      width: 429,
+      height: 883,
+    },
+  ]}
+  caption="The chat answers with the arithmetic and then offers to act on it. Confirmation closes the loop with the interest saved, the forecast effect on the score, and what the streak needs next."
+/>
+
+**Confirmation closes the loop.** After the payment clears, the assistant states the interest saved, forecasts the effect on the credit score, and names what the streak needs next. It is the only moment where a slow, invisible improvement becomes something a person can see.
+
+## Role
+
+I ran the project end to end and alone: secondary research and its synthesis, four customer discovery interviews, the problem definition, the user journey, the interface design, and the presentation. Designed in Figma.
+
+## Learnings
+
+**One sentence carried the whole project.** A participant who did not understand what a minimum payment meant did more to shape the design than any of the synthesis that surrounded it. Making the minimum payment path the most supported one, rather than the most discouraged one, followed directly from that sentence.
+
+**Proactive and pushy are separated by a single design decision.** A system that monitors an account and raises problems unprompted is one step away from one that nags. What keeps it on the right side is that every intervention states a number and then stops. The assistant proposes an amount and shows its working, and the slider stays under the user's hand.
+
+**What is still untested.** This is a concept, and it was never put in front of the people it was researched with. The open question is whether a consequence priced in dollars changes behavior, or whether it becomes one more number to dismiss. Everything here argues that naming the cost at the moment of the decision is what was missing. Only testing would establish whether that is true.

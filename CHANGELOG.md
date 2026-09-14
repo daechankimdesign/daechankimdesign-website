@@ -56,6 +56,33 @@ build; roadmap Phase 5 is the runtime translation (`4348eec`).
 
 ## Log
 
+### 2026-09-14: New case study — Zeto (BJAK design challenge)
+
+- **New `src/content/en/projects/zeto-proactive-ai-for-credit-card-decisions.mdx`**
+  — "A credit card assistant that prices a payment before it is made." A concept
+  for a proactive AI finance assistant: it monitors card usage, raises a rising
+  balance before the statement closes, and prices each payment option at the
+  moment of the decision. `status: concept`, `org: BJAK Design Challenge`,
+  tags Product Design / Design Research / AI Experience, `tools: Figma`.
+- **Written from the design-challenge deck, not pasted from it.** The source was a
+  20-slide presentation; the write-up follows the same section spine as the other
+  case studies (About, Outcome, The Problem, Research, The Approach, The Journey,
+  The Product, Role, Learnings) in the site's prose voice.
+- **13 images, cropped from the deck.** The deck exports as flat 1920x1080 slides
+  with no separable assets, so the embedded JPEGs were extracted and the visuals
+  cropped out of them. Staged in `media-src/projects/<slug>/` and uploaded to
+  `media/projects/<slug>/`; all 13 verified 200 (see docs/MEDIA-PIPELINE.md).
+- The user-journey map is a `<ScrollImage>` (wide), same treatment as the ISHO
+  service blueprint.
+
+### 2026-09-14: Fixed a corrupt dev prerender manifest
+
+- `.next.nosync/dev/prerender-manifest.json` held a complete JSON object followed
+  by the tail of a longer, different write, so `JSON.parse` threw at char 521 and
+  **every route 500'd in `next dev`**, including `/`. A torn write, most likely
+  two dev servers running against the same `distDir`. Deleted; Next regenerates
+  it. Nothing in the repo was at fault, and the deploy was never affected.
+
 ### 2026-07-26: Resume opens in a PDF viewer modal
 
 - **New `src/components/ResumeModal.tsx`** — `ResumeProvider` + `useResume()`,
