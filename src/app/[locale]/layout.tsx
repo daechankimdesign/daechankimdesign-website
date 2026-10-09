@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { notFound } from "next/navigation";
 import { NextIntlClientProvider, hasLocale } from "next-intl";
 import { setRequestLocale } from "next-intl/server";
-import { notoSans } from "../fonts";
+import { nanumPen, notoSans } from "../fonts";
 import { routing } from "@/i18n/routing";
 import { THEME_INIT_SCRIPT } from "@/lib/theme";
 import { ThemeProvider } from "@/components/ThemeProvider";
@@ -64,7 +64,7 @@ export default async function LocaleLayout({
   return (
     <html
       lang={locale}
-      className={`${notoSans.variable} h-full antialiased`}
+      className={`${notoSans.variable} ${nanumPen.variable} h-full antialiased`}
       suppressHydrationWarning
     >
       <head>

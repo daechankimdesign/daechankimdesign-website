@@ -2,8 +2,9 @@
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import { type HeroStackItem } from "./HeroImageStack";
-import { HeroCoverFlow } from "./HeroCoverFlow";
+import { type HeroStackItem } from "./HeroGallery";
+import { HeroWall, type WallPhoto } from "./hero/HeroWall";
+import { HeroIdCard } from "./hero/HeroIdCard";
 import { Highlighter } from "./Highlighter";
 import { LinkButton } from "./LinkButton";
 import { LoveLetterButton } from "./LoveLetter";
@@ -19,11 +20,23 @@ import { useResume } from "./ResumeModal";
 const STEP = 600;
 const LEDE_DELAY = 600;
 
-// The deck runs its OWN even cadence: each photo holds DECK_DWELL ms then advances,
-// so all four get a similar on-screen time. Decoupled from the exact text lines (the
-// 5 uneven beats can't give 4 photos an equal dwell), but the deck still appears
-// with the hero and plays once — it's not a separate looping animation. Tunable.
-const DECK_DWELL = 900;
+/** Everything the hero's wall and ID card show (page.tsx owns the content). */
+export type HeroMedia = {
+  /** The three taped photos, in taping order. */
+  photos: WallPhoto[];
+  /** The ID card's photo: the lightbox's last slide, plus the card's own 1x/2x. */
+  portrait: HeroStackItem & { sq320: string; sq480: string };
+};
+
+// The ID card's printed text and the wall's handwriting.
+// TODO(i18n): move to messages with the rest of the hero copy.
+const CARD = {
+  name: "Daechan Kim",
+  role: "Product Designer",
+  cta: "Get to know me  →",
+  strap: "DAECHAN KIM   •   PRODUCT DESIGNER   •   ",
+};
+const WALL_NOTES = { letter: "Love letter\nto design", resume: "Resume" };
 
 // The headline, revealed one line at a time (step by step). Line index 1 is
 // rendered specially below (it carries the "end-to-end" circle + "product
@@ -77,13 +90,15 @@ function MarkCircle({
  * a single yellow annotation pass draws four marks in sequence: a circle on
  * "end-to-end" and a Highlighter over "product designer" (headline), then a
  * circle on "3+" and a Highlighter over "B2B2C startup and global client work"
- * (sub text). In sync with the text, an image flies into the right-hand stack on
- * each reveal (3 lines + sub text = 4 cards). The sequence plays ONCE per
+ * (sub text). In sync with the text, the wall on the right builds (HeroWall):
+ * each header line tapes a photo up, the sub text drops the 3D ID card in from
+ * above the page (HeroIdCard), and the CTA buttons arrive with their wall
+ * counterparts, the envelope and the resume. The sequence plays ONCE per
  * viewport visit (IntersectionObserver replays on re-entry; plays on mount so it
  * never waits on the observer); it never loops. Reduced motion → everything
  * static.
  */
-export function HeroHeadline({ stack }: { stack: HeroStackItem[] }) {
+export function HeroHeadline({ media }: { media: HeroMedia }) {
   const reduce = useReducedMotion();
   const resume = useResume();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -92,9 +107,11 @@ export function HeroHeadline({ stack }: { stack: HeroStackItem[] }) {
   const [count, setCount] = useState(0);
   // How many of the four annotation marks have drawn in (0..4).
   const [markStep, setMarkStep] = useState(0);
-  // The deck advances its own photo every DECK_DWELL (see the effect below), so the
-  // four photos share a similar dwell instead of riding the uneven text beats.
-  const [deckStep, setDeckStep] = useState(0);
+  // The wall's element: the ID card frames itself off it.
+  const [wall, setWall] = useState<HTMLDivElement | null>(null);
+  // Hovering a CTA lifts its counterpart on the wall (instead of the page-wide
+  // envelope the footer CTA raises).
+  const [ctaHover, setCtaHover] = useState<"letter" | "resume" | null>(null);
 
   useEffect(() => {
     if (reduce) {
@@ -157,32 +174,6 @@ export function HeroHeadline({ stack }: { stack: HeroStackItem[] }) {
 
   const ledeShown = count > HEADLINE.length;
   const buttonsShown = count > HEADLINE.length + 1;
-  // The cover-flow deck appears WITH the first header line ("Daechan Kim,"): photo
-  // 1 sweeps in from the side as it fades in — ONE motion, no unfocused hold, so no
-  // gap before the first focus (see HeroCoverFlow / CoverFlow `entranceOffset`).
-  const deckShown = count > 0;
-  // Which photo the deck centers — driven by the deck's OWN even timer (deckStep),
-  // not the text counter, so every photo gets a similar on-screen dwell instead of
-  // one lingering or flashing by (the text beats are uneven / one short of the
-  // photos, which is what distorted the durations).
-  const focus = deckStep;
-
-  // Deck cadence: once the deck is shown (with line 1), step through the photos one
-  // DECK_DWELL apart, then rest on the last. The deck still appears WITH the hero
-  // and plays once — only the per-photo advance is on this even timer, not the exact
-  // text lines. Reset when the hero leaves so a re-entry replays it; reduced motion
-  // just rests on photo 1.
-  useEffect(() => {
-    if (!deckShown || reduce) {
-      setDeckStep(0);
-      return;
-    }
-    const timers: ReturnType<typeof setTimeout>[] = [];
-    for (let i = 1; i < stack.length; i++) {
-      timers.push(setTimeout(() => setDeckStep(i), i * DECK_DWELL));
-    }
-    return () => timers.forEach(clearTimeout);
-  }, [deckShown, reduce, stack.length]);
 
   // Draw the four marks only after the sub text has settled (rough-notation
   // measures the final box). Staggered in reading order; reduced motion draws
@@ -300,35 +291,49 @@ export function HeroHeadline({ stack }: { stack: HeroStackItem[] }) {
         >
           {/* Hovering this raises the page-wide envelope stage (see
               EnvelopeStage); clicking it continues the intro and opens the letter. */}
-          <LoveLetterButton arrow="right" />
+          <LoveLetterButton arrow="right" onHoverChange={(on) => setCtaHover(on ? "letter" : null)} />
           {/* Resume lives on Firebase Storage (media/about/), not public/ —
               App Hosting serves no public/ paths. See docs/MEDIA-PIPELINE.md.
               Stays a real <a href> to the PDF so modifier / middle click and a
               no-JS visit still reach the file; a plain click opens the viewer
               modal instead (same as the nav pill's Resume). */}
-          <LinkButton
-            href={RESUME_URL}
-            external
-            onClick={(e) => {
-              if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-              e.preventDefault();
-              resume?.open("hero");
-            }}
-          >
-            Resume
-          </LinkButton>
+          {/* Hover lifts the resume on the wall (layout-neutral wrapper). */}
+          <span className="contents" onMouseEnter={() => setCtaHover("resume")} onMouseLeave={() => setCtaHover(null)}>
+            <LinkButton
+              href={RESUME_URL}
+              external
+              onClick={(e) => {
+                if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+                e.preventDefault();
+                resume?.open("hero");
+              }}
+            >
+              Resume
+            </LinkButton>
+          </span>
         </motion.div>
       </div>
 
-      {/* Right — image deck. Fades in with the first header line (resting on the
-          primary photo), then flips through each photo once after the text
-          settles (see HeroCoverFlow). Clicking the centered card opens the
-          lightbox. */}
-      <HeroCoverFlow
-        items={stack}
-        show={deckShown}
-        focus={focus}
-        reduce={!!reduce}
+      {/* Right — the wall. Photos tape up on lines 1–3; the envelope and the
+          resume arrive with the CTA buttons (count 5). */}
+      <HeroWall
+        photos={media.photos}
+        portrait={media.portrait}
+        step={count}
+        notes={WALL_NOTES}
+        card={CARD}
+        hovered={ctaHover}
+        onWallElement={setWall}
+      />
+
+      {/* The ID card hangs in front of the wall from a canvas that spans the
+          whole hero section (the nearest positioned ancestor, page.tsx), and
+          drops in on the sub-text beat. */}
+      <HeroIdCard
+        wall={wall}
+        dropped={ledeShown}
+        photo={{ sq320: media.portrait.sq320, sq480: media.portrait.sq480 }}
+        labels={CARD}
       />
     </div>
   );

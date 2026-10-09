@@ -587,12 +587,6 @@ body::before {
   display: none; /* WebKit / Blink */
 }
 
-/* 3D transform context — used by the CoverFlow cards (not a default Tailwind
-   utility). The stage that actually needs it also sets it inline. */
-.preserve-3d {
-  transform-style: preserve-3d;
-}
-
 /* Prose/content links keep the underline affordance (already the <a> default).
    A `.link` utility for explicit inline links in component code. */
 .link {

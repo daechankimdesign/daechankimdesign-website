@@ -360,7 +360,11 @@ export function WorkBoardClient({
                     item={item}
                     typeLabel={labelFor(item.type)}
                     statusLabel={statusLabelFor(item)}
-                    priority={i === 0}
+                    // Eager first tile only on the standalone /project board,
+                    // where it sits above the fold. On home (no URL sync) the
+                    // board is below the hero, and an eager tile would compete
+                    // with the hero's images for the first load.
+                    priority={i === 0 && syncUrl}
                   />
                 </RevealTile>
               </li>

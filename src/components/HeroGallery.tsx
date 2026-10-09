@@ -4,7 +4,19 @@ import { useCallback, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { motion } from "framer-motion";
 import { NavArrowLeft, NavArrowRight, Xmark } from "iconoir-react";
-import type { HeroStackItem } from "./HeroImageStack";
+
+// One lightbox slide. `full` is the image shown here (empty → a placeholder
+// slide); `src` is a small version of the same photo. `w`/`h` are its natural
+// pixel size. `headline` is the large main line (h2) on the left (may be "");
+// `caption` is the supplementary line on the right and doubles as the alt text.
+export type HeroStackItem = {
+  src: string;
+  full: string;
+  headline: string;
+  caption: string;
+  w?: number;
+  h?: number;
+};
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 

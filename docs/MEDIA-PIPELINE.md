@@ -119,6 +119,27 @@ recurring.
 All of these render as raw `<img>`/`<video>`/`<iframe>` with the remote `src` on
 deploy, so all obey the one rule.
 
+### The exception: the home hero (`/api/hero-media/[file]`)
+
+The home hero's images are referenced as `/api/hero-media/<label>.<ext>`, a
+same-origin route that relays `media/home/hero/<label>.<ext>` from Storage.
+Storage is still the source of truth: upload first, `curl` the `?alt=media`
+URL for `200`, then **add the file name to the route's allowlist** (`FILES` in
+`src/app/api/hero-media/[file]/route.ts`), or it 404s. Two reasons it exists,
+both verified with curl:
+
+- **WebGL needs a readable image.** The 3D ID card's photo is a texture, and
+  Storage sends no `access-control-allow-origin` on GET, so a Storage URL can't
+  be used as one (the same wall `/api/resume` hit with pdf.js).
+- **Storage never caches.** Every object is served `cache-control: private,
+  max-age=0` (1.7 to 3.8s to first byte). The route answers with a one-year
+  `immutable` Cache-Control that the browser and the CDN honour, so object
+  names must stay immutable: a changed image gets a new label.
+
+The second point applies to every image on the site. Fixing it at the source
+(Cache-Control metadata on upload in `scripts/upload-media.mjs`) is an open
+follow-up.
+
 ---
 
 ## Format & size

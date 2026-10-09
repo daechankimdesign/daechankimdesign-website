@@ -790,9 +790,13 @@ export function LoveLetterPortrait({ className = "" }: { className?: string }) {
 export function LoveLetterButton({
   className = "",
   arrow = "up-right",
+  onHoverChange,
 }: {
   className?: string;
   arrow?: "up-right" | "right";
+  /** Replaces the hover envelope: the hero passes this so hovering lifts the
+   *  envelope on its wall instead. Without it (footer), the envelope rises. */
+  onHoverChange?: (hovered: boolean) => void;
 }) {
   const ll = useLoveLetter();
   const Arrow = arrow === "right" ? ArrowRight : ArrowUpRight;
@@ -800,8 +804,8 @@ export function LoveLetterButton({
     <button
       type="button"
       onClick={() => ll?.open()}
-      onMouseEnter={() => ll?.showPreview()}
-      onMouseLeave={() => ll?.hidePreviewSoon()}
+      onMouseEnter={() => (onHoverChange ? onHoverChange(true) : ll?.showPreview())}
+      onMouseLeave={() => (onHoverChange ? onHoverChange(false) : ll?.hidePreviewSoon())}
       className={`link-button hairline-b ${className}`}
     >
       <span>Love letter to design</span>

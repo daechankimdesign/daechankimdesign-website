@@ -56,6 +56,58 @@ build; roadmap Phase 5 is the runtime translation (`4348eec`).
 
 ## Log
 
+### 2026-10-09: Home hero rebuilt as an ID card on a wall of taped papers
+
+Replaces the hero's cover-flow carousel. Prototyped first in the git-ignored
+`hero-id-card-demo.html` (repo root) and iterated with the owner.
+
+- **The wall (`src/components/hero/HeroWall.tsx` + `wall.ts` + `hero-wall.css`).**
+  Five taped items on an imaginary wall: three polaroids (lightbox), the love
+  letter's envelope (the owner's `EnvelopeGraphic`, opens the letter like the
+  CTA) and a folded resume (opens the resume sheet like the CTA). Slots are
+  shuffled on every visit; side papers fan outward so their bottoms (and
+  captions) swing away from the card. Handwritten polaroid captions and wall
+  notes with self-drawing arrows ("Love letter / to design", "Resume"), placed
+  per arrangement clear of the card, the papers, the nav and the headline.
+  Hover: a TiltedCard-style spring tilt (amplitude 26, scale 1.2, damping 30 /
+  stiffness 100 / mass 2), and the tape peels off while hovered and is laid back
+  on leave. Fully fluid: everything is sized off the wall's width (cqw), so the
+  composition scales as one piece.
+- **The ID card (`HeroIdCard.tsx` + `lanyard.ts`, three.js).** A rope-constrained
+  card on a printed lanyard, adapted from a lanyard component: drops in from
+  above the page on the sub-text beat, swings away from a hovering cursor (one
+  push, then a 2.2s rest so it never keeps popping), and a click flicks it into
+  the wall and then goes to About. A shadow-only wall plane catches its shadow
+  and stops a flicked card. It trails the page on scroll (parallax 0.3). The
+  face reads name > role > "Get to know me →". three.js loads as its own chunk
+  via dynamic `import()`, and every shader is compiled with `compileAsync`
+  before the first frame. The camera's near/far are fitted tightly around the
+  scene: with near = 0.1, the tall mobile hero put the camera so far back that
+  the depth buffer lost the card face to the body behind it (blank white card).
+- **Sequence (`HeroHeadline.tsx`).** Lines 1 to 3 each tape a photo, the sub
+  text drops the card, and the CTAs arrive with the envelope and the resume.
+  The old deck timer is gone; the beat counter drives everything.
+- **Media: `/api/hero-media/[file]` (new).** Firebase Storage sends no CORS
+  header (a WebGL texture needs a readable image) and serves everything with
+  `cache-control: private, max-age=0`, at 1.7 to 3.8s to the first byte. The
+  route relays an allowlist of hero files from our own origin with a one-year
+  immutable Cache-Control. New right-sized files, uploaded to
+  `media/home/hero/` and curl-verified 200: square crops `*-sq160/sq320.jpg`
+  (4 / 12KB, were 42 to 59KB), card photo `impact-sq320/sq480.jpg` (16 / 34KB,
+  was 98KB), lightbox portrait `impact-1400.avif` (233KB, was the 3.5MB
+  original). See docs/MEDIA-PIPELINE.md.
+- **Font.** Nanum Pen Script via next/font (`--font-hand`), used ONLY for the
+  wall's handwriting: the one exception to the sans-only rule, chosen because it
+  also covers Korean.
+- **First load.** The home board no longer marks its first tile `priority`
+  (it sits below the hero there; /project keeps it).
+- **Removed.** `CoverFlow.tsx`, `HeroCoverFlow.tsx`, `HeroImageStack.tsx` (its
+  `HeroStackItem` type moved to `HeroGallery.tsx`) and the CoverFlow-only
+  `.preserve-3d` utility. The shadcn `--color-foreground/background` bridge
+  tokens in globals.css are now unused (left in place).
+- **Not yet verified:** the deployed site (needs a release), and real-device
+  feel of the drag / flick / hover on touch screens.
+
 ### 2026-09-14: New case study — Zeto (BJAK design challenge)
 
 - **New `src/content/en/projects/zeto-proactive-ai-for-credit-card-decisions.mdx`**
