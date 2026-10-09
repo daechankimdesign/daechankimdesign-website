@@ -58,8 +58,8 @@ build; roadmap Phase 5 is the runtime translation (`4348eec`).
 
 ### 2026-10-09: Home hero rebuilt as an ID card on a wall of taped papers
 
-Replaces the hero's cover-flow carousel. Prototyped first in the git-ignored
-`hero-id-card-demo.html` (repo root) and iterated with the owner.
+Replaces the hero's cover-flow carousel. Prototyped first as a standalone
+HTML page (never committed, since deleted) and iterated with the owner.
 
 - **The wall (`src/components/hero/HeroWall.tsx` + `wall.ts` + `hero-wall.css`).**
   Five taped items on an imaginary wall: three polaroids (lightbox), the love

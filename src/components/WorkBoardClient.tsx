@@ -349,11 +349,13 @@ export function WorkBoardClient({
             </button>
           </div>
         ) : (
-          <ul className="grid grid-cols-1 items-start gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-12 lg:gap-y-16">
+          <ul className="grid grid-cols-2 items-start gap-x-4 gap-y-12 sm:gap-x-8 lg:grid-cols-12 lg:gap-y-16">
+            {/* Phones: a 2-col grid where projects take the full row and
+                experiments sit two to a line. */}
             {shown.map((item, i) => (
               <li
                 key={`${item.type}-${item.slug}`}
-                className={SPAN_CLASS[item.span]}
+                className={`${item.type === "projects" ? "col-span-2" : ""} ${SPAN_CLASS[item.span]}`}
               >
                 <RevealTile index={i}>
                   <WorkTile
