@@ -56,6 +56,138 @@ build; roadmap Phase 5 is the runtime translation (`4348eec`).
 
 ## Log
 
+### 2026-10-12: Zeto mockups, journey map pan, interview sequence, sankey pool (released)
+
+- **Animated mockups:** `PaymentSlider` (the Make Payment slider, alerts raised
+  and dismissed per stop) and `ZetoChat` (explanation, typed question, streamed
+  answer, highlights, then the CTA, looping), built in code, not screenshots.
+  Each rises in on first view, then plays. The Minimum stop holds 3.8s.
+- **Journey map:** `JourneyMap` = `ScrollImage` + a four-part legend row.
+  `ScrollImage` now pans at every width (no swipe strip that catches the
+  scroll), only while the whole frame is on screen, with the frame height
+  capped at 55svh and the width always the full column. Lens desktop only.
+  Furniture's blueprint shares the change.
+- **Interview sequence:** `ZoomSequence`, the 01 to 04 zoom from the review
+  demo (notes, highlights, insights, all interviews), with an in-frame timed
+  label and click to pause. Images `interview-seq-*` (media-src 52 to 55),
+  with ages, degrees, and a health mention pixelated.
+- **Research sankey:** step 00 "Community observation" is one large input band
+  the full height of the chart, narrowing into 01; the rest is drawn at half
+  height, centred on it.
+- **Quote:** `PullQuote`, the Interviewee 02 line set larger than display type.
+
+### 2026-10-12: Interview calls open the Zeto interview animation; real notes for Interviewee 02 (awaiting owner review)
+
+Not yet released.
+
+- **Intro image:** the interview-call collage with participant names
+  pixelated (the Meet name label, the call title, and a second tile's label;
+  the owner's own label kept), `media-src` 60 → `research-interviews-anon.jpg`,
+  uploaded with `scripts/upload-media.mjs` explicit mode and curl-verified 200.
+- **`ZoomSequence`** (built in a parallel session) takes an optional `intro`
+  image ({ src, alt, width, height }). It prepends an "Interviews" step
+  (3200ms) on the first step's frame. The image fades in over the empty board
+  and out in place, then the first notes layer fades in (extra 0.45s delay).
+  On every loop the last step's layers fade first and the intro comes back
+  (0.7s wait). Layer `from` values in MDX are unchanged; the component shifts
+  them. Reduced motion skips the intro (shows the last step, still).
+  This replaced a first pass with four face bubbles, at the owner's request.
+  The bubble files (`media-src` 56 to 59, `interview-face-a` to `-d` on
+  Storage) are unused now.
+- **Interviewee 02's real notes** replace the two retyped note cards: the
+  column cropped from the full interview board with the age line and the
+  therapist mention pixelated, `media-src` 61 → `interview-02-notes.jpg`
+  (1202x2190, 628 KB), curl-verified 200. Shown as an `MDXImage`, so it is full
+  column width with click-to-zoom. The caption names the interviewee by career
+  stage only. (In `ImageFrame` default mode a lone portrait card shrinks to its
+  aspect fraction of the track, about 307px here, too small to read.)
+- **Quote:** the Interviewee 02 `Dek` is now `<PullQuote>`, a component from the
+  parallel session, swapped at its request.
+- **Anonymity, per the owner:** faces are never matched 1:1 to interview
+  content. The intro never moves toward a column, and it fades out before any
+  notes appear. The board layers and the notes crop have ages, degrees, and
+  the therapist mention pixelated.
+
+### 2026-10-12: Zeto and furniture copy sweep, same rules as Oria (awaiting owner review)
+
+Not yet released. MDX copy only; no facts or media changed.
+
+- **Zeto:** 28 sentences, alt texts, and UI strings with a colon or semicolon
+  rewritten, now zero (several were introduced in the 10-11 pass). Interview
+  note alts now read "A note from…" instead of "Insight: …"; the untested
+  paragraph lists its open questions in first person. Highlights stay at two.
+- **Furniture:** 23 colon or semicolon sentences rewritten, now zero.
+  Highlights eight down to one ("Acting the service out taught more than
+  analyzing it."); the three design directions are a plain list. Removed
+  "X, not Y" slogans ("The convention is broken, not the person", "not a
+  bolt-on", "not just screens", "not by SKU", "performed, not diagrammed"),
+  the figurative "Boston stages a small disaster" and "the service almost
+  defined itself", and "instability, not taste" (it read against the
+  taste-first service). Brief summary no longer repeats the title. Blueprint
+  caption describes the scroll-linked pan instead of telling the reader to
+  scroll. Participant quotes unchanged.
+
+### 2026-10-12: Oria copy sweep for colons and other automated patterns (awaiting owner review)
+
+Not yet released. Oria MDX copy only; no facts or media changed.
+
+- **Colons and semicolons:** 17 sentences, captions, and alt texts that leaned
+  on a colon or semicolon rewritten as plain sentences, now zero. The owner
+  flagged "too many colons" (e.g. "has barely changed: recruit participants,
+  …"). The campaign is now called "Reclaiming Our Space" without its
+  colon subtitle, with topic names in quotes and "a campaign on Oria" instead
+  of "Oria runs".
+- **Related patterns:** captions no longer open with a fragment label ("The
+  institution side in one pass."); "built out of conversations, not
+  assumptions" and "not Oria's" contrasts, the announce-then-list "Three
+  parties hold three different things", the "make…, make…, make…" triplet, and
+  doubled adjectives removed. "Audio and all" dropped from the admin caption
+  (the story in the video is a video).
+- **Highlights:** four down to one, on the stakeholder finding "What ate their
+  time was collecting and analyzing the stories."
+- **Structure:** the Brief summary no longer echoes the title (16 institutions,
+  the Lakeland campaign by name; Brief stays an accordion); analytics split
+  from the ownership paragraph; the tools and stack sentence moved out of the
+  teller paragraph to its own paragraph before Learnings.
+- **Still open from the 10-11 review:** the admin video shows a failed
+  transcript and a Private story being published, the teller video shows an
+  unfilled "Campaign Title / by Organization" and a cropped logo, and the
+  submission screens show one public checkbox where the copy describes public,
+  community-only, or private. Owner to confirm the visibility options,
+  per-campaign agreements, and whether "no AI interpretation of stories" is a
+  rule.
+
+### 2026-10-11: Zeto close review applied (awaiting owner review)
+
+Not yet released. Copy and props in the Zeto MDX only; the `JourneyMap` block
+(being built in a parallel session) is untouched.
+
+- **Highlights:** ten highlighted lead-ins down to two (the minimum-payment
+  decision in The Product, "What is still untested" in Learnings). The owner
+  does not want every first line highlighted.
+- **Slider:** stop labels swapped to match card-issuer terms: $1,920.45 is
+  now "Statement Balance", $3,587.70 "Full Balance". Statement stop moved from
+  `at` 0.56 to 0.66 so its longer label clears "zt0 Suggestion" (desktop and
+  375px checked). Warning reads "in interest" instead of "more". Chat
+  `basedOn` says 2 source documents, matching the two listed.
+- **Copy:** Brief summary now names the interviewee instead of repeating the
+  title (Brief stays an accordion); role "Sole product designer"; research
+  names r/personalfinance, fixes the dangling opener, says why investing and
+  saving were set aside, and ties the choice to Interviewee 02; funnel stage
+  "Validation" is now "Narrowing"; "not information" reconciled (general
+  information is abundant, information about this account is not); features
+  paragraph cut to the features actually shown; journey paragraph covers all
+  four parts; screen captions that repeated the prose removed; brand note
+  moved to the top of The Product; Learnings rewritten so they no longer
+  repeat "the person sets the amount".
+- **Still open (Figma, then a manual upload):** `received-screen.png` still
+  shows the old $873.87 saving (should be $4,742.34 at 22.99% APR). The streak
+  copy on `home-screen.png` / `streak.png` says "full payment", which the
+  assistant's $400 suggestion would break; "on-time payment" would agree.
+  Interviewee ages (03 is 30 and 2 to 3 years out, 04 is 29 and 5 to 7 years
+  out) need the owner's check. (The `JourneyMap` caption, an instruction to
+  the reader, was reworded in the parallel session.)
+
 ### 2026-10-11: Reviewer feedback pass on the hero and case studies (awaiting owner review)
 
 Not yet released; staged with the earlier 10-10 work. Previous versions of the

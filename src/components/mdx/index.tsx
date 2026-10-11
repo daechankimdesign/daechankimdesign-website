@@ -4,8 +4,13 @@ import { MDXImage } from "./MDXImage";
 import { ImageFrame } from "./ImageFrame";
 import { TrustTiers } from "./TrustTiers";
 import { ScrollImage } from "./ScrollImage";
+import { JourneyMap } from "./JourneyMap";
+import { ZoomSequence } from "./ZoomSequence";
+import { PullQuote } from "./PullQuote";
 import { ScreenSet } from "./ScreenSet";
 import { Brief } from "./Brief";
+import { PaymentSlider } from "./PaymentSlider";
+import { ZetoChat } from "./ZetoChat";
 import { StepFlow } from "./diagrams/StepFlow";
 import { PhaseFunnel } from "./diagrams/PhaseFunnel";
 import { CompareBars } from "./diagrams/CompareBars";
@@ -54,6 +59,22 @@ export const mdxComponents: MDXComponents = {
   // Diagrams: NOT wrapped in RevealBlock; each builds itself part by part on
   // scroll-in (diagrams/diagram.css), and a RevealBlock rise would compound.
   StepFlow: (props) => <StepFlow {...props} />,
+  // A static figure, so it takes the standard block fade-up.
+  JourneyMap: (props) => (
+    <RevealBlock as="div">
+      <JourneyMap {...props} />
+    </RevealBlock>
+  ),
+  // Plays itself on scroll-in; no RevealBlock (its rise would fight the track).
+  PaymentSlider: (props) => <PaymentSlider {...props} />,
+  // Plays itself on scroll-in, like PaymentSlider.
+  ZetoChat: (props) => <ZetoChat {...props} />,
+  // Plays itself in view; a static frame around it, so the standard fade-up.
+  ZoomSequence: (props) => (
+    <RevealBlock as="div">
+      <ZoomSequence {...props} />
+    </RevealBlock>
+  ),
   PhaseFunnel: (props) => <PhaseFunnel {...props} />,
   CompareBars: (props) => <CompareBars {...props} />,
   // NOT wrapped in RevealBlock (like ImageFrame): runs its own staggered card
@@ -115,6 +136,12 @@ export const mdxComponents: MDXComponents = {
   h1: (props) => <RevealBlock as="h1" className="text-h1 mt-12 mb-4" {...props} />,
   h2: (props) => <RevealBlock as="h2" className="text-h2 mt-10 mb-3" {...props} />,
   h3: (props) => <RevealBlock as="h3" className="text-h3 mt-8 mb-2" {...props} />,
+  // A participant's words, set as the section's largest line.
+  PullQuote: (props) => (
+    <RevealBlock as="div">
+      <PullQuote {...props} />
+    </RevealBlock>
+  ),
   // Section dek — a quiet one-line summary that sits just under an h2, briefing
   // the section. Muted and body-sized so it reads as a subtitle, not a heading.
   Dek: (props) => (

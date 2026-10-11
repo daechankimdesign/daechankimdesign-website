@@ -18,8 +18,9 @@ type Phase = {
   /** What was set aside on the way to the next phase: it becomes a node of
    *  its own in the next column, sized by the difference. */
   dropped?: string;
-  /** A groundwork step (e.g. step 0): labelled, but drawn with no node bar
-   *  and no flow of its own, so the sankey starts at the next step. */
+  /** A groundwork step (e.g. step 0, observing communities): drawn as one
+   *  large input with no node bar, the sankey's full height, narrowing into
+   *  the next step's node. Its size is not used. */
   ghost?: boolean;
 };
 
@@ -47,12 +48,15 @@ const W = 1000;
 const H = 300;
 const NODE_W = 28; // thick, so the steps read as the bars, not the bands
 const GAP = 28; // vertical gap between the nodes of one column
+const POOL_SHARE = 0.5; // share of the height the rest of the sankey takes beside a pool
 
 // `group`: the phase (1-based) a part belongs to, for the hover link to its
 // hypothesis. A step owns its column: the flow leaving its node and what that
 // flow sets aside.
 type Node = { x: number; y: number; h: number; label: string; main: boolean; group: number; step?: number; method?: string };
-type Link = { sx: number; sy: number; tx: number; ty: number; h: number; tone: "main" | "drop" | "end"; group: number };
+/** `th`: the band's height where it lands, when it differs from `h` (a pool
+ *  strand narrows as it gathers into the next node). */
+type Link = { sx: number; sy: number; tx: number; ty: number; h: number; th?: number; tone: "main" | "drop" | "end" | "pool"; group: number };
 type NodeDraw = Node & { ghost?: boolean };
 
 /**
@@ -75,27 +79,38 @@ export function PhaseFunnel({
   const num = (k: number) => String(startAt + k).padStart(2, "0");
   const n = phases.length;
   if (!n) return null;
-  const max = Math.max(...phases.map((p) => p.size));
-  const scale = (H - GAP) / max;
+  // With a pool, the rest of the sankey takes about half the height, centred
+  // on it, so the pool reads as far larger than what it gathers into.
+  const pooled = phases.some((p) => p.ghost);
+  const max = Math.max(...phases.filter((p) => !p.ghost).map((p) => p.size), 1);
+  const scale = (H * (pooled ? POOL_SHARE : 1) - GAP) / max;
+  const off = pooled ? (H - (max * scale + GAP)) / 2 : 0;
   const colX = (k: number) => (k * W) / n;
 
   const nodes: Node[] = [];
   const links: Link[] = [];
   phases.forEach((p, k) => {
     const h = p.size * scale;
-    nodes.push({ x: colX(k), y: 0, h, label: p.scope, main: true, group: k + 1, step: k + 1, method: p.method, ghost: p.ghost } as NodeDraw);
+    // The input spans the full height, so its label sits at the middle.
+    nodes.push({ x: colX(k), y: p.ghost ? 0 : off, h: p.ghost ? H : h, label: p.scope, main: true, group: k + 1, step: k + 1, method: p.method, ghost: p.ghost } as NodeDraw);
     if (k === n - 1) return;
+    if (p.ghost) {
+      // One input: the full height at the left edge, narrowing into the whole
+      // of the next node.
+      links.push({ sx: colX(k), sy: 0, tx: colX(k + 1), ty: off, h: H, th: phases[k + 1].size * scale, tone: "pool", group: k + 1 });
+      return;
+    }
     const keep = phases[k + 1].size * scale;
     const drop = h - keep;
     const sx = colX(k) + NODE_W;
     const tx = colX(k + 1);
     // What flows on: the top of this node into the next main node.
-    if (!p.ghost) links.push({ sx, sy: 0, tx, ty: 0, h: keep, tone: "main", group: k + 1 });
+    links.push({ sx, sy: off, tx, ty: off, h: keep, tone: "main", group: k + 1 });
     // What was set aside: the rest, into its own node below the next main one.
     if (drop > 0) {
-      const dy = keep + GAP;
+      const dy = off + keep + GAP;
       nodes.push({ x: tx, y: dy, h: drop, label: p.dropped ?? "", main: false, group: k + 1 });
-      links.push({ sx, sy: keep, tx, ty: dy, h: drop, tone: "drop", group: k + 1 });
+      links.push({ sx, sy: off + keep, tx, ty: dy, h: drop, tone: "drop", group: k + 1 });
     }
   });
 
@@ -103,12 +118,14 @@ export function PhaseFunnel({
   // control points at the horizontal midpoint.
   const band = (l: Link) => {
     const m = (l.sx + l.tx) / 2;
-    return `M${l.sx},${l.sy} C${m},${l.sy} ${m},${l.ty} ${l.tx},${l.ty} L${l.tx},${l.ty + l.h} C${m},${l.ty + l.h} ${m},${l.sy + l.h} ${l.sx},${l.sy + l.h} Z`;
+    const th = l.th ?? l.h;
+    return `M${l.sx},${l.sy} C${m},${l.sy} ${m},${l.ty} ${l.tx},${l.ty} L${l.tx},${l.ty + th} C${m},${l.ty + th} ${m},${l.sy + l.h} ${l.sx},${l.sy + l.h} Z`;
   };
   const tone = {
     main: "fill-fg-muted opacity-30",
     drop: "fill-fg-subtle opacity-35",
     end: "fill-[var(--hl)]",
+    pool: "fill-fg-muted opacity-25",
   } as const;
   const grid = { "--n": n } as CSSProperties;
 
@@ -117,7 +134,9 @@ export function PhaseFunnel({
       {/* .dg-steps: hovering any part of a phase (flow, node, label, or its
           hypothesis) dims the other phases; see diagram.css. */}
       <div className="dg-steps">
-      <div className="relative h-[200px] sm:h-[240px]">
+      {/* Taller on phones beside a pool: the rest is drawn at half height,
+          and its labels need the room. */}
+      <div className={`relative ${pooled ? "h-[320px]" : "h-[200px]"} sm:h-[240px]`}>
         <svg
           viewBox={`0 0 ${W} ${H}`}
           preserveAspectRatio="none"
@@ -141,7 +160,7 @@ export function PhaseFunnel({
               {/* The final step carries on as a highlighted band to the edge:
                   the flow the design is built on. */}
               {k === n - 1 ? (
-                <rect x={colX(k) + NODE_W} y={0} width={W - colX(k) - NODE_W} height={phases[k].size * scale} className="fill-[var(--hl)]" />
+                <rect x={colX(k) + NODE_W} y={off} width={W - colX(k) - NODE_W} height={phases[k].size * scale} className="fill-[var(--hl)]" />
               ) : null}
               {links.filter((l) => l.group === k + 1).map((l, i) => (
                 <path key={i} d={band(l)} className={tone[l.tone]} />
@@ -157,11 +176,13 @@ export function PhaseFunnel({
           {nodes.map((d, i) => (
             <li
               key={i}
-              className={`dg-part absolute pl-2 leading-snug ${d.main ? "text-note font-medium text-fg" : "text-[11px] text-fg-subtle"}`}
+              className={`dg-part absolute leading-snug ${d.main ? `${(d as NodeDraw).ghost ? "pl-1 text-[11px] sm:pl-2 sm:text-note" : "pl-2 text-note"} font-medium text-fg` : "pl-2 text-[11px] text-fg-subtle"}`}
               style={{
                 left: `${((d.x + NODE_W) / W) * 100}%`,
                 top: `${((d.y + d.h / 2) / H) * 100}%`,
-                maxWidth: `calc(${100 / n}% - 1.5rem)`,
+                // The input's label sits over its own band, so it may use its
+                // whole column; the others stop short of the next node.
+                maxWidth: (d as NodeDraw).ghost ? `calc(${100 / n}% - 0.25rem)` : `calc(${100 / n}% - 1.5rem)`,
                 translate: "0 -50%",
                 ...at(1 + i),
               }}
