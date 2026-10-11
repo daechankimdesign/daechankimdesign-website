@@ -23,6 +23,12 @@ export type Frontmatter = {
   title: string;
   summary?: string;
   thumbnail?: string;
+  /** Work-board tile: "contain" fits the whole thumbnail inside the tile
+      instead of cropping it to fill (default "cover"). EN-only layout field. */
+  thumbnailFit?: "cover" | "contain";
+  /** With thumbnailFit "contain": the colour of the bands around the image
+      (use the image's own background). */
+  thumbnailBackground?: string;
   date?: string;
   /** Craft tools used, verbatim proper nouns (e.g. "Claude Code", "Figma").
       A visual tag on the tile + slug header. EN-only — never translated. */

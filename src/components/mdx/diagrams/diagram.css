@@ -1,0 +1,110 @@
+/* ============================================================================
+   MDX diagrams (StepFlow, PhaseFunnel, CompareBars): a CSS-driven build-up.
+
+   The figure carries data-shown="true" once it scrolls into view (useShown);
+   each part then transitions in after a delay set by its --i index, so a
+   diagram assembles step by step: boxes rise in, connectors draw, bars grow,
+   and the highlighted part takes the marker colour last. Pure CSS (no
+   per-frame JS), so the same markup animates anywhere the stylesheet loads.
+
+   Timing mirrors src/lib/motion.ts: EASE_OUT (expo) and DURATION (2s). The
+   beat between parts is short, because a diagram has many parts and each
+   should be underway before the next arrives.
+   ============================================================================ */
+.dg {
+  --dg-ease: cubic-bezier(0.16, 1, 0.3, 1); /* == EASE_OUT */
+  --dg-dur: 2s; /* == DURATION */
+  --dg-beat: 0.28s;
+}
+
+/* A box, label, or block: rises 12px and fades in. */
+.dg-part {
+  opacity: 0;
+  transform: translateY(12px);
+  transition:
+    opacity var(--dg-dur) var(--dg-ease),
+    transform var(--dg-dur) var(--dg-ease);
+  transition-delay: calc(var(--i, 0) * var(--dg-beat));
+}
+.dg[data-shown="true"] .dg-part {
+  opacity: 1;
+  transform: none;
+}
+
+/* A connector: draws from its start along its length (horizontal from sm up,
+   vertical when the flow stacks on phones). */
+.dg-line {
+  transform: scaleY(0);
+  transform-origin: top;
+  transition: transform calc(var(--dg-dur) * 0.6) var(--dg-ease);
+  transition-delay: calc(var(--i, 0) * var(--dg-beat));
+}
+@media (min-width: 40rem) {
+  .dg-line {
+    transform: scaleX(0);
+    transform-origin: left;
+  }
+}
+.dg[data-shown="true"] .dg-line {
+  transform: none;
+}
+
+/* A bar or band: revealed from its baseline with a clip, so a rounded data-end
+   keeps its shape while it grows (a scaleX would squash the corner). */
+.dg-grow {
+  clip-path: inset(0 100% 0 0);
+  transition: clip-path var(--dg-dur) var(--dg-ease);
+  transition-delay: calc(var(--i, 0) * var(--dg-beat));
+}
+.dg[data-shown="true"] .dg-grow {
+  clip-path: inset(0 0 0 0);
+}
+
+/* The emphasised part: takes the highlighter colour (--hl, the same marker as
+   bold lead-ins) after the rest has landed. */
+.dg-mark {
+  transition: background-color calc(var(--dg-dur) * 0.5) var(--dg-ease);
+  transition-delay: calc(var(--i, 0) * var(--dg-beat));
+}
+.dg[data-shown="true"] .dg-mark {
+  background-color: var(--hl);
+}
+
+/* Linked hover (PhaseFunnel): every part of a phase carries data-step; hovering
+   one (a flow, a node, its label, or its hypothesis) dims the rest. The dim
+   sits on wrappers, not on the .dg-part elements, so it never fights the
+   reveal's opacity or its delays. */
+.dg-steps [data-step] {
+  transition: opacity 0.3s ease;
+}
+.dg-steps:has([data-step="1"]:hover) [data-step]:not([data-step="1"]),
+.dg-steps:has([data-step="2"]:hover) [data-step]:not([data-step="2"]),
+.dg-steps:has([data-step="3"]:hover) [data-step]:not([data-step="3"]),
+.dg-steps:has([data-step="4"]:hover) [data-step]:not([data-step="4"]),
+.dg-steps:has([data-step="5"]:hover) [data-step]:not([data-step="5"]),
+.dg-steps:has([data-step="6"]:hover) [data-step]:not([data-step="6"]) {
+  opacity: 0.2;
+}
+
+/* Reduced motion: no build-up; everything is shown as it is. */
+@media (prefers-reduced-motion: reduce) {
+  .dg-part,
+  .dg-line,
+  .dg-grow,
+  .dg-mark {
+    transition: none;
+  }
+  .dg .dg-part {
+    opacity: 1;
+    transform: none;
+  }
+  .dg .dg-line {
+    transform: none;
+  }
+  .dg .dg-grow {
+    clip-path: none;
+  }
+  .dg .dg-mark {
+    background-color: var(--hl);
+  }
+}

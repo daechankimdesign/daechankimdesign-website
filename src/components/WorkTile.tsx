@@ -142,6 +142,8 @@ export function WorkTile({
             height={tier.h}
             sizes={tier.sizes}
             priority={priority}
+            fit={frontmatter.thumbnailFit}
+            background={frontmatter.thumbnailFit === "contain" ? frontmatter.thumbnailBackground : undefined}
           />
         ) : (
           <div

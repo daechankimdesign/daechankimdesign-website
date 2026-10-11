@@ -26,11 +26,17 @@
   --color-hairline-faint: #ececec; /* barely-there edge on floating pills */
   --color-surface: #e3e3e3; /* active pill / raised surface */
   --color-surface-subtle: #f5f5f5; /* subtle background blocks */
-  /* Recessed panel behind content media (MDX ImageFrame). Light: identical to
-     surface-subtle. Dark: drops to the FOOTER colour, so framed screenshots sit
-     in the same well the footer does — see the dark scope below, where the
-     footer derives its canvas from this token so the two cannot drift. */
+  /* The recessed well: the FOOTER colour in dark (the footer derives its
+     canvas from this token, see the dark scope below). Light: identical to
+     surface-subtle. Content media panels use surface-panel instead. */
   --color-surface-sunken: #f5f5f5;
+  /* The panel behind content media and asides in case studies (image grids,
+     screen sets, the laptop frame, the summary box) and its edge. Light: the
+     same #f5f5f5 / hairline as before. Dark: a blue-grey one step above the
+     canvas, so panels sit in the page's own hue instead of the warm surfaces
+     or the near-black footer well. */
+  --color-surface-panel: #f5f5f5;
+  --color-hairline-panel: #d9d9d9;
   --color-canvas: #f8fafc; /* page background */
   /* shadcn-registry bridge: components pulled from a shadcn registry (e.g. the
      CoverFlow carousel) reference `foreground`/`background`. Map them onto the
@@ -93,6 +99,9 @@
      resolve to it, so they are the same well by construction. */
   --dark-surface-sunken: #0d1117;
   --dark-canvas: #161b22;
+  /* Panels: blue-grey, one step above the canvas; edge one step above that. */
+  --dark-surface-panel: #1c2128;
+  --dark-hairline-panel: #30363d;
   /* 0.26, not more: rough-notation draws 2 overlapping strokes and the overlap
      compounds toward alpha ~0.45 — at 0.26 even that keeps 4.58:1 (AA) behind
      the #e8e6e3 ink, since the marker sits under 16px MDX body text. 0.28
@@ -113,6 +122,8 @@
   --color-surface: var(--dark-surface);
   --color-surface-subtle: var(--dark-surface-subtle);
   --color-surface-sunken: var(--dark-surface-sunken);
+  --color-surface-panel: var(--dark-surface-panel);
+  --color-hairline-panel: var(--dark-hairline-panel);
   --color-canvas: var(--dark-canvas);
   --color-foreground: var(--dark-fg);
   --color-background: var(--dark-canvas);
@@ -131,6 +142,8 @@
     --color-surface: var(--dark-surface);
     --color-surface-subtle: var(--dark-surface-subtle);
     --color-surface-sunken: var(--dark-surface-sunken);
+    --color-surface-panel: var(--dark-surface-panel);
+    --color-hairline-panel: var(--dark-hairline-panel);
     --color-canvas: var(--dark-canvas);
     --color-foreground: var(--dark-fg);
     --color-background: var(--dark-canvas);

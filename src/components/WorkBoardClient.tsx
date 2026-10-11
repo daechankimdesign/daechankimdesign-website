@@ -215,7 +215,11 @@ export function WorkBoardClient({
       {/* Mobile: pin the filter rail just below the fixed top nav (~54px) so the
           type tabs stay reachable while the grid scrolls. Desktop uses the inner
           sticky column instead. */}
-      <aside className="sticky top-16 z-20 pb-2 lg:static lg:top-auto lg:z-auto lg:pb-0 lg:order-first lg:w-48 lg:shrink-0">
+      {/* Below lg the rail floats over the scrolling grid, so its text blends
+          by difference (white text, like the top nav): it reads as the inverse
+          of whatever passes under it, light image, dark image, or the canvas,
+          in both themes. Active stays full white; the rest at 60%. */}
+      <aside className="sticky top-16 z-20 pb-2 max-lg:mix-blend-difference max-lg:[&_button]:!text-white/60 max-lg:[&_button[aria-pressed=true]]:!text-white lg:static lg:top-auto lg:z-auto lg:pb-0 lg:order-first lg:w-48 lg:shrink-0">
         {/* Viewport-tall sticky column (calc needs the spaces → underscores) so
             mt-auto can pin the disciplines to the bottom EDGE of the screen and
             keep them there as you scroll the grid. */}
@@ -233,7 +237,7 @@ export function WorkBoardClient({
             }
           >
             {/* Type — single-select text tabs. */}
-            <div className="flex flex-row gap-5 border-b border-hairline pb-4 lg:flex-col lg:items-start lg:gap-3 lg:border-0 lg:pb-0">
+            <div className="flex flex-row gap-5 pb-4 lg:flex-col lg:items-start lg:gap-3 lg:pb-0">
               {TYPE_FILTERS.map((f) => {
                 const isActive =
                   f.key === "all"
@@ -259,9 +263,8 @@ export function WorkBoardClient({
                 toward the type tabs, never off the bottom of the screen. */}
             {!FILTER_BUTTON && facets.length > 0 ? (
               <div className="mt-4 lg:mt-auto lg:pt-8">
-                {/* Divider only at lg, where the tabs have no border and the
-                    disciplines are pinned far below. On mobile the tabs' own
-                    border-b already separates them, so this would double the line. */}
+                {/* Divider only at lg, where the disciplines are pinned far
+                    below the tabs. Below lg there is no line between them. */}
                 <hr className="hidden hairline-b mb-4 border-0 lg:block" />
 
                 {discOpen ? (

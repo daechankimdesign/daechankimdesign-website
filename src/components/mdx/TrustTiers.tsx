@@ -55,7 +55,7 @@ export function TrustTiers({
 
   return (
     <figure className="my-8">
-      <div className="flex flex-col gap-4 bg-surface-subtle p-6 sm:flex-row sm:gap-6 sm:p-8">
+      <div className="flex flex-col gap-4 bg-surface-panel p-6 sm:flex-row sm:gap-6 sm:p-8">
         {items.map((item, i) => {
           const { accent, Icon, solid } = TIERS[item.level];
           const cardStyle = {

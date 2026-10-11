@@ -21,7 +21,7 @@ export function MacbookFrame({
 }) {
   return (
     <figure className="my-8">
-      <div className="flex justify-center bg-surface-subtle p-6 sm:p-10">
+      <div className="flex justify-center bg-surface-panel p-6 sm:p-10">
         <MacbookMockUp src={src} alt={alt} />
       </div>
       {caption ? (

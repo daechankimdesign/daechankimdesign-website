@@ -4,6 +4,11 @@ import { MDXImage } from "./MDXImage";
 import { ImageFrame } from "./ImageFrame";
 import { TrustTiers } from "./TrustTiers";
 import { ScrollImage } from "./ScrollImage";
+import { ScreenSet } from "./ScreenSet";
+import { Brief } from "./Brief";
+import { StepFlow } from "./diagrams/StepFlow";
+import { PhaseFunnel } from "./diagrams/PhaseFunnel";
+import { CompareBars } from "./diagrams/CompareBars";
 import { PhotoGrid } from "./PhotoGrid";
 import { MacbookFrame } from "./MacbookFrame";
 import { QuoteCarousel } from "./QuoteCarousel";
@@ -37,6 +42,20 @@ export const mdxComponents: MDXComponents = {
   // entrance direction — turning a "slide right" into a diagonal. The panel is
   // the stage and stays put; the cards animate into it.
   ImageFrame: (props) => <ImageFrame {...props} />,
+  // NOT wrapped in RevealBlock (like ImageFrame): runs its own phone-then-
+  // components reveal.
+  ScreenSet: (props) => <ScreenSet {...props} />,
+  // The case-study opening: static, so it takes the standard block fade-up.
+  Brief: (props) => (
+    <RevealBlock as="div">
+      <Brief {...props} />
+    </RevealBlock>
+  ),
+  // Diagrams: NOT wrapped in RevealBlock; each builds itself part by part on
+  // scroll-in (diagrams/diagram.css), and a RevealBlock rise would compound.
+  StepFlow: (props) => <StepFlow {...props} />,
+  PhaseFunnel: (props) => <PhaseFunnel {...props} />,
+  CompareBars: (props) => <CompareBars {...props} />,
   // NOT wrapped in RevealBlock (like ImageFrame): runs its own staggered card
   // reveal, so a RevealBlock y-rise would compound with each card's entrance.
   TrustTiers: (props) => <TrustTiers {...props} />,

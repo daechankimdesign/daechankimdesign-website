@@ -24,9 +24,17 @@ org: "Oria"
   ]}
 />
 
+<Brief
+  summary="A concept for the web side of Oria, where a recorded story can be found by asking a question."
+  items={[
+    { label: "AI decision", text: "The language model finds the story that answers a question. The teller decides who each story is shared with." },
+    { label: "Role", text: "Founding product lead." },
+  ]}
+/>
+
 ## About
 
-The web app is where Oria stops being a recorder and becomes a place: a shareable, explorable home for personal stories, so the people they are for can actually reach them.
+The web app turns Oria from a recorder into a shareable, explorable home for personal stories, so the people they are for can actually reach them.
 
 ## Outcome
 
@@ -44,19 +52,50 @@ Oria collects stories on mobile, through a conversation with Oria AI. The web ap
 
 Most personal stories that do get recorded still go nowhere. A voice memo, a video on one phone, a document in a drawer: even when the recording is digital, it stays locked to one device and one person, unsorted and unsearchable. The memory exists, but no one can find it when it matters.
 
-Underneath that is a quieter inequity. The lessons and histories of ordinary people, and especially of the older and overlooked, rarely become part of any shared record. History and common knowledge are written by the few with the means to publish, and everyone else's experience stays private and is lost a generation later. Collecting a story is the easy half. The convention worth rebuilding is the one that leaves those stories unreachable.
+Underneath that is an inequity. The lessons and histories of ordinary people, and especially of the older and overlooked, rarely become part of any shared record. History and common knowledge are written by the few with the means to publish, and everyone else's experience stays private and is lost a generation later. Collecting a story is the easy half. The convention worth rebuilding is the one that leaves those stories unreachable.
 
 ## The Insight
 
-People do not sit and read an archive. They arrive with a question, what was my grandmother's first apartment like, how did our family come to be here, and they want the one story that answers it. A static list of recordings cannot serve that. An archive you can ask can.
+People do not sit and read an archive. They arrive with a question, what was my grandmother's first apartment like, how did our family come to be here, and they want the one story that answers it. A static list of recordings cannot serve that. An archive that answers questions can.
 
-That pointed the whole web app at exploring rather than browsing. The same language technology that lets someone tell a story by talking should let someone else find it by asking, which is what makes the archive feel less like storage and more like a conversation with a family's memory.
+That pointed the whole web app at exploring rather than browsing. The same language technology that lets someone tell a story by talking should let someone else find it by asking, which turns the archive from storage into something that answers.
+
+<StepFlow
+  rows={[
+    {
+      label: "Browsing an archive",
+      steps: [
+        { title: "Open the archive" },
+        { title: "Scroll a list of recordings" },
+        { title: "Open them one by one" },
+        { title: "Hope one answers the question" },
+      ],
+    },
+    {
+      label: "Asking the archive",
+      steps: [
+        { title: "Ask a question", note: "How did our family come to be here?" },
+        { title: "Arrive at the story", note: "The one that answers it.", mark: true },
+        { title: "Follow connected stories", note: "From that story to the ones linked to it." },
+      ],
+    },
+  ]}
+/>
 
 ## The Web App
 
 The web app's job is to take a story from recorded to reachable, and to do it without the clutter that made the early product hard for its own users.
 
-**A story becomes a place you can visit.** Each recording from Oria AI arrives as a multimedia record, the voice, the video, the photos, and the text together, presented to be read, watched, or listened to. The three principles that shaped the product, simplicity, empathy, and clarity, carry over to the larger desktop canvas, so a story is calm to sit with rather than busy to decode.
+<StepFlow
+  steps={[
+    { title: "Recorded", note: "On mobile, in a conversation with Oria AI." },
+    { title: "Presented", note: "Voice, video, photos, and text as one record." },
+    { title: "Explored", note: "Found by asking, not by scrolling.", mark: true },
+    { title: "Shared", note: "With a circle, and where it belongs, a community." },
+  ]}
+/>
+
+**A story becomes a record to read, watch, or hear.** Each recording from Oria AI arrives as a multimedia record, the voice, the video, the photos, and the text together, presented to be read, watched, or listened to. The three principles that shaped the product, simplicity, empathy, and clarity, carry over to the larger desktop canvas, so a story reads simply rather than as a busy screen.
 
 <MDXImage
   src="https://placehold.co/1600x1000/e3e3e3/757575.png?text=Oria+3"
@@ -66,17 +105,17 @@ The web app's job is to take a story from recorded to reachable, and to do it wi
   caption="Placeholder: a recorded story presented as a multimedia record to read, watch, or hear."
 />
 
-**Exploring by asking.** This is where the explorative LLM lives. Instead of scrolling a list, a visitor asks the archive a question and is taken to the story that answers it, and from there to the ones connected to it. Exploration replaces navigation: you follow a thread of memory rather than hunt through folders.
+**Exploring by asking.** This is where the explorative LLM lives. Instead of scrolling a list, a visitor asks the archive a question and is taken to the story that answers it, and from there to the ones connected to it. Exploration replaces navigation: a visitor follows connected stories rather than hunting through folders.
 
 <MDXImage
   src="https://placehold.co/1600x1000/e3e3e3/757575.png?text=Oria+4"
   alt="Exploring the story archive by asking"
   width={1600}
   height={1000}
-  caption="Placeholder: ask the archive a question and arrive at the story that answers it."
+  caption="Placeholder: a question asked of the archive, and the story that answers it."
 />
 
-**Sharing with a circle, not a feed.** A story is opened to the people it is meant for, the Oria connections, and, where it belongs, a wider community that can learn from it. The aim is reach with intention rather than broadcast, so a private memory keeps its meaning as it travels.
+**Sharing with a circle, not a feed.** A story is opened to the people it is meant for, the Oria connections, and, where it belongs, a wider community that can learn from it. The aim is reach with intention rather than broadcast, so a private story reaches the people it was meant for.
 
 <MDXImage
   src="https://placehold.co/1600x1000/e3e3e3/757575.png?text=Oria+5"

@@ -56,6 +56,106 @@ build; roadmap Phase 5 is the runtime translation (`4348eec`).
 
 ## Log
 
+### 2026-10-11: Reviewer feedback pass on the hero and case studies (awaiting owner review)
+
+Not yet released; staged with the earlier 10-10 work. Previous versions of the
+edited MDX and the hero are saved in `review-demo/backup-2026-10-11/`.
+
+- **Thesis:** hero and footer copy changes were reverted at the owner's
+  request; both keep their original wording.
+- **Openings:** new `Brief` MDX component, a bordered summary box on
+  `surface-subtle`: one sentence, with Problem / AI decision / Result / Role
+  behind "Read more". Closed, it shows a faded peek of the first row (84px,
+  masked); opening measures the height, animates max-height, reveals the
+  remaining rows staggered, and turns the chevron (double rAF on close so the
+  collapse animates from "none"). Replaces About, Outcome and the closing Role
+  section on Zeto, Oria and furniture; the key image follows the box. Summary
+  sentences no longer open with "I".
+- **Panel colour token:** `--color-surface-panel` / `--color-hairline-panel`
+  (light #f5f5f5 / #d9d9d9, unchanged; dark #1c2128 / #30363d, blue-grey one
+  step above the canvas) on the summary box, ImageFrame, ScreenSet,
+  MacbookFrame, TrustTiers, and the ProgressiveImage / ScrollImage loading
+  backdrop. Replaces the warm surface-subtle and the footer-well surface-sunken
+  there in dark mode.
+- **Zeto:** research cut to the sankey (equal-step widths), three plain
+  sentences, interviewee notes and the quote; six boards and the journey map
+  dropped. Payoff figures removed from prose and the CompareBars chart removed;
+  numbers live on the screens only. A consistent 22.99% APR set for the Figma
+  screens is in `review-demo/index.html`. The untested section names the open
+  AI design questions.
+- **Oria:** 16 partners and an October 2025 to March 2026 timeline (About page
+  too); leads with the Lakeland campaign; ownership per the owner: the
+  collection is the institution's asset and downloadable, each teller keeps
+  their story and sets its visibility, public or community-only licenses Oria;
+  Gemini drafts are edited in place like any question; the two-users section
+  names the screen decisions; no reference to the mobile app work for now.
+- **Furniture:** "validated" removed; no "led end to end"; a team of three,
+  with the teammates on recruiting and interview notes; the AI framing names
+  the inferred style tags and the editable assumed room; the template-copy
+  mobile screens are dropped.
+- **Experiments:** Sucholary naming and the Interpret / Outline labels made
+  consistent; the VendorPass human-in-the-loop line moved up to the tiers.
+- Open items needing the owner (timeline, Lakeland numbers and quote, Gemini
+  review flow, ownership terms, test-answer screenshots, furniture team, the
+  conversational AI case study, 3x screen exports, PDFs) are listed in
+  `review-demo/index.html`.
+
+### 2026-10-10: Animated diagrams, transparent-image fixes, project copy review (awaiting owner review)
+
+Not yet released: staged in the working tree for the owner to review via the
+local `review-demo/` build (git-excluded in this clone) before pushing `live`.
+
+- **Diagrams** (`src/components/mdx/diagrams/`): `StepFlow` (a process as
+  boxes and arrows, one row or compared rows, optional loop line, or
+  `connector="none"` chips), `PhaseFunnel` (phased hypotheses as a narrowing
+  funnel with verdicts), `CompareBars` (one small bar chart per measure, direct
+  labels, one emphasised option). CSS-driven build-up (`diagram.css`): the
+  figure gets `data-shown` on scroll-in and parts transition by `--i` index,
+  EASE_OUT and DURATION mirrored from `lib/motion.ts`; reduced motion shows
+  them complete. Monochrome, with `--hl` (the bold-lead-in marker) on the key
+  step. Shared label class lives in `styles.ts`, not the client
+  `DiagramFrame` (a constant exported from a client module reaches server
+  components as a client reference). 12 placed: Zeto 4 (phases, statement vs
+  monitoring, journey in the board's sampled colours, payoff bars), Oria 3,
+  Oria web 2, furniture 3.
+- **Transparent images:** `ProgressiveImage` kept its `bg-surface-subtle`
+  loading backdrop after load, which showed through transparent PNGs (phone
+  corners, UI exports) as a grey box, dark in dark mode. It now clears on load.
+  `ImageFrame` and `ScreenSet` cards sit on white (dark-text UI exports stay
+  legible in dark mode); `ScreenSet` items take `bare` for exports that draw
+  their own card. `ScrollImage` gains `background` (furniture blueprint is a
+  transparent PNG with black lines).
+- **Image fixes:** Oria `submission.jpg` was declared 1600x1000 but is
+  1767x960 (sides cropped); furniture mobile pair and desktop taste pair now
+  side by side instead of ~800px-tall singles; boards on padded white.
+- **Copy sweep** (all four projects, per the owner's voice rules): em-dashes,
+  second person, prose contractions, inline bold on names, figures of speech.
+  Participant quotes unchanged. Open questions for the owner are listed in
+  `review-demo/index.html` (Oria partner count 12 vs 16 on the product's own
+  landing screen; consent caption "community" vs "organization"; Zeto slider
+  headers; storytelling project still all placeholders).
+
+### 2026-10-09: Zeto case study, hypothesis narrative and original images
+
+- **New section, "Hypotheses, and how each was tested"**, in three phases that
+  follow the project's own documentation order: (1) choosing, not knowing,
+  tested by coding community threads and mapping 8 insights to 5 challenges;
+  (2) information, support and confidence, tested by four interviews across
+  career stages (insights coded afterwards, not set beforehand); (3) credit
+  card debt, from one interview, narrowing the how-might-we. The old Problem
+  and Research sections fold into it. The Approach now shows where the
+  features came from (Confidence / Information / Personalized board).
+- **Originals replace the crops.** 28 new files in
+  `media-src/projects/zeto-…/` (13 to 40), uploaded and curl-verified 200:
+  full-resolution research boards, the user journey at 5000px (from the
+  13576px original), clean screen exports, separate streak / score /
+  transactions components, the four slider stops in a row, the brand mark, and
+  a transparent hand mockup as the hero. Files 00 to 12 are no longer
+  referenced (left on Storage).
+- Source material (Original images, Research, presentation) is cleared by the
+  owner to show. The draft chat frame with different payoff figures
+  (`Frame 1597880975`) is deliberately not used.
+
 ### 2026-10-09: Home hero rebuilt as an ID card on a wall of taped papers
 
 Replaces the hero's cover-flow carousel. Prototyped first as a standalone

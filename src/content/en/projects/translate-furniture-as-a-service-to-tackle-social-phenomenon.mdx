@@ -23,25 +23,27 @@ org: Northeastern University
   ]}
 />
 
-## About
-
-A furniture subscription service that lets transient residents live well without owning, and gives a furniture brand a sustainable channel to keep its products in circulation.
-
-## Outcome
-
-<MDXImage
-  src="https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fprojects%2Ftranslate-furniture-as-a-service-to-tackle-social-phenomenon%2Foutcome-subscription.png?alt=media"
-  alt="ISHO CloudLiving service concept"
-  width={1340}
-  height={1636}
-  caption="ISHO CloudLiving, a subscription that trades ownership for access."
+<Brief
+  summary="A furniture subscription for people who move often, and the service design behind it."
+  items={[
+    { label: "Problem", text: "Every late August, Allston's curbs fill with furniture that people who move constantly cannot take with them." },
+    { label: "AI decision", text: "The system learns a taste from images and matches pieces to it. The customer picks the pieces." },
+    { label: "Result", text: "A service concept and blueprint with sponsor ISHO Furniture, not built or run." },
+    { label: "Role", text: "Research and service design lead on a team of three." },
+  ]}
 />
 
-A research-led service concept: customers access quality furniture without buying it, and the provider turns seasonal furniture waste into a repurposing channel. The work delivered a validated concept, a full service blueprint, and an AI taste-matching flow across desktop and mobile, developed with sponsor **ISHO Furniture**. It was a research and service-design project, not a shipped product, and what it demonstrated was a model that fits transience instead of fighting it.
+<MDXImage
+  src="https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fprojects%2Ftranslate-furniture-as-a-service-to-tackle-social-phenomenon%2Fservice-delivery.png?alt=media"
+  alt="An empty apartment beside a furnished living room, with a phone showing the delivery-tracking screen"
+  width={2012}
+  height={1500}
+  caption="The final service in one frame: an empty apartment furnished in a single, tracked delivery."
+/>
 
 ## The Problem
 
-Every late August, Boston stages a small disaster it has named: *Allston Christmas*. As leases turn over, students drag what they can't carry to the curb, and the sidewalks in Allston, which sits between BU, BC, and Harvard, fill with discarded furniture. The easy reading is a waste problem.
+Every late August, Boston stages a small disaster it has named: *Allston Christmas*. As leases turn over, students drag what they cannot carry to the curb, and the sidewalks in Allston, which sits between BU, BC, and Harvard, fill with discarded furniture. The easy reading is a waste problem.
 
 <PhotoGrid
   items={[
@@ -73,11 +75,25 @@ Every late August, Boston stages a small disaster it has named: *Allston Christm
   caption="Late August in Allston. When leases turn over on the same day, whatever cannot be carried is left at the curb."
 />
 
-But the waste is a symptom. With 39% of Boston's residents between 18 and 34 (a 2019 City of Boston report puts that 18 points above the national average), the city runs on people who move constantly. The real problem isn't that they're wasteful; it's that **ownership doesn't fit a transient life**. Buying furniture asks people to commit to a place and a future they don't have yet, so they buy cheap, use it briefly, and leave it on the curb. The convention is broken, not the person.
+But the waste is a symptom. With 39% of Boston's residents between 18 and 34 (a 2019 City of Boston report puts that 18 points above the national average), the city runs on people who move constantly. The real problem is not that they are wasteful; it is that ownership does not fit a transient life. Buying furniture asks people to commit to a place and a future they do not have yet, so they buy cheap, use it briefly, and leave it on the curb. The convention is broken, not the person.
+
+<StepFlow
+  rows={[
+    {
+      steps: [
+        { title: "A new lease", note: "A place and a future that are not settled yet." },
+        { title: "Cheap furniture", note: "Bought because the commitment cannot be justified." },
+        { title: "Brief use", note: "Until the next move." },
+        { title: "The curb", note: "Whatever cannot be carried is left behind.", mark: true },
+      ],
+      loop: "Repeats with every lease turnover.",
+    },
+  ]}
+/>
 
 ## Research
 
-To understand the ecosystem rather than assume it, I led five in-depth interviews with students across the city: three new arrivals and two who had moved several times within Boston, documented with recordings, notes, and stimulus exercises. Two tools did the heavy lifting: a *Think-Out-Loud* floor-plan exercise, where participants sketched and narrated their spaces, and *A Day in the Life*, which traced how they actually used their furniture.
+To understand the ecosystem rather than assume it, I led five in-depth interviews with students across the city, with my two teammates recruiting the participants and recording the interviews and their notes: three new arrivals and two who had moved several times within Boston, documented with recordings, notes, and stimulus exercises. Two tools did the heavy lifting: a *Think-Out-Loud* floor-plan exercise, where participants sketched and narrated their spaces, and *A Day in the Life*, which traced how they actually used their furniture.
 
 <ImageFrame
   items={[
@@ -120,10 +136,11 @@ The conversations kept returning to instability, not taste.
   ]}
 />
 
-People weren't avoiding good furniture; they were avoiding a commitment they couldn't justify. *A Day in the Life* surfaced the same thing physically: residents eating meals in bed because a dining table wasn't worth the space or the spend. The pivot was clear: design *for* impermanence, not against it.
+People were not avoiding good furniture; they were avoiding a commitment they could not justify. *A Day in the Life* surfaced the same thing physically: residents eating meals in bed because a dining table was not worth the space or the spend. The pivot was clear: design *for* impermanence, not against it.
 
 <MDXImage
   src="https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fprojects%2Ftranslate-furniture-as-a-service-to-tackle-social-phenomenon%2Fresearch-affinity-map.webp?alt=media"
+  background="#ffffff"
   alt="Cross-participant affinity map sorting interview notes from life-context to furniture-specific, resolved into three findings"
   width={1532}
   height={1404}
@@ -138,12 +155,13 @@ From the research I developed three directions, then pressure-tested each agains
 - **A personalized rental service.** Renters, apartments, and providers connected, so residents pick pieces that fit them and landlords gain retention.
 - **A convertible bed-and-dining-table.** A product answer to the "eating in bed" finding, reclaiming square footage in small apartments.
 
-I carried the **subscription model** forward. It gave the provider real operational control, opened a market conventional furniture businesses had left untouched, and turned seasonal waste into inventory to repurpose rather than a cost to absorb.
+I carried the subscription model forward. It gave the provider real operational control, opened a market conventional furniture businesses had left untouched, and turned seasonal waste into inventory to repurpose rather than a cost to absorb.
 
-To explore positioning before committing, I built three imaginative furniture brands, each aimed at a different segment from secondary research on the Boston market. Those explorations mapped the touchpoints and service moments that shaped the final concept, which I then developed with the sponsor, **ISHO Furniture (Bangladesh)**, drawing a palette and moodboard from their existing lines so the service read as an extension of their brand, not a bolt-on.
+To explore positioning before committing, I built three imaginative furniture brands, each aimed at a different segment from secondary research on the Boston market. Those explorations mapped the touchpoints and service moments that shaped the final concept, which I then developed with the sponsor, ISHO Furniture (Bangladesh), drawing a palette and moodboard from their existing lines so the service read as an extension of their brand, not a bolt-on.
 
 <MDXImage
   src="https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fprojects%2Ftranslate-furniture-as-a-service-to-tackle-social-phenomenon%2Fdesign-moodboard.png?alt=media"
+  background="#ffffff"
   alt="ISHO brand palette and moodboard"
   width={1224}
   height={1280}
@@ -154,59 +172,70 @@ To explore positioning before committing, I built three imaginative furniture br
 
 The final concept is a subscription that trades ownership for access: quality furniture without the commitment, and for the provider, a sustainable way to keep furniture in circulation.
 
-<MDXImage
-  src="https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fprojects%2Ftranslate-furniture-as-a-service-to-tackle-social-phenomenon%2Fservice-delivery.png?alt=media"
-  alt="An empty apartment beside a furnished living room, with a phone showing the delivery-tracking screen"
-  width={2012}
-  height={1500}
-  caption="The final service in one frame: an empty apartment furnished in a single, tracked delivery."
-/>
 
 **A blueprint, not just screens.** I mapped the full customer journey end to end, including the interactions and the logistics layers behind them, so the concept held up as an operation, not only an interface.
 
 <ScrollImage
   src="https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fprojects%2Ftranslate-furniture-as-a-service-to-tackle-social-phenomenon%2Fservice-blueprint.png?alt=media"
+  background="#ffffff"
   alt="Service plan and blueprint"
   width={4290}
   height={1563}
   caption="The service blueprint, built from primary research and the business concepts. Scroll to pan across the full journey."
 />
 
-**Choosing furniture by taste, not by SKU.** First-time movers told us the hardest part wasn't only budget; it was not knowing what they wanted or how to make a space cohere. So the service starts from aspiration: customers pick inspiration images, the system learns their aesthetic and generates mood-based scenes, then matches real pieces from ISHO's inventory to those scenes. It inverts the usual shopping flow: discover the taste first, find the products second.
+**Choosing furniture by taste, not by SKU.** First-time movers told us the hardest part was not only budget; it was not knowing what they wanted or how to make a space cohere. So the service starts from aspiration: customers pick inspiration images, the system learns their aesthetic and generates mood-based scenes, then matches real pieces from ISHO's inventory to those scenes. It inverts the usual shopping flow: discover the taste first, find the products second. The part of this that is genuinely about AI is what the system shows of its own reading: each generated scene carries the style it inferred as tags, such as Modern Scandinavian, Neutral Tones, and Wood Accent, and the room it assumed, a studio living room for one person, sits behind an Edit button, so a customer can see what was inferred and correct it.
 
-<MDXImage
-  src="https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fprojects%2Ftranslate-furniture-as-a-service-to-tackle-social-phenomenon%2Fservice-taste-matching.png?alt=media"
-  alt="AI taste-matching from inspiration images"
-  width={1080}
-  height={820}
-  caption="Users train the system on their taste; it generates mood-based visuals in return."
+<StepFlow
+  rows={[
+    {
+      label: "The usual shopping flow",
+      steps: [
+        { title: "Browse products", note: "One item at a time, by category." },
+        { title: "Guess what fits", note: "The space and the other pieces." },
+        { title: "Buy, and hope it coheres" },
+      ],
+    },
+    {
+      label: "The service",
+      steps: [
+        { title: "Pick inspiration images", note: "Rooms the customer likes." },
+        { title: "The taste is learned", note: "Mood-based scenes are generated." },
+        { title: "Pieces are matched", note: "Similar items from ISHO's inventory.", mark: true },
+      ],
+    },
+  ]}
 />
 
-<MDXImage
-  src="https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fprojects%2Ftranslate-furniture-as-a-service-to-tackle-social-phenomenon%2Fservice-inventory-match.png?alt=media"
-  alt="Matching inventory to generated scenes"
-  width={1080}
-  height={1080}
-  caption="From each generated scene, the service surfaces similar pieces from ISHO's inventory."
+<ImageFrame
+  items={[
+    {
+      src: "https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fprojects%2Ftranslate-furniture-as-a-service-to-tackle-social-phenomenon%2Fservice-taste-matching.png?alt=media",
+      alt: "AI taste-matching from inspiration images",
+      width: 1080,
+      height: 820,
+    },
+    {
+      src: "https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fprojects%2Ftranslate-furniture-as-a-service-to-tackle-social-phenomenon%2Fservice-inventory-match.png?alt=media",
+      alt: "Matching inventory to generated scenes",
+      width: 1080,
+      height: 1080,
+    },
+  ]}
+  caption="The two steps on desktop: inspiration images in, then a generated scene labelled with the inferred style tags and the assumed room, editable, before pieces are matched from ISHO's inventory."
 />
 
 **Set up on desktop, live with it on mobile.** The desktop flow handles setup and activation; the mobile app carries the ongoing relationship: monthly feedback to keep the fit right, full-purchase options, and subscription and maintenance management. An expiring plan nudges toward purchase, closing the loop from access to ownership for the pieces people grow attached to.
 
-<MDXImage
-  src="https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fprojects%2Ftranslate-furniture-as-a-service-to-tackle-social-phenomenon%2Fmobile-feedback.png?alt=media"
-  alt="Mobile engagement, monthly feedback"
-  width={1080}
-  height={1080}
-  caption="Monthly feedback keeps the match honest over time."
+<StepFlow
+  steps={[
+    { title: "Set up on desktop", note: "Taste, plan, and activation." },
+    { title: "One tracked delivery", note: "An empty apartment furnished at once." },
+    { title: "Live with it on mobile", note: "Monthly feedback, maintenance, and plan management." },
+    { title: "The plan expires", note: "Return the pieces, renew, or buy the ones that stuck.", mark: true },
+  ]}
 />
 
-<MDXImage
-  src="https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fprojects%2Ftranslate-furniture-as-a-service-to-tackle-social-phenomenon%2Fmobile-renewal.png?alt=media"
-  alt="Mobile engagement, plan renewal to purchase"
-  width={1280}
-  height={1280}
-  caption="An expiring plan becomes the moment to buy the pieces that stuck."
-/>
 
 <MDXImage
   src="https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fprojects%2Ftranslate-furniture-as-a-service-to-tackle-social-phenomenon%2Fpresentation.png?alt=media"
@@ -216,12 +245,8 @@ The final concept is a subscription that trades ownership for access: quality fu
   caption="Presenting ISHO CloudLiving."
 />
 
-## Role
-
-I led the project end to end: planning and running the research, conducting and analyzing the interviews, managing the research team, developing the service concepts, building the service blueprint, and designing the desktop and mobile interfaces, through to the final concept developed with the sponsor.
-
 ## Learnings
 
 **Reframing the convention was the whole job.** The brief looked like a waste problem; the leverage was in ownership itself. Once I stopped designing against transience and started designing for it, the service almost defined itself.
 
-**Action clarified more than analysis.** For the final presentation, we staged the service as a short skit. Acting it out exposed flaws and gaps between screens that had stayed invisible on the board: the kind of thing you only catch by doing, not diagramming. It's the lesson I carry forward: design is action, experimentation, and iteration, and the fastest way to find the real problem is to try the thing.
+**Action clarified more than analysis.** For the final presentation, we staged the service as a short skit. Acting it out exposed flaws and gaps between screens that had stayed invisible on the board: gaps that only show when a service is performed, not diagrammed. It is the lesson I carry forward: design is action, experimentation, and iteration, and the fastest way to find the real problem is to try the thing.

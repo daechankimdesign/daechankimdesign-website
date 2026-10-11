@@ -15,6 +15,10 @@ type Props = {
       still shown immediately while the heavy animation downloads, then the
       animation crossfades in over it. Ignored for non-animated srcs. */
   poster?: string;
+  /** "contain" fits the whole image in the box instead of cropping to fill. */
+  fit?: "cover" | "contain";
+  /** The box's colour behind a contained image (its own background). */
+  background?: string;
 };
 
 /**
@@ -43,6 +47,8 @@ export function ProgressiveImage({
   sizes = "100vw",
   priority,
   poster,
+  fit = "cover",
+  background,
 }: Props) {
   // Start already loaded if this src rendered earlier this session — no blur-up.
   const [loaded, setLoaded] = useState(() => loadedSrcs.has(src));
@@ -69,7 +75,7 @@ export function ProgressiveImage({
     const hasFacade = !!poster && posterOk;
     return (
       <div
-        className={`relative overflow-hidden bg-surface-subtle ${className ?? ""}`}
+        className={`relative overflow-hidden bg-surface-panel ${className ?? ""}`}
         style={{ aspectRatio: `${width} / ${height}` }}
       >
         {/* Facade: a lightweight static first-frame poster shown immediately,
@@ -106,8 +112,11 @@ export function ProgressiveImage({
 
   return (
     <div
-      className={`relative overflow-hidden bg-surface-subtle ${className ?? ""}`}
-      style={{ aspectRatio: `${width} / ${height}` }}
+      // The backdrop only fills the box while loading: left in place, it shows
+      // through a transparent PNG's clear pixels (a phone mockup's corners, a
+      // UI export's margins) as a grey box, darker than the panel in dark mode.
+      className={`relative overflow-hidden ${loaded || background ? "" : "bg-surface-panel"} ${className ?? ""}`}
+      style={{ aspectRatio: `${width} / ${height}`, ...(background ? { background } : {}) }}
     >
       {/* Low-res placeholder — small + blurred, loads fast. It fades OUT as the
           full image fades in (a true crossfade), and stays aligned with it (no
@@ -121,7 +130,7 @@ export function ProgressiveImage({
         sizes="480px"
         quality={45}
         priority={priority}
-        className={`object-cover transition-opacity duration-700 ${
+        className={`${fit === "contain" ? "object-contain" : "object-cover"} transition-opacity duration-700 ${
           loaded ? "opacity-0" : "opacity-100"
         }`}
         // Minimal, tight blur (inline so it always applies).
@@ -136,7 +145,7 @@ export function ProgressiveImage({
         sizes={sizes}
         priority={priority}
         onLoad={markLoaded}
-        className={`object-cover transition-opacity duration-700 ${
+        className={`${fit === "contain" ? "object-contain" : "object-cover"} transition-opacity duration-700 ${
           loaded ? "opacity-100" : "opacity-0"
         }`}
       />

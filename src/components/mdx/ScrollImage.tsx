@@ -56,6 +56,7 @@ export function ScrollImage({
   height,
   caption,
   zoom = 2,
+  background,
 }: {
   src: string;
   alt: string;
@@ -63,6 +64,10 @@ export function ScrollImage({
   height: number;
   caption?: string;
   zoom?: number;
+  /** The image's own sheet colour (e.g. "#ffffff" for a white board), drawn
+   *  behind it in both themes. Needed for a transparent export with dark lines,
+   *  which otherwise sits on the dark surface in dark mode. */
+  background?: string;
 }) {
   const reduce = useReducedMotion();
   const compact = useSyncExternalStore(
@@ -97,7 +102,8 @@ export function ScrollImage({
             loading="lazy"
             decoding="async"
             draggable={false}
-            className="block h-full w-auto max-w-none select-none bg-surface-subtle"
+            className={`block h-full w-auto max-w-none select-none ${background ? "" : "bg-surface-panel"}`}
+            style={background ? { background } : undefined}
           />
         </div>
         {captionEl}
@@ -114,6 +120,7 @@ export function ScrollImage({
       frameAspect={frameAspect}
       zoom={zoom}
       caption={captionEl}
+      background={background}
     />
   );
 }
@@ -127,6 +134,7 @@ function ScrollPan({
   frameAspect,
   zoom,
   caption,
+  background,
 }: {
   src: string;
   alt: string;
@@ -135,6 +143,7 @@ function ScrollPan({
   frameAspect: string;
   zoom: number;
   caption: ReactNode;
+  background?: string;
 }) {
   const figureRef = useRef<HTMLElement>(null);
   const viewportRef = useRef<HTMLDivElement>(null);
@@ -210,7 +219,8 @@ function ScrollPan({
               loading="lazy"
               decoding="async"
               draggable={false}
-              className="block h-full w-auto max-w-none select-none bg-surface-subtle"
+              className={`block h-full w-auto max-w-none select-none ${background ? "" : "bg-surface-panel"}`}
+              style={background ? { background } : undefined}
             />
           </motion.div>
         </motion.div>

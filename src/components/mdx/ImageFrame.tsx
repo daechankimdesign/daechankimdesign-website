@@ -16,6 +16,10 @@ type FrameItem = {
       place. Defaults to `bottom`, matching the page's fade-up language. Ignored in
       `background` mode, where the panel always drops in from the top. */
   from?: Entrance;
+  /** Default mode: a short title above this card, e.g. "Interviewee 01". */
+  title?: string;
+  /** Default mode: a short note above this card (under its title, if any). */
+  label?: string;
 };
 
 /** A screenshot rendered blurred behind the foreground cards — the "app window
@@ -27,8 +31,8 @@ type Background = { src: string; alt?: string };
  * and native aspect; nothing is baked into a composite.
  *
  * Two panel treatments:
- *  - DEFAULT (Oria): a flat `bg-surface-sunken` seamless (in dark this is the
- *    FOOTER colour, so framed screenshots sit in the same well). Cards lie side by side
+ *  - DEFAULT (Oria): a flat `bg-surface-panel` seamless (in dark, a blue-grey
+ *    one step above the canvas). Cards lie side by side
  *    and `flex-grow` by aspect against `flex-basis: 0`, so every card resolves to
  *    the SAME height even from slightly different source ratios. Below `sm` they
  *    stack full-width and the ratio is inert. Each card reveals once on scroll-in.
@@ -67,8 +71,10 @@ const BEAT = 0.45;
 
 // DEFAULT-mode card: flat, rounded, softly shadowed, and grown to a shared height
 // by aspect ratio (so a row of screenshots aligns tops and bottoms).
+// White under the image: a transparent UI export (dark text on alpha) needs the
+// light surface it sits on in the product, or it vanishes on the dark panel.
 const CARD_CLASS =
-  "overflow-hidden rounded-xl shadow-[0_2px_6px_-2px_rgba(0,0,0,0.06),0_16px_36px_-12px_rgba(0,0,0,0.16)] sm:flex-[var(--frame-grow)_1_0%]";
+  "overflow-hidden rounded-xl bg-white shadow-[0_2px_6px_-2px_rgba(0,0,0,0.06),0_16px_36px_-12px_rgba(0,0,0,0.16)] sm:flex-[var(--frame-grow)_1_0%]";
 
 // BACKGROUND-mode card base: floats over the blurred backdrop.
 const BG_CARD_BASE =
@@ -140,11 +146,31 @@ export function ImageFrame({
   caption,
   background,
   foregroundWidth = DEFAULT_FOREGROUND_WIDTH,
+  maxWidth,
+  row = false,
+  columns,
+  title,
+  label,
 }: {
   items?: FrameItem[];
   caption?: string;
   background?: Background;
   foregroundWidth?: number;
+  /** Default mode: cap the row of cards (px), centred in the panel, for small
+   *  pieces that would otherwise grow to the full column width. */
+  maxWidth?: number;
+  /** Default mode: keep the cards side by side on phones too (they stack below
+   *  sm otherwise). For short rows of small pieces. */
+  row?: boolean;
+  /** Default mode: a 2-column grid from sm up (one column on phones), for a set
+   *  of small pieces that reads better as a block than as one long row. With
+   *  `columns={2}` and `row`, the grid keeps two columns on phones too. */
+  columns?: 2;
+  /** Default mode: one title above the whole set (e.g. "Interviewee 02"),
+   *  for pieces that share a source. Per-card titles live on each item. */
+  title?: string;
+  /** Default mode: a short note under the set title. */
+  label?: string;
 }) {
   const reduce = useReducedMotion();
   // Default-mode reveal: ONE trigger on the frame. `useInView` fires once when the
@@ -260,30 +286,69 @@ export function ImageFrame({
   // ── Default mode: flat tinted seamless. ONE trigger on the figure — as the
   // frame scrolls into view (frameInView), each card animates with delay i*BEAT,
   // so they cascade left→right in a row (top→bottom when stacked). ─────────────
-  const panelClass =
-    "flex flex-col gap-6 bg-surface-sunken p-6 sm:flex-row sm:items-start sm:gap-10 sm:p-10";
+  const wrapped = Boolean(maxWidth || title || label);
+  const layout = columns
+    ? `grid ${row ? "grid-cols-2" : "grid-cols-1 sm:grid-cols-2"} items-start gap-x-4 gap-y-6 sm:gap-x-6 sm:gap-y-8`
+    : row
+      ? "flex flex-row items-start gap-4 sm:gap-10"
+      : "flex flex-col gap-6 sm:flex-row sm:items-start sm:gap-10";
+  // In a forced row, cards grow by aspect at every width, not only from sm up;
+  // in a grid, each card fills its cell.
+  const cardClass = columns
+    ? CARD_CLASS.replace(" sm:flex-[var(--frame-grow)_1_0%]", "")
+    : row
+      ? `${CARD_CLASS} flex-[var(--frame-grow)_1_0%]`
+      : CARD_CLASS;
+  // A labelled card: the card itself, then its note under it, as one cell.
+  const cell = (item: FrameItem) =>
+    item.label || item.title ? (
+      <>
+        {/* Title and note sit above the card, like a heading for it. Spans, not
+            <p>s: prose paragraph styles would resize them on phones. */}
+        {item.title ? <span className="text-note block font-medium text-fg">{item.title}</span> : null}
+        {item.label ? <span className={`text-note block text-fg-muted ${item.title ? "mt-0.5" : ""}`}>{item.label}</span> : null}
+        <div className={`mt-2 ${CARD_CLASS.replace(" sm:flex-[var(--frame-grow)_1_0%]", "")}`}>{progressive(item)}</div>
+      </>
+    ) : (
+      progressive(item)
+    );
+  // A labelled cell carries the card visuals on its inner card, so the outer
+  // keeps only the sizing: a grid cell fills its track; a row cell still grows
+  // by aspect, as an unlabelled card would.
+  const outer = (item: FrameItem) =>
+    item.label || item.title ? (columns ? "" : row ? "min-w-0 flex-[var(--frame-grow)_1_0%]" : "min-w-0 sm:flex-[var(--frame-grow)_1_0%]") : cardClass;
 
   return (
     <figure ref={frameRef} className="my-8">
-      <div className={panelClass}>
+      {/* A capped row (or a titled set) keeps the full-width panel and nests
+          the track in it: centred and narrower when capped, under the title. */}
+      <div className={wrapped ? "bg-surface-panel p-6 sm:p-10" : `${layout} bg-surface-panel p-6 sm:p-10`}>
+      {title || label ? (
+        <div className="mx-auto mb-2" style={maxWidth ? { maxWidth } : undefined}>
+          {title ? <span className="text-note block font-medium text-fg">{title}</span> : null}
+          {label ? <span className={`text-note block text-fg-muted ${title ? "mt-0.5" : ""}`}>{label}</span> : null}
+        </div>
+      ) : null}
+      <div className={wrapped ? `${layout} mx-auto` : "contents"} style={maxWidth ? { maxWidth } : undefined}>
         {items.map((item, i) =>
           reduce ? (
-            <div key={item.src} style={growStyle(item)} className={CARD_CLASS}>
-              {progressive(item)}
+            <div key={item.src} style={growStyle(item)} className={outer(item)}>
+              {cell(item)}
             </div>
           ) : (
             <motion.div
               key={item.src}
               style={growStyle(item)}
-              className={CARD_CLASS}
+              className={outer(item)}
               initial={{ opacity: 0, ...OFFSET[item.from ?? "bottom"] }}
               animate={frameInView ? { opacity: 1, x: 0, y: 0 } : undefined}
               transition={{ duration: DURATION, ease: EASE_OUT, delay: i * BEAT }}
             >
-              {progressive(item)}
+              {cell(item)}
             </motion.div>
           ),
         )}
+      </div>
       </div>
       {captionEl}
     </figure>

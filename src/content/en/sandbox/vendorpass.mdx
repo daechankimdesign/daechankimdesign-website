@@ -36,7 +36,7 @@ Search comes first. **A property manager can browse the marketplace through natu
 Inviting a vendor is what unlocks their private contact info and creates the working relationship. An existing vendor receives a project invite; a new one gets a signup link, completes onboarding, and accepts or declines from their own dashboard. Contact details stay locked behind that accepted invite, never exposed to every property manager who happens to search.
 
 ## Verification tiers
-This is the core idea, and the part I designed the whole interface around. Every vendor document, a business license, a W-9, a certificate of insurance, moves through three tiers of trust, and the whole interface is colored by that status.
+This is the core idea, and the part I designed the whole interface around. Every vendor document, a business license, a W-9, a certificate of insurance, moves through three tiers of trust, and the whole interface is colored by that status. The AI reads the document, and people decide what it is worth: Google Document AI extracts the fields, the vendor confirms what was read rather than retyping it, and only an admin can promote a vendor to Verified.
 
 <TrustTiers
   items={[
@@ -74,7 +74,7 @@ The hierarchies and visual cues make the weight of an element track its complian
 />
 
 ## The build
-Uploads flow into **Google Document AI**, one processor per document type, which extracts the fields that matter, policy numbers, expiration dates, license IDs, so the vendor confirms what was read rather than retyping it. Every verification-changing write is a server-owned Cloud Function, so a vendor can never mark themselves Tier 3; promotion is admin-gated on purpose, because a trust signal is only worth anything if it cannot be self-issued.
+Uploads flow into **Google Document AI**, one processor per document type, which extracts the fields that matter: policy numbers, expiration dates, license IDs. Every verification-changing write is a server-owned Cloud Function, so a vendor can never mark themselves Tier 3; promotion is admin-gated on purpose, because a trust signal is only worth anything if it cannot be self-issued.
 
 Vendor data is split public and private at the database level: search reads only name, zip, and categories, while contact details sit in a locked subdocument opened only on invite acceptance. The front end is React, Vite, and Tailwind; the back end is Firebase across Auth, Firestore, Storage, and Functions, with a Trigger Email extension queuing the invite mail. Ambitious for 54 hours, which is exactly the point of the format.
 
