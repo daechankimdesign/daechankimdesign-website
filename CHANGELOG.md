@@ -56,6 +56,24 @@ build; roadmap Phase 5 is the runtime translation (`4348eec`).
 
 ## Log
 
+### 2026-10-12: Reddit evidence on Zeto; unused face files removed (awaiting owner review)
+
+Not yet released (after `4d83b5f`).
+
+- **Reddit:** the Research paragraph is split. After the r/personalfinance
+  sentences comes the coded say/want/value board (`research-say-want-value.jpg`,
+  already on Storage, curl 200) as an `MDXImage` with click-to-zoom, then one
+  sentence quoting a poster who "pay[s] the minimum repayment fee" on a 23
+  percent personal loan, which leads into the interviews. The "$20000" in that
+  post is local currency, so the copy says "25 and in debt" without a figure.
+- **Removed:** `interview-face-a` to `-d` deleted from Storage by name (now
+  404; never referenced by `4d83b5f`), and `media-src` 56 to 59 deleted. No
+  prune run.
+- **Owner decisions:** interviewee ages and degrees stay in the labels.
+- **Deleted:** the original collage with participant names,
+  `research-interviews.jpg`, removed from Storage (404); the local original moved
+  out of `media-src` to `../media-private/` so a sync cannot re-upload it.
+
 ### 2026-10-12: Zeto mockups, journey map pan, interview sequence, sankey pool (released)
 
 - **Animated mockups:** `PaymentSlider` (the Make Payment slider, alerts raised
