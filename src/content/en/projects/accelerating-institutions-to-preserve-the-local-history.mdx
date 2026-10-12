@@ -21,18 +21,18 @@ org: "Oria"
 <ProjectMeta
   items={[
     { label: "Role", value: "Founding Product Lead" },
-    { label: "Platform", value: "Web (mobile, tablet, desktop)" },
     { label: "Timeline", value: "Oct 2025 to Mar 2026" },
+    { label: "Platform", value: "Web (mobile, tablet, desktop)" },
   ]}
 />
 
 <Brief
-  summary="Oria is used today by 16 institutions, including the College Park Aviation Museum for its campaign about Lakeland."
+  summary="A two-sided web platform for oral histories. An institution publishes a campaign as a link, and community members record their stories on any device."
   items={[
-    { label: "Problem", text: "Collecting oral histories by hand costs museums, libraries, and parks departments staff hours they do not have." },
-    { label: "AI decision", text: "Gemini drafts questions that organizers edit like their own, and every story is transcribed. The teller sets who sees each story." },
-    { label: "Result", text: "Released in January 2026, now with 16 partner institutions and $12K ARR in its first three months." },
-    { label: "Role", text: "Founding product lead, with a data engineer on the database and deploy pipelines." },
+    { label: "Problem", text: "Museums, libraries, and parks departments collect oral histories by hand. This work uses staff hours that they do not have." },
+    { label: "AI decision", text: "Gemini writes draft questions, and organizers can edit all drafts. The system transcribes each story. The teller decides who can see each story." },
+    { label: "Result", text: "The platform went live in January 2026. In three months, it got 16 partner institutions and $12K ARR." },
+    { label: "Role", text: "Founding product lead for the research, the product design, and most of the development. A data engineer made the database and the deploy pipelines." },
   ]}
 />
 
@@ -46,7 +46,7 @@ org: "Oria"
 
 Oral histories are still collected much as they always have been. Staff recruit participants, schedule interviews, sit for each recording, and then transcribe and analyze it all by hand. Every step costs staff hours, and libraries in particular are short of staff. The stories a community most wants to keep are the ones there is never enough time to gather.
 
-One campaign on Oria today comes from the College Park Aviation Museum. Called Reclaiming Our Space, it asks neighbors what Lakeland means to them, with topics titled "Care, belong, protect, preserve" and "Safe Spaces."
+I set out to move each of those steps off staff time without taking the stories away from the institution or the people who tell them.
 
 <StepFlow
   rows={[
@@ -80,11 +80,11 @@ We were bootstrapping, so the product was shaped by conversations with the peopl
 
 Two findings reset the plan. First, they welcomed AI, and they cared deeply about ownership. The collection had to belong to the institution rather than to Oria. Second, and more surprising, these institutions already have trusted channels to their participants.
 
-**What ate their time was collecting and analyzing the stories.** They did not need help with distribution or recruitment the way a consumer product would, so I aimed the product at collection and analysis instead. A campaign had to be quick to create and share, and collected stories easy to manage and understand. Telling a story had to feel worth the effort, so that people would share a real one.
+**What ate their time was collecting and analyzing the stories.** They did not need help with distribution or recruitment the way a consumer product would, so I cut recruitment from the scope and aimed the product at collection and analysis. That set three requirements I designed against. A campaign had to be quick to create and share, collected stories had to be easy to manage and understand, and telling a story had to feel worth the effort, so that people would share a real one.
 
 ## The Platform
 
-An organization signs up, creates its space, and opens a campaign, which sets the overall theme of a collection. Under it, the organization adds topics, each with its own questions. To save organizers from a blank page, the platform can draft the questions with the Gemini API from the campaign, the topic, and the direction the organizer enters. The drafts appear where organizers write and edit the questionnaire, and they can be edited at any time, like any question an organizer wrote. Each campaign and topic publishes to missionoria.com, ready to share as a link or QR code, and participants can also browse public campaigns to find a local institution collecting stories near them.
+I structured a collection in three levels. A campaign sets the overall theme, topics sit under it, and each topic has its own questions. To save them from a blank page, the platform drafts questions with the Gemini API from the campaign, the topic, and the direction the organizer enters. I placed the drafts in the same editor where organizers write their own questions, editable at any time, so the AI removes the blank page without taking over the authorship. Each campaign and topic publishes to missionoria.com as a link or QR code, so an institution can send it through the channels it already trusts, and participants can also browse public campaigns to find an institution collecting stories near them.
 
 <StepFlow
   steps={[
@@ -102,13 +102,13 @@ An organization signs up, creates its space, and opens a campaign, which sets th
   caption="On the public side of missionoria.com, a neighbor can start a submission without an account, using an organization lookup or a join code, then browse the campaigns running now and open one to see its topics."
 />
 
-A participant opens the link and answers in text, audio, video, or photo, on a phone, tablet, or desktop, so a story can be told at the library or at home. Every contribution is stored in its original format and transcribed, so the collection can be searched from the first story.
+A participant opens the link and answers in text, audio, video, or photo, on a phone, tablet, or desktop, so a story can be told at the library or at home. I kept every contribution in its original format and had it transcribed on arrival, so the collection can be searched from the first story and nothing of the teller's voice is lost.
 
 <ImageFrame
   items={[
     {
       src: "https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fprojects%2Faccelerating-institutions-to-preserve-the-local-history%2Fstories.jpg?alt=media",
-      alt: "The College Park Aviation Museum's Lakeland campaign, with a list of topics that each link to Submit a story",
+      alt: "A campaign page with its list of topics, each linking to Submit a story",
       width: 723,
       height: 463,
       from: "bottom",
@@ -124,9 +124,9 @@ A participant opens the link and answers in text, audio, video, or photo, on a p
   caption="A teller picks one of the campaign's topics, then answers its prompt on a screen that asks one question at a time, with read-aloud and microphone icons beside it and options to record audio or video or upload below."
 />
 
-The collection belongs to the institution, which can download every story in it. Each teller keeps ownership of their own story and chooses whether it is public, community-only, or private, or submits it anonymously. Choosing public or community-only grants Oria a license to store, display, and share the story for historical, educational, and research purposes.
+Ownership came straight from the interviews, so I designed it in at two levels. The collection belongs to the institution, which can download every story in it. Each teller keeps ownership of their own story and chooses whether it is public, community-only, or private, or submits it anonymously. Choosing public or community-only grants Oria a license to store, display, and share the story for historical, educational, and research purposes.
 
-The platform also gives organizations analytics their old process could not, including participation, completion, and retention rates and the number of stories collected, so a small team can see what is working without counting by hand.
+I also gave organizations the analytics their old process could not produce, including participation, completion, and retention rates and the number of stories collected, so a small team can see what is working without counting by hand.
 
 ## Designing for Two Users at Once
 
@@ -151,7 +151,7 @@ The hard part was that this is two products sharing one platform. The institutio
   ]}
 />
 
-Each need became a specific decision in the screens. A teller joins with an organization lookup or a join code, with no account to create. Each screen asks a single question, with read-aloud and microphone icons beside the prompt, so a question can be heard and answered by voice. An answer can be typed, recorded as audio or video, or uploaded, and a story can go in anonymously. On the institution side, a campaign is one link and one QR code, and every story arrives transcribed and ready to review.
+I turned each need into a specific decision in the screens. A teller joins with an organization lookup or a join code, with no account to create. Each screen asks a single question, with read-aloud and microphone icons beside the prompt, so a question can be heard and answered by voice. An answer can be typed, recorded as audio or video, or uploaded, and a story can go in anonymously. On the institution side, a campaign is one link and one QR code, and every story arrives transcribed and ready to review.
 
 <MDXImage
   src="https://firebasestorage.googleapis.com/v0/b/daechankimdesign-2026.firebasestorage.app/o/media%2Fprojects%2Faccelerating-institutions-to-preserve-the-local-history%2Fsubmission.jpg?alt=media"
@@ -167,7 +167,7 @@ Each need became a specific decision in the screens. A teller joins with an orga
   caption="A neighbor answers a prompt, sets how the story is shared, and reaches a thank-you page with more prompts waiting."
 />
 
-I designed in Figma and built mostly with Claude Code and Codex, on React and AWS after an initial Vercel build. The data engineer structured the database and set up the build and deploy pipelines.
+I designed in Figma and built most of the product myself with Claude Code and Codex, on React and AWS after an initial Vercel build. The data engineer structured the database and set up the build and deploy pipelines.
 
 ## Learnings
 
