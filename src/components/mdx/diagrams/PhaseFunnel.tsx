@@ -1,6 +1,7 @@
 import type { CSSProperties } from "react";
 import { DiagramFrame } from "./DiagramFrame";
 import { LABEL } from "./styles";
+import { HAND, Ink, pen, sketchPath, sketchRect } from "./sketch";
 
 type Phase = {
   /** The phase's theme, e.g. "Exploration". */
@@ -30,10 +31,10 @@ const at = (i: number) => ({ "--i": i }) as CSSProperties;
 export const KEY_UNDERLINE = "underline decoration-1 underline-offset-[3px]";
 
 // "[[key]]" in a hypothesis renders underlined.
-const keyed = (text: string) =>
+const keyed = (text: string, sketch = false) =>
   text.split(/(\[\[[^\]]+\]\])/).map((part, i) =>
     part.startsWith("[[") ? (
-      <u key={i} className={KEY_UNDERLINE}>
+      <u key={i} className={sketch ? "dg-key-sketch no-underline" : KEY_UNDERLINE}>
         {part.slice(2, -2)}
       </u>
     ) : (
@@ -66,12 +67,18 @@ type NodeDraw = Node & { ghost?: boolean };
  * below (bands keep their width, so a node's height is the flow into it).
  * Under each column, a small "01 · theme" label and the hypothesis. On
  * scroll-in the sankey draws left to right, then the hypotheses appear.
+ *
+ * `sketch` draws it by hand (sketch.tsx): wobbly outlines that draw in,
+ * pencil hatching in the bands, solid ink bars, and the titles in the home
+ * page wall's pen, each step's above its bar, clear of the hatching.
  */
 export function PhaseFunnel({
   phases = [],
   startAt = 1,
+  sketch = false,
 }: {
   phases?: Phase[];
+  sketch?: boolean;
   /** The number shown for the first step (0 when it is a groundwork step
    *  before the first hypothesis). */
   startAt?: number;
@@ -89,15 +96,18 @@ export function PhaseFunnel({
 
   const nodes: Node[] = [];
   const links: Link[] = [];
+  const poolTop = 0;
+  // The height the input narrows to: the next step's bar.
+  const k1 = pooled ? (phases[phases.findIndex((p) => p.ghost) + 1]?.size ?? 0) * scale : 0;
   phases.forEach((p, k) => {
     const h = p.size * scale;
     // The input spans the full height, so its label sits at the middle.
-    nodes.push({ x: colX(k), y: p.ghost ? 0 : off, h: p.ghost ? H : h, label: p.scope, main: true, group: k + 1, step: k + 1, method: p.method, ghost: p.ghost } as NodeDraw);
+    nodes.push({ x: colX(k), y: p.ghost ? poolTop : off, h: p.ghost ? H - poolTop : h, label: p.scope, main: true, group: k + 1, step: k + 1, method: p.method, ghost: p.ghost } as NodeDraw);
     if (k === n - 1) return;
     if (p.ghost) {
       // One input: the full height at the left edge, narrowing into the whole
       // of the next node.
-      links.push({ sx: colX(k), sy: 0, tx: colX(k + 1), ty: off, h: H, th: phases[k + 1].size * scale, tone: "pool", group: k + 1 });
+      links.push({ sx: colX(k), sy: poolTop, tx: colX(k + 1), ty: off, h: H - poolTop, th: phases[k + 1].size * scale, tone: "pool", group: k + 1 });
       return;
     }
     const keep = phases[k + 1].size * scale;
@@ -140,7 +150,7 @@ export function PhaseFunnel({
         <svg
           viewBox={`0 0 ${W} ${H}`}
           preserveAspectRatio="none"
-          className="dg-grow absolute inset-0 h-full w-full"
+          className={`${sketch ? "" : "dg-grow"} absolute inset-0 h-full w-full overflow-visible`}
           style={at(0)}
           aria-hidden
           // The SVG itself must not take the hover, only its phase groups.
@@ -159,59 +169,202 @@ export function PhaseFunnel({
               />
               {/* The final step carries on as a highlighted band to the edge:
                   the flow the design is built on. */}
-              {k === n - 1 ? (
-                <rect x={colX(k) + NODE_W} y={off} width={W - colX(k) - NODE_W} height={phases[k].size * scale} className="fill-[var(--hl)]" />
-              ) : null}
-              {links.filter((l) => l.group === k + 1).map((l, i) => (
-                <path key={i} d={band(l)} className={tone[l.tone]} />
-              ))}
-              {nodes.filter((d) => d.group === k + 1 && !(d as NodeDraw).ghost).map((d, i) => (
-                <rect key={i} x={d.x} y={d.y} width={NODE_W} height={d.h} className={d.main ? "fill-fg" : "fill-fg-subtle"} />
-              ))}
+              {sketch ? (
+                <>
+                  {k === n - 1 ? (
+                    <>
+                      {/* The marker colour is translucent, so the band is a solid
+                          pass of it with the hatching drawn over, darker where
+                          the strokes overlap, as a second marker pass would be. */}
+                      <Ink
+                        i={2 * k + 2}
+                        fill="text-[var(--hl)]"
+                        d={sketchRect(colX(k) + NODE_W, off, W - colX(k) - NODE_W, phases[k].size * scale, pen({ seed: 900 + k, stroke: "none", fill: "currentColor", fillStyle: "solid" }))}
+                      />
+                      <Ink
+                        i={2 * k + 2}
+                        line="text-[var(--hl)]"
+                        fill="text-[var(--hl)]"
+                        d={sketchRect(colX(k) + NODE_W, off, W - colX(k) - NODE_W, phases[k].size * scale, pen({ seed: 910 + k, fill: "currentColor", fillStyle: "hachure", hachureGap: 4, fillWeight: 1.6 }))}
+                      />
+                    </>
+                  ) : null}
+                  {links.filter((l) => l.group === k + 1).map((l, i) => (
+                    <Ink
+                      key={i}
+                      i={2 * k + (l.tone === "drop" ? 1 : 0)}
+                      line={l.tone === "drop" ? "text-fg-subtle" : "text-fg"}
+                      fill="text-fg-subtle"
+                      d={sketchPath(
+                        band(l),
+                        l.tone === "drop"
+                          ? pen({ seed: 700 + 10 * k + i, strokeLineDash: [5, 6] })
+                          : pen({ seed: 700 + 10 * k + i, fill: "currentColor", fillStyle: "hachure", hachureGap: l.tone === "pool" ? 15 : 13, fillWeight: 0.7, hachureAngle: -50 }),
+                      )}
+                    />
+                  ))}
+                  {/* From sm up, an arrow in the hero wall's pen (wall.ts) runs
+                      from the step's bar down to its hypothesis in the same
+                      column: a smooth curve out of the bar's bottom corner,
+                      bowing just left of the column so it never reads as joined
+                      to a set-aside box, then an open head of two short
+                      strokes along the curve's last direction. The shaft draws
+                      in, then the head. The gap above the hypotheses is 2rem,
+                      40 units at the sankey's 240px height. */}
+                  {!phases[k].ghost && phases[k].hypothesis ? (() => {
+                    const bar = nodes.find((d) => d.main && d.x === colX(k));
+                    if (!bar) return null;
+                    const sx = colX(k) + 5;
+                    const sy = bar.y + bar.h - 2;
+                    const tx = colX(k) + 4;
+                    const ty = H + 32;
+                    const c1 = [colX(k) - 16, sy + 26];
+                    const c2 = [colX(k) - 14, ty - 46];
+                    const ul = Math.hypot(tx - c2[0], ty - c2[1]) || 1;
+                    const ux = (tx - c2[0]) / ul;
+                    const uy = (ty - c2[1]) / ul;
+                    const hl = 11;
+                    const spread = 0.5;
+                    const wing = (w: number) => [
+                      tx - hl * (ux * Math.cos(spread) - w * uy * Math.sin(spread)),
+                      ty - hl * (uy * Math.cos(spread) + w * ux * Math.sin(spread)),
+                    ];
+                    const [w1, w2] = [wing(1), wing(-1)];
+                    const f = (v: number) => v.toFixed(1);
+                    const stroke = { stroke: "currentColor", strokeWidth: 1.9, strokeLinecap: "round", strokeLinejoin: "round", fill: "none" } as const;
+                    return (
+                      <g className="hidden text-fg-muted sm:inline">
+                        <path
+                          d={`M${f(sx)} ${f(sy)} C${f(c1[0])} ${f(c1[1])} ${f(c2[0])} ${f(c2[1])} ${f(tx)} ${f(ty)}`}
+                          pathLength={1}
+                          className="dg-draw"
+                          style={at(2 * k + 2)}
+                          {...stroke}
+                        />
+                        <path
+                          d={`M${f(w1[0])} ${f(w1[1])} L${f(tx)} ${f(ty)} L${f(w2[0])} ${f(w2[1])}`}
+                          pathLength={1}
+                          className="dg-draw"
+                          style={at(2 * k + 4)}
+                          {...stroke}
+                        />
+                      </g>
+                    );
+                  })() : null}
+                  {nodes.filter((d) => d.group === k + 1 && !(d as NodeDraw).ghost).map((d, i) => (
+                    <Ink
+                      key={`n${i}`}
+                      i={2 * k + 1}
+                      line={d.main ? "text-fg" : "text-fg-subtle"}
+                      fill={d.main ? "text-fg" : "text-fg-subtle"}
+                      d={sketchRect(d.x, d.y, NODE_W, d.h, pen({ seed: 800 + 10 * k + i, fill: "currentColor", fillStyle: d.main ? "solid" : "cross-hatch", hachureGap: 4 }))}
+                    />
+                  ))}
+                </>
+              ) : (
+                <>
+                  {k === n - 1 ? (
+                    <rect x={colX(k) + NODE_W} y={off} width={W - colX(k) - NODE_W} height={phases[k].size * scale} className="fill-[var(--hl)]" />
+                  ) : null}
+                  {links.filter((l) => l.group === k + 1).map((l, i) => (
+                    <path key={i} d={band(l)} className={tone[l.tone]} />
+                  ))}
+                  {nodes.filter((d) => d.group === k + 1 && !(d as NodeDraw).ghost).map((d, i) => (
+                    <rect key={i} x={d.x} y={d.y} width={NODE_W} height={d.h} className={d.main ? "fill-fg" : "fill-fg-subtle"} />
+                  ))}
+                </>
+              )}
             </g>
           ))}
         </svg>
-        {/* Node labels, beside each node */}
+        {/* Node labels, beside each node (sketched: each step's above its bar) */}
         <ul aria-label={phases.map((p) => p.scope).join(", then ")}>
-          {nodes.map((d, i) => (
+          {nodes.map((d, i) => {
+            const ghost = (d as NodeDraw).ghost;
+            const above = sketch && d.main && !ghost;
+            // Sketched, the input's label sits inside it, centred on the band's
+            // narrowest opening (level with the 01 bar): the outline stays above
+            // and below that line along the whole curve, so the text never
+            // meets it.
+            const inner = sketch && ghost && k1 ? off + k1 / 2 : null;
+            return (
             <li
               key={i}
-              className={`dg-part absolute leading-snug ${d.main ? `${(d as NodeDraw).ghost ? "pl-1 text-[11px] sm:pl-2 sm:text-note" : "pl-2 text-note"} font-medium text-fg` : "pl-2 text-[11px] text-fg-subtle"}`}
+              className={`dg-part absolute leading-snug ${
+                sketch
+                  ? d.main
+                    ? ghost ? "pl-2 sm:pl-3" : "pb-1.5"
+                    : "pl-2 text-fg-subtle"
+                  : d.main
+                    ? `${ghost ? "pl-1 text-[11px] sm:pl-2 sm:text-note" : "pl-2 text-note"} font-medium text-fg`
+                    : "pl-2 text-[11px] text-fg-subtle"
+              }`}
               style={{
-                left: `${((d.x + NODE_W) / W) * 100}%`,
-                top: `${((d.y + d.h / 2) / H) * 100}%`,
+                left: `${((above ? d.x : d.x + NODE_W) / W) * 100}%`,
+                top: `${((above ? d.y : inner ?? d.y + d.h / 2) / H) * 100}%`,
                 // The input's label sits over its own band, so it may use its
                 // whole column; the others stop short of the next node.
-                maxWidth: (d as NodeDraw).ghost ? `calc(${100 / n}% - 0.25rem)` : `calc(${100 / n}% - 1.5rem)`,
-                translate: "0 -50%",
+                maxWidth: ghost ? `calc(${100 / n}% - ${sketch ? "2rem" : "0.25rem"})` : `calc(${100 / n}% - ${above ? "0.5rem" : "1.5rem"})`,
+                translate: above ? "0 -100%" : "0 -50%",
                 ...at(1 + i),
               }}
             >
               <span data-step={d.group} className="block">
               {/* Branch nodes say what they are, so the chart needs no caption. */}
               {!d.main ? <span className="block text-[10px] font-medium tracking-[0.08em] uppercase">Set aside</span> : null}
-              {d.step ? <span className="block text-[11px] font-medium tracking-[0.08em] text-fg-muted">{num(d.step - 1)}</span> : null}
-              {d.label}
-              {d.method ? <span className="mt-0.5 block font-normal text-fg-muted">{d.method}</span> : null}
+              {/* Sketched, on phones, the labels above the bars keep only the
+                  step's name: there is no room above for three lines. */}
+              {/* Sketched, the numbers stay on the steps above the bars (on
+                  phones those labels keep only the method). */}
+              {d.step && (!sketch || (above && !ghost)) ? <span className={`${above ? "hidden sm:block" : "block"} text-[11px] font-medium tracking-[0.08em] text-fg-muted`}>{num(d.step - 1)}</span> : null}
+              {sketch && d.main ? (
+                // Sketched, a step leads with how it was studied (the method,
+                // in pen) and names its scope under it in sans. The input,
+                // with no method of its own, leads with its name.
+                <>
+                  <span className={`block ${HAND} ${ghost ? "text-[15px] sm:text-[18px]" : "text-[16px] sm:text-[20px]"}`}>{ghost || !d.method ? d.label : d.method}</span>
+                  {ghost ? (
+                    d.method ? <span className="mt-0.5 hidden text-[12px] text-fg-muted sm:block">{d.method}</span> : null
+                  ) : d.method ? (
+                    <span className="mt-0.5 hidden text-[12px] text-fg-muted sm:block">{d.label}</span>
+                  ) : null}
+                </>
+              ) : sketch ? (
+                <span className={`block ${HAND} text-[15px] text-fg-subtle sm:text-[17px]`}>{d.label}</span>
+              ) : (
+                <>
+                  {d.label}
+                  {d.method ? <span className="mt-0.5 block font-normal text-fg-muted">{d.method}</span> : null}
+                </>
+              )}
               </span>
             </li>
-          ))}
+            );
+          })}
         </ul>
       </div>
 
       {/* The hypotheses */}
       <ol
-        className="mt-8 grid grid-cols-1 gap-8 border-t border-hairline pt-8 sm:[grid-template-columns:repeat(var(--n),minmax(0,1fr))] sm:gap-5"
+        className={`mt-8 grid grid-cols-1 gap-8 sm:[grid-template-columns:repeat(var(--n),minmax(0,1fr))] sm:gap-5 ${sketch ? "" : "border-t border-hairline pt-8"}`}
         style={grid}
       >
         {phases.map((p, k) => (
           <li key={k} className="dg-part" style={at(1 + nodes.length + k)}>
+            {/* Sketched, the empty column under step 00 names the row. */}
+            {sketch && !p.hypothesis && k === 0 ? (
+              <div className={`text-[22px] ${HAND} text-fg-muted`}>Hypotheses</div>
+            ) : null}
             {p.hypothesis ? (
             <div data-step={k + 1}>
-            <div className={LABEL}>
-              {num(k)} · {p.theme}
-            </div>
-            <p className="mt-2 text-[16px] leading-snug text-fg">{keyed(p.hypothesis)}</p>
+            {sketch ? (
+              <div className={`text-[22px] ${HAND}`}>{p.theme}</div>
+            ) : (
+              <div className={LABEL}>
+                {num(k)} · {p.theme}
+              </div>
+            )}
+            <p className="mt-2 text-[16px] leading-snug text-fg">{keyed(p.hypothesis, sketch)}</p>
             </div>
             ) : null}
           </li>

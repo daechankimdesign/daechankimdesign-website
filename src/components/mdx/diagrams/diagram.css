@@ -122,6 +122,63 @@
 }
 
 /* Reduced motion: no build-up; everything is shown as it is. */
+/* Sketch ink (sketch.tsx): an outline draws along its length, then its
+   hatching or solid fill fades in a beat later. */
+.dg-draw {
+  stroke-dashoffset: 1;
+  transition: stroke-dashoffset calc(var(--dg-dur) * 0.7) var(--dg-ease);
+  transition-delay: calc(var(--i, 0) * var(--dg-beat));
+}
+.dg-draw:not([stroke-dasharray]) {
+  stroke-dasharray: 1;
+}
+/* A dashed outline cannot also be dashed to draw in, so it fades instead. */
+.dg-draw[stroke-dasharray] {
+  stroke-dashoffset: 0;
+  opacity: 0;
+  transition: opacity var(--dg-dur) var(--dg-ease);
+  transition-delay: calc(var(--i, 0) * var(--dg-beat));
+}
+.dg[data-shown="true"] .dg-draw {
+  stroke-dashoffset: 0;
+  opacity: 1;
+}
+.dg-fade {
+  opacity: 0;
+  transition: opacity var(--dg-dur) var(--dg-ease);
+  transition-delay: calc(var(--i, 0) * var(--dg-beat) + 0.35s);
+}
+.dg[data-shown="true"] .dg-fade {
+  opacity: 1;
+}
+/* A key area in a sketched hypothesis: a hand-drawn marker stroke under it. */
+.dg-key-sketch {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 10' preserveAspectRatio='none'%3E%3Cpath d='M1 7.2 C 20 5.6, 42 8.4, 60 6.6 S 88 5.8, 99 7' fill='none' stroke='%2322a34a' stroke-width='2.2' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-size: 100% 0.5em;
+  background-position: 0 100%;
+  padding-bottom: 1px;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dg-draw,
+  .dg-fade {
+    transition: none;
+  }
+  .dg .dg-draw {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+  .dg .dg-draw:not([stroke-dasharray]) {
+    stroke-dasharray: none;
+  }
+  .dg .dg-fade {
+    opacity: 1;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .dg-part,
   .dg-line,

@@ -1,6 +1,8 @@
 import { Fragment, type CSSProperties } from "react";
 import { DiagramFrame } from "./DiagramFrame";
 import { LABEL } from "./styles";
+import { HAND } from "./sketch";
+import { SketchFrame } from "./SketchFrame";
 
 type Step = {
   title: string;
@@ -46,57 +48,79 @@ export function StepFlow({
   rows,
   connector = "arrow",
   compare = false,
+  sketch = false,
 }: {
   steps?: Step[];
   rows?: Row[];
   connector?: "arrow" | "none";
   /** Rows side by side as vertical columns, divided by a line. */
   compare?: boolean;
+  /** Hand-drawn (sketch.tsx): rounded boxes, pills, arrows, and divider drawn
+   *  in pen, titles in the home page wall's handwriting. Every layout. */
+  sketch?: boolean;
 }) {
   const all: Row[] = rows ?? (steps ? [{ steps }] : []);
   if (!all.length) return null;
 
-  // One running index across the whole figure, so rows build in reading order;
-  // marks land after everything else.
+  // Each row's parts count from zero, so every row builds at the same time;
+  // marks land after the longest row.
   const parts = all.map((r) => r.steps.length * 2 + (r.label ? 1 : 0) + (r.loop ? 1 : 0));
-  const starts = parts.map((_, r) => parts.slice(0, r).reduce((n, p) => n + p, 0));
-  const total = parts.reduce((n, p) => n + p, 0);
   const longest = Math.max(...parts);
-  const markAt = (compare ? longest : total) + 1;
+  // Sketched, a set of parallel items (connector "none") reads as side-by-side
+  // bullet lists rather than rows of pills.
+  const lists = sketch && connector === "none";
+  const markAt = longest + 1;
 
   return (
     <DiagramFrame>
       <div
-        className={compare ? "grid gap-0" : "flex flex-col gap-8"}
-        style={compare ? { gridTemplateColumns: `repeat(${all.length}, minmax(0, 1fr))` } : undefined}
+        className={compare || lists ? "grid gap-0" : "flex flex-col gap-8"}
+        style={compare || lists ? { gridTemplateColumns: `repeat(${all.length}, minmax(0, 1fr))` } : undefined}
       >
         {all.map((row, r) => {
-          // Each row counts its parts on from the rows before it; side by
-          // side, the columns build at the same time, each from zero.
-          let i = compare ? 0 : starts[r];
+          // Every row builds at the same time, each counting its parts from
+          // zero, so stacked flows (and side-by-side columns) start together.
+          let i = 0;
           const dense = row.steps.length >= 5;
           const box = `h-full rounded-xl border border-hairline bg-canvas ${dense ? "p-3" : "p-4"}`;
           // In compare mode each row is a column; every column after the first
           // starts with the dividing line.
-          const col = compare ? `flex h-full flex-col gap-3 ${r > 0 ? "border-l border-hairline pl-3 sm:pl-6" : ""} ${r < all.length - 1 ? "pr-3 sm:pr-6" : ""}` : "flex flex-col gap-3";
+          // Sketched lists (connector "none") sit side by side like compare
+          // columns, with the hand-drawn divider between them.
+          const col = compare || lists ? `relative flex h-full flex-col gap-3 ${r > 0 ? `${sketch ? "" : "border-l border-hairline"} pl-3 sm:pl-6` : ""} ${r < all.length - 1 ? "pr-3 sm:pr-6" : ""}` : "flex flex-col gap-3";
           return (
             <div key={r} className={col}>
+              {sketch && (compare || lists) && r > 0 ? (
+                <span aria-hidden className="absolute inset-y-0 left-0 w-2 -translate-x-1/2">
+                  <SketchFrame shape="vline" seed={400 + r} i={0} />
+                </span>
+              ) : null}
               {row.label ? (
-                <div className={`dg-part ${LABEL}`} style={at(i++)}>
+                <div className={`dg-part ${sketch ? `${HAND} text-[22px] sm:text-[28px]` : LABEL}`} style={at(i++)}>
                   {row.label}
                 </div>
               ) : null}
               {connector === "none" ? (
-                <ul className="flex flex-wrap gap-2">
-                  {row.steps.map((s, k) => (
-                    <li
-                      key={k}
-                      className={`dg-part rounded-full border border-hairline bg-canvas px-3 py-1.5 text-[14px] text-fg ${s.mark ? "dg-mark" : ""}`}
-                      style={at(i++)}
-                    >
-                      {s.title}
-                    </li>
-                  ))}
+                <ul className={lists ? "flex flex-col gap-2.5" : "flex flex-wrap gap-2"}>
+                  {row.steps.map((s, k) =>
+                    lists ? (
+                      // One per line, each after a pen-stroke bullet.
+                      <li key={k} className="dg-part flex items-baseline gap-2.5 text-[15px] leading-snug text-fg" style={at(i++)}>
+                        <span aria-hidden className="relative block h-2 w-3 shrink-0 -translate-y-0.5">
+                          <SketchFrame shape="dash" seed={200 + 20 * r + k} i={i - 1} />
+                        </span>
+                        {s.title}
+                      </li>
+                    ) : (
+                      <li
+                        key={k}
+                        className={`dg-part rounded-full border border-hairline bg-canvas px-3 py-1.5 text-[14px] text-fg ${s.mark ? "dg-mark" : ""}`}
+                        style={at(i++)}
+                      >
+                        {s.title}
+                      </li>
+                    ),
+                  )}
                 </ul>
               ) : (
                 <ol className={compare ? "flex flex-1 flex-col" : "flex flex-col sm:flex-row sm:items-stretch"}>
@@ -107,7 +131,22 @@ export function StepFlow({
                           aria-hidden
                           className={compare ? "flex min-h-6 flex-1 items-stretch justify-center py-1" : "flex h-7 shrink-0 items-stretch justify-center py-1 sm:h-auto sm:w-8 sm:items-center sm:px-1 sm:py-0"}
                         >
-                          {compare ? (
+                          {compare && sketch ? (
+                            <span className="relative block w-6">
+                              <SketchFrame shape="arrow" seed={500 + 20 * r + k} i={i++} />
+                            </span>
+                          ) : sketch ? (
+                            // Down on phones, across from sm up: each drawn at
+                            // its own size, the hidden one left blank.
+                            <span className="relative block w-6 sm:w-full">
+                              <span className="absolute inset-0 sm:hidden">
+                                <SketchFrame shape="arrow" seed={500 + 20 * r + k} i={i} />
+                              </span>
+                              <span className="absolute inset-x-0 top-1/2 hidden h-4 -translate-y-1/2 sm:block">
+                                <SketchFrame shape="arrow-h" seed={530 + 20 * r + k} i={i++} />
+                              </span>
+                            </span>
+                          ) : compare ? (
                             <span className="dg-line dg-line-v relative block w-px bg-fg-muted" style={at(i++)}>
                               <span className="absolute bottom-0 left-1/2 h-1.5 w-1.5 -translate-x-1/2 rotate-45 border-r border-b border-fg-muted" />
                             </span>
@@ -120,14 +159,21 @@ export function StepFlow({
                       ) : null}
                       <li className={`dg-part min-w-0 ${compare ? "" : "sm:flex-1"}`} style={at(i++)}>
                         <div
-                          className={`${box} ${compare ? "min-h-[8.5rem] sm:min-h-[6.25rem]" : ""} ${s.blind ? "border-dashed" : ""} ${s.mark ? "dg-mark" : ""}`}
-                          style={s.mark ? at(markAt) : undefined}
+                          className={
+                            sketch
+                              ? `relative h-full ${dense ? "p-3" : "p-4"} ${compare ? "min-h-[8.5rem] sm:min-h-[6.25rem]" : ""}`
+                              : `${box} ${compare ? "min-h-[8.5rem] sm:min-h-[6.25rem]" : ""} ${s.blind ? "border-dashed" : ""} ${s.mark ? "dg-mark" : ""}`
+                          }
+                          style={s.mark && !sketch ? at(markAt) : undefined}
                         >
-                          <div className="flex items-center gap-2">
+                          {sketch ? (
+                            <SketchFrame shape="box" seed={600 + 20 * r + k} i={s.mark ? markAt : i - 1} variant={s.blind ? "blind" : s.mark ? "mark" : undefined} />
+                          ) : null}
+                          <div className="relative flex items-center gap-2">
                             {s.color ? (
                               <span aria-hidden className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: s.color }} />
                             ) : null}
-                            <span className="text-[14px] leading-snug font-medium text-fg">{s.title}</span>
+                            <span className={sketch ? `${HAND} text-[20px] sm:text-[23px]` : "text-[14px] leading-snug font-medium text-fg"}>{s.title}</span>
                             {s.blind ? (
                               <svg aria-hidden className="ml-auto shrink-0 text-fg-muted" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                                 <path d="M2 12s3.6-7 10-7c2.1 0 3.9.7 5.4 1.7M22 12s-3.6 7-10 7c-2.1 0-3.9-.7-5.4-1.7" />
@@ -144,7 +190,7 @@ export function StepFlow({
                               </span>
                             ) : null}
                           </div>
-                          {s.note ? <p className="text-note mt-1.5 text-fg-muted">{s.note}</p> : null}
+                          {s.note ? <p className="text-note relative mt-1.5 text-fg-muted">{s.note}</p> : null}
                         </div>
                       </li>
                     </Fragment>
