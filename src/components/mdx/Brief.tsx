@@ -50,7 +50,8 @@ export function Brief({ summary, items = [] }: { summary: string; items?: Line[]
       data-open={open ? "true" : "false"}
       data-brief=""
     >
-      <p className="text-body text-fg">{summary}</p>
+      <p className={LABEL}>Project Summary</p>
+      <p className="text-body mt-2 text-fg">{summary}</p>
       {items.length ? (
         <>
           <div

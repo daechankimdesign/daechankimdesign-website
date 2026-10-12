@@ -14,6 +14,9 @@ type MDXImageProps = {
   /** With `background`: no bottom padding, so an image that ends at its own
    *  bottom edge (a hand mockup cut off at the wrist) sits on the panel edge. */
   flushBottom?: boolean;
+  /** Show only a band of the image, as fractions of its height ([top,
+   *  bottom]), cropped in CSS so no second file is needed. Full width. */
+  crop?: [number, number];
 };
 
 export function MDXImage({
@@ -24,13 +27,30 @@ export function MDXImage({
   caption,
   background,
   flushBottom = false,
+  crop,
 }: MDXImageProps) {
-  const image = (
+  const w = Number(width);
+  const h = Number(height);
+  const image = crop ? (
+    <div className="relative overflow-hidden" style={{ aspectRatio: `${w} / ${h * (crop[1] - crop[0])}` }}>
+      {/* eslint-disable-next-line @next/next/no-img-element -- offset inside a crop box; the optimizer is off on deploy */}
+      <img
+        src={src}
+        alt={alt}
+        width={w}
+        height={h}
+        loading="lazy"
+        decoding="async"
+        className="absolute left-0 block h-auto w-full max-w-none"
+        style={{ top: `${(-crop[0] / (crop[1] - crop[0])) * 100}%` }}
+      />
+    </div>
+  ) : (
     <ProgressiveImage
       src={src}
       alt={alt}
-      width={Number(width)}
-      height={Number(height)}
+      width={w}
+      height={h}
       sizes="(max-width: 768px) 100vw, 800px"
     />
   );

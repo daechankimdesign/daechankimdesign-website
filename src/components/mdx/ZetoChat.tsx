@@ -83,6 +83,8 @@ export function ZetoChat({
   const [run, setRun] = useState(0);
   // The action button: its own step, after the highlights have swept in.
   const [cta, setCta] = useState(false);
+  // The finished chat's exit: it fades up and out of focus as one, then clears.
+  const [leaving, setLeaving] = useState(false);
   const all = words(answer);
   const total = all.reduce((n, p) => n + p.length, 0);
 
@@ -100,7 +102,8 @@ export function ZetoChat({
       setShownWords(0);
       setCta(false);
     });
-    t += 1600;
+    // Typing starts as soon as the explanation is in.
+    t += 450;
     at(t, () => setPhase("typing"));
     for (let c = 1; c <= question.length; c++) at(t + c * 38, () => setTyped(c));
     t += question.length * 38 + 450;
@@ -117,8 +120,13 @@ export function ZetoChat({
     at(t + answer.length * 120 + 500 + 350, () => setCta(true));
     // Hold the finished chat, then clear it and play again (while in view).
     t += answer.length * 120 + 850 + LOOP_HOLD;
+    at(t, () => setLeaving(true));
+    t += 600;
     at(t, () => {
+      // Clear the button with the rest, so it is never left on screen alone.
       setPhase("idle");
+      setCta(false);
+      setLeaving(false);
       scroller.current?.scrollTo({ top: 0 });
     });
     at(t + 450, () => setRun((n) => n + 1));
@@ -194,7 +202,17 @@ export function ZetoChat({
         </div>
 
         {/* The conversation */}
-        <div ref={scroller} className="min-h-0 flex-1 overflow-y-auto px-5 pb-3 [scrollbar-width:none]" aria-live="polite">
+        <div
+          ref={scroller}
+          className="min-h-0 flex-1 overflow-y-auto px-5 pb-3 [scrollbar-width:none]"
+          aria-live="polite"
+          style={{
+            opacity: leaving ? 0 : 1,
+            transform: leaving ? "translateY(-14px)" : "none",
+            filter: leaving ? "blur(4px)" : "none",
+            transition: leaving ? "opacity 0.55s ease-in, transform 0.55s ease-in, filter 0.55s ease-in" : "none",
+          }}
+        >
           {show("explain") ? (
             <motion.div {...fade()}>
               <p className="mt-2 text-[16px] font-bold">{explanation.title}</p>

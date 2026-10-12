@@ -7,6 +7,7 @@ import { ScrollImage } from "./ScrollImage";
 import { JourneyMap } from "./JourneyMap";
 import { ZoomSequence } from "./ZoomSequence";
 import { PullQuote } from "./PullQuote";
+import { ScrollZoomImage } from "./ScrollZoomImage";
 import { ScreenSet } from "./ScreenSet";
 import { Brief } from "./Brief";
 import { PaymentSlider } from "./PaymentSlider";
@@ -136,6 +137,8 @@ export const mdxComponents: MDXComponents = {
   h1: (props) => <RevealBlock as="h1" className="text-h1 mt-12 mb-4" {...props} />,
   h2: (props) => <RevealBlock as="h2" className="text-h2 mt-10 mb-3" {...props} />,
   h3: (props) => <RevealBlock as="h3" className="text-h3 mt-8 mb-2" {...props} />,
+  // Zoom tied to the scroll; a RevealBlock rise would fight it.
+  ScrollZoomImage: (props) => <ScrollZoomImage {...props} />,
   // A participant's words, set as the section's largest line.
   PullQuote: (props) => (
     <RevealBlock as="div">

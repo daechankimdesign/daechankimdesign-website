@@ -58,9 +58,11 @@ export function StepFlow({
 
   // One running index across the whole figure, so rows build in reading order;
   // marks land after everything else.
-  let i = 0;
-  const total = all.reduce((n, r) => n + r.steps.length * 2 + (r.label ? 1 : 0) + (r.loop ? 1 : 0), 0);
-  const markAt = total + 1;
+  const parts = all.map((r) => r.steps.length * 2 + (r.label ? 1 : 0) + (r.loop ? 1 : 0));
+  const starts = parts.map((_, r) => parts.slice(0, r).reduce((n, p) => n + p, 0));
+  const total = parts.reduce((n, p) => n + p, 0);
+  const longest = Math.max(...parts);
+  const markAt = (compare ? longest : total) + 1;
 
   return (
     <DiagramFrame>
@@ -69,6 +71,9 @@ export function StepFlow({
         style={compare ? { gridTemplateColumns: `repeat(${all.length}, minmax(0, 1fr))` } : undefined}
       >
         {all.map((row, r) => {
+          // Each row counts its parts on from the rows before it; side by
+          // side, the columns build at the same time, each from zero.
+          let i = compare ? 0 : starts[r];
           const dense = row.steps.length >= 5;
           const box = `h-full rounded-xl border border-hairline bg-canvas ${dense ? "p-3" : "p-4"}`;
           // In compare mode each row is a column; every column after the first

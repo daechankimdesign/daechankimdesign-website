@@ -30,9 +30,9 @@ type Stop = {
 // Colours from the Zeto screens.
 const FILL = { warn: "#ef4444", suggest: "#34c45c", pay: "#0ba5ec" } as const;
 const ALERT = { warning: "#dc2626", advice: "#16a34a" } as const;
-const HOLD = 2800; // ms on each stop while it plays by itself
-// A stop with alerts holds longer, so they can be read before they dismiss.
-const HOLD_ALERTS = 3800;
+// ms on each stop while it plays by itself, the same at every stop, counted
+// from the stop change (its alerts rise in within the first second).
+const HOLD = 2200;
 const fmt = (n: number) =>
   `$${n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
@@ -108,13 +108,13 @@ export function PaymentSlider({
     const t = setTimeout(() => {
       setLive(inView);
       if (!inView) setI(0);
-    }, inView ? 750 : 0);
+    }, inView ? 450 : 0);
     return () => clearTimeout(t);
   }, [inView, reduce]);
 
   useEffect(() => {
     if (reduce || !live || stops.length < 2) return;
-    const hold = (stops[i]?.alerts?.length ?? 0) > 1 ? HOLD_ALERTS : HOLD + 600;
+    const hold = HOLD;
     const wait = Math.max(hold, pausedUntil - Date.now());
     const t = setTimeout(() => setI((n) => (n + 1) % stops.length), wait);
     return () => clearTimeout(t);

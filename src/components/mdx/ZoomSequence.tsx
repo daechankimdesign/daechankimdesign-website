@@ -18,9 +18,9 @@ type Step = { label: string; frame: Box; hold: number };
 type IntroImage = { src: string; alt: string; width: number; height: number };
 
 // The camera move between steps (ms); matches the transform transition.
-const MOVE = 1300;
+const MOVE = 950;
 // The intro image: how long it holds, and its label in the step pill.
-const INTRO_HOLD = 3200;
+const INTRO_HOLD = 2000;
 const INTRO_LABEL = "Interviews";
 
 /**
@@ -32,7 +32,7 @@ const INTRO_LABEL = "Interviews";
  *
  * It plays by itself while in view, looping. A timed pill in the corner shows
  * the step and fills over its time. A click pauses, and another plays again;
- * on hover the label says which. Reduced motion: the last step, still.
+ * on hover a small line above the dots says which (the step label stays). Reduced motion: the last step, still.
  *
  * `intro` adds an intro step at the start of every loop: one image (the
  * interview calls) fades in over the empty board and fades out in place
@@ -196,6 +196,15 @@ export function ZoomSequence({
             fixed rather than themed. */}
         {steps.length > 1 ? (
           <div className="absolute bottom-3.5 left-4 flex flex-col gap-1.5">
+            {/* The pause hint: its own quieter line above the dots, so the
+                step label is never replaced. */}
+            <p
+              aria-hidden
+              className="text-[10px] leading-tight font-medium whitespace-nowrap text-[#6f6f6f] transition-opacity duration-[250ms]"
+              style={{ opacity: hover && !reduce ? 1 : 0 }}
+            >
+              {held ? "Click to play" : "Click to pause"}
+            </p>
             <div className="flex w-full gap-1" aria-hidden>
               {steps.map((s, n) => (
                 <span
@@ -227,14 +236,11 @@ export function ZoomSequence({
                 <span
                   key={s.label}
                   className="[grid-area:1/1] transition-opacity duration-[250ms]"
-                  style={{ opacity: !hover && n === shown ? 1 : 0 }}
+                  style={{ opacity: n === shown ? 1 : 0 }}
                 >
                   {n + 1}. {s.label}
                 </span>
               ))}
-              <span className="[grid-area:1/1] transition-opacity duration-[250ms]" style={{ opacity: hover && !reduce ? 1 : 0 }}>
-                {held ? "Click to play" : "Click to pause"}
-              </span>
             </p>
           </div>
         ) : null}
