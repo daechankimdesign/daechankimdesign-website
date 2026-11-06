@@ -16,9 +16,9 @@ import { useResume } from "./ResumeModal";
 // Reveal cadence: one header line every STEP ms, then the sub text and the CTA
 // buttons each follow after LEDE_DELAY. Plays ONCE per viewport visit (no loop);
 // replays when the hero leaves and re-enters. Keep the line tween duration
-// (0.55s, below) STRICTLY < STEP so each line settles before the next steps in.
-const STEP = 600;
-const LEDE_DELAY = 600;
+// (0.38s, below) STRICTLY < STEP so each line settles before the next steps in.
+const STEP = 400;
+const LEDE_DELAY = 400;
 
 /** Everything the hero's wall and ID card show (page.tsx owns the content). */
 export type HeroMedia = {
@@ -188,15 +188,15 @@ export function HeroHeadline({ media }: { media: HeroMedia }) {
       return;
     }
     const timers: ReturnType<typeof setTimeout>[] = [];
-    const base = 550; // let the sub-text fade settle before measuring
-    const step = 320;
+    const base = 380; // let the sub-text fade settle before measuring
+    const step = 220;
     [1, 2, 3, 4].forEach((n, i) => {
       timers.push(setTimeout(() => setMarkStep(n), base + i * step));
     });
     return () => timers.forEach(clearTimeout);
   }, [ledeShown, reduce]);
 
-  const hlDuration = reduce ? 0 : 700;
+  const hlDuration = reduce ? 0 : 550;
 
   return (
     <div
@@ -216,7 +216,7 @@ export function HeroHeadline({ media }: { media: HeroMedia }) {
               className="block"
               initial={false}
               animate={{ opacity: i < count ? 1 : 0 }}
-              transition={{ duration: 0.55, ease: EASE_OUT }}
+              transition={{ duration: 0.38, ease: EASE_OUT }}
             >
               {i === 1 ? (
                 <>
@@ -247,7 +247,7 @@ export function HeroHeadline({ media }: { media: HeroMedia }) {
           className="relative mt-8 hl-behind max-w-[40rem]"
           initial={false}
           animate={{ opacity: ledeShown ? 1 : 0 }}
-          transition={{ duration: 0.7, ease: EASE_OUT }}
+          transition={{ duration: 0.55, ease: EASE_OUT }}
         >
           <p className="text-sub-display text-fg-muted dark:text-fg">
             I&apos;m a designer, researcher, and builder with{" "}
@@ -286,7 +286,7 @@ export function HeroHeadline({ media }: { media: HeroMedia }) {
           className="mt-8 flex flex-wrap items-center gap-6"
           initial={false}
           animate={{ opacity: buttonsShown ? 1 : 0, y: buttonsShown ? 0 : 16 }}
-          transition={{ duration: 0.7, ease: EASE_OUT }}
+          transition={{ duration: 0.55, ease: EASE_OUT }}
           inert={!buttonsShown}
         >
           {/* Hovering this raises the page-wide envelope stage (see

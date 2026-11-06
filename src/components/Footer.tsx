@@ -38,7 +38,7 @@ export function Footer() {
             creating impactful visuals, and
           </SequenceItem>
           <SequenceItem order={3} as="span" className="block">
-            creating AI-powered products.
+            building AI-powered products.
           </SequenceItem>
         </h2>
         <SequenceItem

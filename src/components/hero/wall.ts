@@ -19,7 +19,14 @@ const HELD_SHADOW = "0 0 0 0.5px rgb(0 0 0 / 0.05), 10px 30px 40px -12px rgb(var
 const HELD_FILTER =
   "drop-shadow(0 0 0 transparent) drop-shadow(6px 18px 14px rgb(var(--hw-ink) / var(--hw-sh-b))) drop-shadow(10px 30px 24px rgb(var(--hw-ink) / var(--hw-sh-a)))";
 // Hover tilt: TiltedCard's behaviour (exaggerated amplitude), same spring.
-const TILT = { amplitude: 26, scale: 1.2, stiffness: 100, damping: 30, mass: 2 };
+// Hover = taking a paper off the wall to look at it: a gentle hand-held tilt
+// toward the pointer (amplitude, degrees), a little closer (scale), and turned
+// most of the way upright (STRAIGHTEN of its wall angle undone). One spring
+// drives it all, so the lift, turn, slide, and tilt move as one motion.
+const TILT = { amplitude: 8, scale: 1.12, stiffness: 230, damping: 42, mass: 2 };
+const STRAIGHTEN = 0.8;
+// The tape comes off first; the paper leaves the wall this long after (ms).
+const LIFT_AFTER = 60;
 
 const area = (a: Box, b: Box) =>
   Math.max(0, Math.min(a.right, b.right) - Math.max(a.left, b.left)) *
@@ -226,8 +233,8 @@ export function createWall(root: HTMLElement, { reduce }: { reduce: boolean }): 
       n.head.style.strokeDashoffset = "0";
       return;
     }
-    n.line.animate([{ strokeDashoffset: 1 }, { strokeDashoffset: 0 }], { duration: 520, delay: 180, easing: "cubic-bezier(0.3, 0.6, 0.3, 1)", fill: "forwards" });
-    n.head.animate([{ strokeDashoffset: 1 }, { strokeDashoffset: 0 }], { duration: 170, delay: 690, easing: "ease-out", fill: "forwards" });
+    n.line.animate([{ strokeDashoffset: 1 }, { strokeDashoffset: 0 }], { duration: 420, delay: 120, easing: "cubic-bezier(0.3, 0.6, 0.3, 1)", fill: "forwards" });
+    n.head.animate([{ strokeDashoffset: 1 }, { strokeDashoffset: 0 }], { duration: 150, delay: 540, easing: "ease-out", fill: "forwards" });
   };
   const hideNote = (item: HTMLElement) => {
     const n = notes.get(item);
@@ -240,7 +247,8 @@ export function createWall(root: HTMLElement, { reduce }: { reduce: boolean }): 
   };
 
   // ── Taping: pressed onto the wall, then the tape is laid across the top ────
-  const tilts = new Map<HTMLElement, { layer: HTMLElement; rx: Spring; ry: Spring; s: Spring; live: boolean; peeled: boolean }>();
+  type Tilt = { layer: HTMLElement; rx: Spring; ry: Spring; s: Spring; tx: Spring; ty: Spring; rz: Spring; live: boolean; peeled: boolean };
+  const tilts = new Map<HTMLElement, Tilt>();
   const pinned = new Set<HTMLElement>();
   const pin = (el: HTMLElement) => {
     if (pinned.has(el)) return;
@@ -263,14 +271,14 @@ export function createWall(root: HTMLElement, { reduce }: { reduce: boolean }): 
         { transform: `translate(0, 0) rotate(${r + 0.25}deg) scale(1.003)`, offset: 0.84 },
         { opacity: 1, transform: `rotate(${r}deg)` },
       ],
-      { duration: 540, easing: EASE_PRESS, fill: "both" },
+      { duration: 440, easing: EASE_PRESS, fill: "both" },
     );
     if (surface?.classList.contains("hw-paper")) {
       surface.animate([{ boxShadow: HELD_SHADOW }, { boxShadow: getComputedStyle(surface).boxShadow }], { duration: 380, easing: "ease-out", fill: "backwards" });
     } else if (surface) {
       surface.animate([{ filter: HELD_FILTER }, { filter: getComputedStyle(surface).filter }], { duration: 380, easing: "ease-out", fill: "backwards" });
     }
-    lift?.animate([{ opacity: 0 }, { opacity: 0, offset: 0.5 }, { opacity: 1 }], { duration: 420, fill: "backwards" });
+    lift?.animate([{ opacity: 0 }, { opacity: 0, offset: 0.5 }, { opacity: 1 }], { duration: 340, fill: "backwards" });
     const base = `translate(-50%, -46%) rotate(${tr}deg)`;
     tape?.animate(
       [
@@ -278,7 +286,7 @@ export function createWall(root: HTMLElement, { reduce }: { reduce: boolean }): 
         { opacity: 1, transform: `${base} scale(1.01)`, clipPath: "inset(0 30% 0 0)", offset: 0.45 },
         { opacity: 1, transform: base, clipPath: "inset(0 0 0 0)" },
       ],
-      { duration: 300, delay: 300, easing: EASE_TAPE, fill: "both" },
+      { duration: 260, delay: 220, easing: EASE_TAPE, fill: "both" },
     );
     body.finished.then(
       () => {
@@ -297,7 +305,8 @@ export function createWall(root: HTMLElement, { reduce }: { reduce: boolean }): 
     hideNote(el);
     const t = tilts.get(el);
     if (t) {
-      t.rx.x = t.rx.to = t.ry.x = t.ry.to = t.rx.v = t.ry.v = t.s.v = 0;
+      [t.rx, t.ry, t.tx, t.ty, t.rz].forEach((p) => (p.x = p.to = p.v = 0));
+      t.s.v = 0;
       t.s.x = t.s.to = 1;
       t.live = false;
       t.peeled = false;
@@ -320,7 +329,7 @@ export function createWall(root: HTMLElement, { reduce }: { reduce: boolean }): 
         if (letter) pin(letter);
         if (resume) {
           if (reduce || step >= 5) pin(resume);
-          else later(() => pin(resume), 200);
+          else later(() => pin(resume), 120);
         }
       }
     }
@@ -345,16 +354,19 @@ export function createWall(root: HTMLElement, { reduce }: { reduce: boolean }): 
     let running = false;
     tilts.forEach((t, el) => {
       if (!t.live) return;
-      for (let i = 0; i < 4; i++) [t.rx, t.ry, t.s].forEach((p) => stepSpring(p, dt / 4));
-      const atRest = t.s.to === 1 && t.rx.to === 0 && t.ry.to === 0;
-      if (atRest && settled(t.rx, 0.01) && settled(t.ry, 0.01) && settled(t.s, 0.0005)) {
+      for (let i = 0; i < 4; i++) [t.rx, t.ry, t.s, t.tx, t.ty, t.rz].forEach((p) => stepSpring(p, dt / 4));
+      const atRest = t.s.to === 1 && t.rx.to === 0 && t.ry.to === 0 && t.tx.to === 0 && t.ty.to === 0 && t.rz.to === 0;
+      if (atRest && settled(t.rx, 0.01) && settled(t.ry, 0.01) && settled(t.s, 0.0005) && settled(t.tx, 0.1) && settled(t.ty, 0.1) && settled(t.rz, 0.01)) {
         t.live = false;
         t.layer.style.transform = "";
         delete el.dataset.lifted;
+        // Back flat on the wall: only now does it drop to its own layer.
+        settle(el);
         return;
       }
       running = true;
-      t.layer.style.transform = `rotateX(${t.rx.x.toFixed(3)}deg) rotateY(${t.ry.x.toFixed(3)}deg) scale(${t.s.x.toFixed(4)})`;
+      // In the paper's own (rotated) frame: slide, turn upright, tilt, grow.
+      t.layer.style.transform = `translate(${t.tx.x.toFixed(2)}px, ${t.ty.x.toFixed(2)}px) rotate(${t.rz.x.toFixed(3)}deg) rotateX(${t.rx.x.toFixed(3)}deg) rotateY(${t.ry.x.toFixed(3)}deg) scale(${t.s.x.toFixed(4)})`;
     });
     raf = running ? requestAnimationFrame(frame) : 0;
   };
@@ -368,6 +380,86 @@ export function createWall(root: HTMLElement, { reduce }: { reduce: boolean }): 
   const overCard = () => hero.hasAttribute("data-card");
   const tapeBase = (el: HTMLElement) => `translate(-50%, -46%) rotate(${parseFloat(el.style.getPropertyValue("--tr")) || 0}deg)`;
 
+  // Stacking while hovering. The paper being pointed at is always on top; a
+  // paper just left stays above the rest while it eases back, the most
+  // recently left highest, and only drops to its own layer (its slot's
+  // z-index) once it lies flat again. So leaving one paper for an overlapping
+  // one never leaves the old one covering the new.
+  const Z_HOVER = 9;
+  const Z_LEAVING = 8;
+  let order = 0;
+  const leaving = new Map<HTMLElement, number>();
+  const restack = () => {
+    // The most recently left paper sits just under the hovered one; any older
+    // ones still easing back sit one layer lower.
+    const newest = Math.max(0, ...leaving.values());
+    leaving.forEach((n, el) => {
+      el.style.zIndex = String(n === newest ? Z_LEAVING : Z_LEAVING - 1);
+    });
+  };
+  // Taken off the wall, a paper also moves a little away from where the ID card
+  // hangs (the card always stays in front, in its own layer over the wall), so
+  // it comes out from under the card to be looked at. Measured from the card's
+  // resting place: centred, its top at --card-top × the wall's height and
+  // --card-h × the wall's width tall. Set on the paper's spring, in its own
+  // rotated frame, with the turn upright.
+  const AWAY = 0.045; // the move, as a share of the wall's width
+  const lookAt = (el: HTMLElement) => {
+    const t = tilts.get(el);
+    if (!t) return;
+    const cs = getComputedStyle(root);
+    const W = root.clientWidth;
+    const H = root.clientHeight;
+    const cardH = W * (parseFloat(cs.getPropertyValue("--card-h")) || 0.56);
+    const dx = el.offsetLeft + el.offsetWidth / 2 - W / 2;
+    const dy = el.offsetTop + el.offsetHeight / 2 - (H * (parseFloat(cs.getPropertyValue("--card-top")) || 0.1) + cardH / 2);
+    const len = Math.hypot(dx, dy) || 1;
+    const sx = (dx / len) * AWAY * W;
+    const sy = (dy / len) * AWAY * W;
+    const deg = parseFloat(el.style.getPropertyValue("--r")) || 0;
+    const a = (deg * Math.PI) / 180;
+    t.tx.to = sx * Math.cos(a) + sy * Math.sin(a);
+    t.ty.to = -sx * Math.sin(a) + sy * Math.cos(a);
+    t.rz.to = -deg * STRAIGHTEN;
+    t.s.to = TILT.scale;
+    el.dataset.lifted = "";
+    wake(t);
+  };
+  // The tape peels first; the paper leaves the wall a beat later.
+  const lifts = new Map<HTMLElement, ReturnType<typeof setTimeout>>();
+  const takeOff = (el: HTMLElement) => {
+    clearTimeout(lifts.get(el));
+    lifts.set(el, setTimeout(() => {
+      lifts.delete(el);
+      lookAt(el);
+    }, LIFT_AFTER));
+  };
+
+  const raise = (el: HTMLElement) => {
+    el.dataset.held = "";
+    takeOff(el);
+    leaving.delete(el);
+    items.forEach((o) => {
+      if (o !== el && o.style.zIndex === String(Z_HOVER)) {
+        leaving.set(o, ++order);
+      }
+    });
+    el.style.zIndex = String(Z_HOVER);
+    restack();
+  };
+  const lower = (el: HTMLElement) => {
+    clearTimeout(lifts.get(el));
+    lifts.delete(el);
+    delete el.dataset.held;
+    if (el.style.zIndex !== String(Z_HOVER)) return;
+    leaving.set(el, ++order);
+    restack();
+  };
+  const settle = (el: HTMLElement) => {
+    leaving.delete(el);
+    el.style.zIndex = "";
+  };
+
   // Per-item hover steps, shared by the pointer and by setHover() (the hero CTA).
   const hovers = new Map<HTMLElement, { enter: () => void; leave: () => void }>();
 
@@ -375,13 +467,13 @@ export function createWall(root: HTMLElement, { reduce }: { reduce: boolean }): 
     const layer = el.querySelector<HTMLElement>(".hw-tilt");
     const tape = el.querySelector<HTMLElement>(".hw-tape");
     if (!layer) return;
-    const t = { layer, rx: { x: 0, v: 0, to: 0 }, ry: { x: 0, v: 0, to: 0 }, s: { x: 1, v: 0, to: 1 }, live: false, peeled: false };
+    const z = () => ({ x: 0, v: 0, to: 0 });
+    const t: Tilt = { layer, rx: z(), ry: z(), s: { x: 1, v: 0, to: 1 }, tx: z(), ty: z(), rz: z(), live: false, peeled: false };
     tilts.set(el, t);
     const usable = (e: PointerEvent) => !reduce && e.pointerType === "mouse" && el.hasAttribute("data-pinned");
     const rest = () => {
-      if (t.s.to === 1) return;
-      t.rx.to = 0;
-      t.ry.to = 0;
+      if (t.s.to === 1 && t.tx.to === 0 && t.ty.to === 0 && t.rz.to === 0) return;
+      [t.rx, t.ry, t.tx, t.ty, t.rz].forEach((p) => (p.to = 0));
       t.s.to = 1;
       wake(t);
     };
@@ -396,8 +488,8 @@ export function createWall(root: HTMLElement, { reduce }: { reduce: boolean }): 
       const ly = dx * Math.sin(r) + dy * Math.cos(r);
       t.rx.to = (ly / (el.offsetHeight / 2)) * -TILT.amplitude;
       t.ry.to = (lx / (el.offsetWidth / 2)) * TILT.amplitude;
-      t.s.to = TILT.scale;
-      el.dataset.lifted = "";
+      // Back off the ID card onto the paper: take it off the wall again.
+      if (t.s.to === 1 && !lifts.has(el) && el.hasAttribute("data-held")) lookAt(el);
       wake(t);
     };
     const peel = () => {
@@ -411,7 +503,7 @@ export function createWall(root: HTMLElement, { reduce }: { reduce: boolean }): 
           { transform: `${b} translateY(-7px) rotate(6deg) scale(1.05)`, clipPath: "inset(0 0 0 55%)", opacity: 1, offset: 0.6 },
           { transform: `${b} translateY(-12px) rotate(9deg) scale(1.06)`, clipPath: "inset(0 0 0 100%)", opacity: 0 },
         ],
-        { duration: 200, easing: "ease-in", fill: "forwards" },
+        { duration: 190, easing: "cubic-bezier(0.4, 0, 0.6, 1)", fill: "forwards" },
       );
     };
     const relay = () => {
@@ -425,15 +517,20 @@ export function createWall(root: HTMLElement, { reduce }: { reduce: boolean }): 
           { transform: `${b} scale(1.01)`, clipPath: "inset(0 30% 0 0)", opacity: 1, offset: 0.45 },
           { transform: b, clipPath: "inset(0 0 0 0)", opacity: 1 },
         ],
-        { duration: 650, delay: 250, easing: EASE_TAPE, fill: "backwards" },
+        // Laid back on once the paper is nearly flat on the wall again.
+        { duration: 380, delay: 260, easing: EASE_TAPE, fill: "backwards" },
       );
     };
     on(el, "pointerenter", (e) => {
       if (usable(e)) peel();
     });
-    on(el, "pointerenter", follow);
+    on(el, "pointerenter", (e) => {
+      if (usable(e)) raise(el);
+      follow(e);
+    });
     on(el, "pointermove", follow);
     on(el, "pointerleave", () => {
+      lower(el);
       rest();
       relay();
     });
@@ -446,11 +543,10 @@ export function createWall(root: HTMLElement, { reduce }: { reduce: boolean }): 
         const outer = el.dataset.slot === "s1" || el.dataset.slot === "s3" ? -1 : 1;
         t.rx.to = -0.35 * TILT.amplitude;
         t.ry.to = outer * 0.4 * TILT.amplitude;
-        t.s.to = TILT.scale;
-        el.dataset.lifted = "";
-        wake(t);
+        raise(el);
       },
       leave: () => {
+        lower(el);
         rest();
         relay();
       },
